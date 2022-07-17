@@ -1,0 +1,19 @@
+﻿<Page
+    x:Class="TextControlBox_TestApp.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:TextControlBox_TestApp"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:textcontrolbox="using:TextControlBox_TestApp.TextControlBox"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    mc:Ignorable="d"
+    muxc:BackdropMaterial.ApplyToRootOrPageBackground="False">
+    <Page.Background>
+        <AcrylicBrush TintColor="Black" TintOpacity="0.7" BackgroundSource="HostBackdrop">
+        </AcrylicBrush>
+    </Page.Background>
+    <Grid>
+        <textcontrolbox:TextControlBox x:Name="TextControlBox"/>
+    </Grid>
+</Page>
