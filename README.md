@@ -2,7 +2,7 @@
 An UWP based textbox with Syntaxhighliting and support for very large amount of text
 
 
-## Reason why I build it
+## Reason why I built it
 UWP has a default Textbox and a RichTextBox. Both of them are very slow in rendering multiple thounsand lines. The selection works also very slow. So I decided to create my own version of a Textbox.
 
 ## Features:
