@@ -341,24 +341,21 @@ namespace TextControlBox_TestApp.TextControlBox
             return null;
         }
 
-        private void SelectDoubleClick()
+        private void SelectDoubleClick(PointerRoutedEventArgs e)
         {
-            var PointerPosition = Windows.UI.Core.CoreWindow.GetForCurrentThread().PointerPosition;
-            Point Point = new Point(PointerPosition.X - Window.Current.Bounds.X, PointerPosition.Y - Window.Current.Bounds.Y);
-            int Characterpos = CursorRenderer.GetCharacterPositionFromPoint(GetCurrentLine(), CurrentLineTextLayout, Point, 0);
+            //Calculate the Characterposition from the current pointerposition:
+            int Characterpos = CursorRenderer.GetCharacterPositionFromPoint(GetCurrentLine(), CurrentLineTextLayout, e.GetCurrentPoint(Canvas_Text).Position, 0);
+            //Use a function to calculate the steps from one the current position to the next letter or digit
             int StepsLeft = Cursor.CalculateStepsToMoveLeft(CurrentLine, Characterpos, true);
             int StepsRight = Cursor.CalculateStepsToMoveRight(CurrentLine, Characterpos, true);
 
-            Debug.WriteLine(Characterpos);
-
+            //Update variables
             selectionrenderer.SelectionStartPosition = new CursorPosition(Characterpos - StepsLeft, CursorPosition.LineNumber - 1);
-
             selectionrenderer.SelectionEndPosition = new CursorPosition(Characterpos + StepsRight, CursorPosition.LineNumber - 1);
-            CursorPosition.CharacterPosition = selectionrenderer.SelectionEndPosition.CharacterPosition += (StepsRight -1);
-
-            Debug.WriteLine(selectionrenderer.SelectionStartPosition.CharacterPosition + "::" + selectionrenderer.SelectionEndPosition.CharacterPosition + ":::::" + StepsLeft + "::" + StepsRight);
-            selectionrenderer.IsSelecting = true;
+            CursorPosition.CharacterPosition = selectionrenderer.SelectionEndPosition.CharacterPosition;      
             selectionrenderer.HasSelection = true;
+
+            //Render it
             UpdateCursor();
             UpdateSelection();
         }
@@ -646,7 +643,7 @@ namespace TextControlBox_TestApp.TextControlBox
             }
             else if (PointerClickCount == 2)
             {
-                SelectDoubleClick();
+                SelectDoubleClick(e);
                 Debug.WriteLine("DoubleClicked");
             }
             else

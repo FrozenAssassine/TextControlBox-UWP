@@ -186,7 +186,9 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 else
                     break;
             }
-            return Count == 0 ? 1 : Count;
+            //If it ignores the ControlKey return the real value of Count otherwise
+            //return 1 if Count is 0
+            return IgnoreControlKey ? Count : Count == 0 ? 1 : Count;
         }
         public static int CalculateStepsToMoveRight(Line CurrentLine, int CursorCharPosition, bool IgnoreControlKey = false)
         {
@@ -202,7 +204,9 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 else
                     break;
             }
-            return Count == 0 ? 1 : Count;
+            //If it ignores the ControlKey return the real value of Count otherwise
+            //return 1 if Count is 0
+            return IgnoreControlKey ? Count : Count == 0 ? 1 : Count;
         }
 
         //Move cursor:
