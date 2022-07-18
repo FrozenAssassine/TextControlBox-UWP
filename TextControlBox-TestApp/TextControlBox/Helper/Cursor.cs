@@ -61,6 +61,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             return CursorIndex + CursorPosition.CharacterPosition;
         }
 
+        //Convert the coordinates from Relative to Absolute and the other way around
         public static CursorPosition RelativeToAbsolute(CursorPosition curpos, int nmbOfUnrenderdLines)
         {
             return CursorPosition.ChangeLineNumber(curpos, curpos.LineNumber - nmbOfUnrenderdLines);
@@ -170,32 +171,68 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             return ReturnValue;
         }
 
+        //Calculate the number of characters from the cursorposition to the next character or digit to the left and to the right
+        public static int CalculateStepsToMoveLeft2(Line CurrentLine, int CursorCharPosition)
+        {
+            int Count = 0;
+            for (int i = CursorCharPosition - 1; i >= 0; i--)
+            {
+                char CurrentCharacter = CurrentLine.Content[i];
+                if (char.IsLetterOrDigit(CurrentCharacter))
+                    Count++;
+                else if (i == CursorCharPosition - 1 && char.IsWhiteSpace(CurrentCharacter))
+                    return 0;
+                else
+                    break;
+            }
+            //If it ignores the ControlKey return the real value of Count otherwise
+            //return 1 if Count is 0
+            return Count;
+        }
+        public static int CalculateStepsToMoveRight2(Line CurrentLine, int CursorCharPosition)
+        {
+            int Count = 0;
+            for(int i = CursorCharPosition; i < CurrentLine.Content.Length; i++)
+            {
+                if (char.IsLetterOrDigit(CurrentLine.Content[i]))
+                    Count++;
+                else if (i == CursorCharPosition && char.IsWhiteSpace(CurrentLine.Content[i]))
+                    return 0;
+                else
+                    break;
+            }
+            //If it ignores the ControlKey return the real value of Count otherwise
+            //return 1 if Count is 0
+            return Count;
+        }
+
         //Calculates how many characters the cursor needs to move if control is pressed
         //Returns 1 if control is not pressed
-        public static int CalculateStepsToMoveLeft(Line CurrentLine, int CursorCharPosition, bool IgnoreControlKey = false)
+        public static int CalculateStepsToMoveLeft(Line CurrentLine, int CursorCharPosition)
         {
-            if (!ControlIsPressed && !IgnoreControlKey)
+            if (!ControlIsPressed)
                 return 1;
             int Count = 0;
             for (int i = CursorCharPosition - 1; i >= 0; i--)
             {
-                if (char.IsLetterOrDigit(CurrentLine.Content[i]))
+                char CurrentCharacter = CurrentLine.Content[i];
+                if (char.IsLetterOrDigit(CurrentCharacter))
                     Count++;
-                else if (i == CursorCharPosition - 1 && char.IsWhiteSpace(CurrentLine.Content[i]))
+                else if (i == CursorCharPosition - 1 && char.IsWhiteSpace(CurrentCharacter))
                     Count++;
                 else
                     break;
             }
             //If it ignores the ControlKey return the real value of Count otherwise
             //return 1 if Count is 0
-            return IgnoreControlKey ? Count : Count == 0 ? 1 : Count;
+            return Count == 0 ? 1 : Count;
         }
-        public static int CalculateStepsToMoveRight(Line CurrentLine, int CursorCharPosition, bool IgnoreControlKey = false)
+        public static int CalculateStepsToMoveRight(Line CurrentLine, int CursorCharPosition)
         {
-            if (!ControlIsPressed && !IgnoreControlKey)
+            if (!ControlIsPressed)
                 return 1;
             int Count = 0;
-            for(int i = CursorCharPosition; i < CurrentLine.Content.Length; i++)
+            for (int i = CursorCharPosition; i < CurrentLine.Content.Length; i++)
             {
                 if (char.IsLetterOrDigit(CurrentLine.Content[i]))
                     Count++;
@@ -206,7 +243,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
             //If it ignores the ControlKey return the real value of Count otherwise
             //return 1 if Count is 0
-            return IgnoreControlKey ? Count : Count == 0 ? 1 : Count;
+            return Count == 0 ? 1 : Count;
         }
 
         //Move cursor:

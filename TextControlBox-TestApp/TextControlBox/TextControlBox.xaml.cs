@@ -346,8 +346,8 @@ namespace TextControlBox_TestApp.TextControlBox
             //Calculate the Characterposition from the current pointerposition:
             int Characterpos = CursorRenderer.GetCharacterPositionFromPoint(GetCurrentLine(), CurrentLineTextLayout, e.GetCurrentPoint(Canvas_Text).Position, 0);
             //Use a function to calculate the steps from one the current position to the next letter or digit
-            int StepsLeft = Cursor.CalculateStepsToMoveLeft(CurrentLine, Characterpos, true);
-            int StepsRight = Cursor.CalculateStepsToMoveRight(CurrentLine, Characterpos, true);
+            int StepsLeft = Cursor.CalculateStepsToMoveLeft2(CurrentLine, Characterpos);
+            int StepsRight = Cursor.CalculateStepsToMoveRight2(CurrentLine, Characterpos);
 
             //Update variables
             selectionrenderer.SelectionStartPosition = new CursorPosition(Characterpos - StepsLeft, CursorPosition.LineNumber - 1);
