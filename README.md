@@ -1,5 +1,5 @@
 # TextControlBox-UWP
-An UWP based textbox with Syntaxhighliting and support for very large amount of text
+An UWP based textbox with Syntaxhighlighting and support for very large amount of text
 
 
 ## Reason why I built it
@@ -9,6 +9,7 @@ UWP has a default Textbox and a RichTextBox. Both of them are very slow in rende
 - Open a file with a million lines or more without laggs
 - Syntaxhighlighting with customisation and api to create your own Regex patterns for it
 - Outstanding performance because it only renders as many lines as your screen can display
+- Linenumbering
 
 ## Problems:
 - Because all the lines are stored in a List the ram usage with a million lines ore more is very high.
