@@ -12,9 +12,9 @@ UWP has a default Textbox and a RichTextBox. Both of them are very slow in rende
 
 ## Problems:
 - Because all the lines are stored in a List the ram usage with a million lines ore more is very high.
-- Performance of deleting long range of text is slow, because it needs to remove all the lines from the list
+- Performance of deleting a long range of text is slow, because it needs to remove all the lines from the list
 
-#### The Control is not done yet and should not be used in produktion. There are many features missing and not everything works without crashing sometimes. I will do my very best to make it pretty usable
+#### The Control is not done yet and should not be used in production. There are many features missing and not everything works without crashing sometimes. I will do my very best to make it done soon.
 
 
 <img src="images/image1.png">
