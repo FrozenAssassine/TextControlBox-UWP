@@ -846,7 +846,6 @@ namespace TextControlBox_TestApp.TextControlBox
             args.DrawingSession.DrawTextLayout(LineNumberLayout, 0, SingleLineHeight, LineNumberColorBrush);
         }
 
-
         //Functions:
         /// <summary>
         /// Select the line specified by the index
@@ -889,7 +888,7 @@ namespace TextControlBox_TestApp.TextControlBox
             if (dataPackageView.Contains(StandardDataFormats.Text))
             {
                 string Text = LineEndings.ChangeLineEndings(await dataPackageView.GetTextAsync(), LineEnding);
-                CursorPosition = Selection.InsertText(TextSelection, TotalLines, Text, NewLineCharacter);
+                CursorPosition = Selection.InsertText(TextSelection, CursorPosition, TotalLines, Text, NewLineCharacter);
                 UpdateText();
             }
         }

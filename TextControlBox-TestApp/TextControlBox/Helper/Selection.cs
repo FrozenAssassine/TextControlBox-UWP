@@ -32,14 +32,12 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 return Pos1.CharacterPosition > Pos2.CharacterPosition ? Pos1 : Pos2;
             return Pos1.LineNumber > Pos2.LineNumber ? Pos2 : Pos1;
         }
-        public static CursorPosition InsertText(TextSelection Selection, List<Line> TotalLines, string Text, string NewLineCharacter)
+        public static CursorPosition InsertText(TextSelection Selection, CursorPosition CursorPosition, List<Line> TotalLines, string Text, string NewLineCharacter)
         {
             Debug.WriteLine("--Insert text--");
 
             if (Selection != null)
                 return Replace(Selection, TotalLines, Text, NewLineCharacter);
-
-            CursorPosition CursorPosition = Selection.StartPosition;
 
             string[] lines = Text.Split(NewLineCharacter);
             Line CurrentLine = TotalLines[CursorPosition.LineNumber - 1];
@@ -161,25 +159,29 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
             int StartLine = Math.Min(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
             int EndLine = Math.Max(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
-            int StartIndex;
-            int EndIndex;
+            int StartPosition;
+            int EndPosition;
+            string[] SplittedText = Text.Split(NewLineCharacter);
 
             //Just delete the text if the string is emty
             if (Text == string.Empty)
             {
                 return Remove(Selection, TotalLines, NewLineCharacter);
             }
-
-            if (StartLine == EndLine) //Selection is singleline
+            //Selection is singleline and Text to paste is only a singleline
+            if (StartLine == EndLine && SplittedText.Length == 1)
             {
-                StartIndex = Math.Min(Selection.StartPosition.CharacterPosition, Selection.EndPosition.CharacterPosition);
-                EndIndex = Math.Max(Selection.StartPosition.CharacterPosition, Selection.EndPosition.CharacterPosition);
+                StartPosition = Math.Min(Selection.StartPosition.CharacterPosition, Selection.EndPosition.CharacterPosition);
+                EndPosition = Math.Max(Selection.StartPosition.CharacterPosition, Selection.EndPosition.CharacterPosition);
 
-                if (StartIndex == 0 && EndIndex == TotalLines[EndLine].Content.Length)
-                    TotalLines[EndLine].Content = "";
+                if (StartPosition == 0 && EndPosition == TotalLines[EndLine].Content.Length)
+                    TotalLines[StartLine].Content = "";
                 else
-                    TotalLines[StartLine].Remove(StartIndex, EndIndex - StartIndex);
-                return new CursorPosition(StartIndex, StartLine + 1);
+                    TotalLines[StartLine].Remove(StartPosition, EndPosition - StartPosition);
+                
+                TotalLines[StartLine].AddText(Text, StartPosition);
+
+                return new CursorPosition(EndPosition, StartLine + 1);
             }
             else if (WholeTextSelected(Selection, TotalLines))
             {
@@ -189,47 +191,80 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
             else
             {
-                if (StartLine < EndLine)
+                if (Selection.StartPosition.LineNumber < Selection.EndPosition.LineNumber)
                 {
-                    EndIndex = Selection.StartPosition.CharacterPosition;
-                    StartIndex = Selection.EndPosition.CharacterPosition;
+                    EndPosition = Selection.EndPosition.CharacterPosition;
+                    StartPosition = Selection.StartPosition.CharacterPosition;
                 }
                 else
                 {
-                    EndIndex = Selection.EndPosition.CharacterPosition;
-                    StartIndex = Selection.StartPosition.CharacterPosition;
+                    EndPosition = Selection.StartPosition.CharacterPosition;
+                    StartPosition = Selection.EndPosition.CharacterPosition;
                 }
 
-                string StartLineContent = TotalLines[StartLine].Remove(StartIndex);
-                string EndLineContent = TotalLines[EndLine].Substring(EndIndex);
+                Line Start_Line = TotalLines[StartLine];
+                Line End_Line = TotalLines[EndLine];
 
-                TotalLines.RemoveRange(StartLine, EndLine - StartLine + (EndLine - StartIndex > 2 ? 1 : 0));
-
-                var SplittedText = Text.Split(NewLineCharacter);
-                if (SplittedText.Length == 1)
+                //all lines are selected from start to finish
+                if (StartPosition == 0 && EndPosition == End_Line.Content.Length)
                 {
-                    Debug.WriteLine(SplittedText.Length);
-                    Debug.WriteLine(SplittedText[0]);
-                    Debug.WriteLine(TotalLines.Count + "::" + StartLine);
-                    TotalLines[StartLine].Content = StartLineContent + SplittedText[0] + EndLineContent;
+                    TotalLines.RemoveRange(StartLine, EndLine - StartLine + 1);
+
+                    for (int i = 0; i < SplittedText.Length; i++)
+                    {
+                        TotalLines.Insert(StartLine + i, new Line(SplittedText[i]));
+                    }
                 }
+                //Only the startline is completely selected
+                else if (StartPosition == 0 && EndPosition != End_Line.Content.Length)
+                {
+                    Debug.WriteLine("1");
+                    End_Line.Substring(EndPosition);
+                    TotalLines.RemoveRange(StartLine, EndLine - StartLine);
+
+                    for (int i = 0; i < SplittedText.Length; i++)
+                    {
+                        if (i == SplittedText.Length - 1)
+                            TotalLines[EndLine].AddToStart(SplittedText[i]);
+                        else
+                            TotalLines.Insert(StartLine + i, new Line(SplittedText[i]));
+                    }
+                }
+                //Only the endline is completely selected
+                else if (StartPosition != 0 && EndPosition == End_Line.Content.Length)
+                {
+                    Debug.WriteLine("2");
+                    Start_Line.Remove(StartPosition);
+                    TotalLines.RemoveRange(StartLine + 1, EndLine - StartLine);
+
+                    for (int i = 0; i < SplittedText.Length; i++)
+                    {
+                        if (i == 0)
+                            TotalLines[StartLine].AddToEnd(SplittedText[i]);
+                        else
+                            TotalLines.Insert(StartLine + i, new Line(SplittedText[i]));
+                    }
+                }
+                //Both startline and endline are not completely selected
                 else
                 {
+                    Start_Line.Remove(StartPosition);
+                    End_Line.Substring(EndPosition);
+
+                    TotalLines.RemoveRange(StartLine + 1, EndLine - StartLine - 1);
+
                     for (int i = 0; i < SplittedText.Length; i++)
                     {
                         if (i == 0)
                             TotalLines[StartLine].AddToEnd(SplittedText[i]);
                         else if (i == SplittedText.Length - 1)
-                            TotalLines[EndLine].AddToEnd(SplittedText[i]);
+                            TotalLines[EndLine].AddToStart(SplittedText[i]);
                         else
                             TotalLines.Insert(StartLine + i, new Line(SplittedText[i]));
                     }
                 }
-                //Add a new line if no line exists
-                if (TotalLines.Count == 0)
-                    TotalLines.Add(new Line());
 
-                return new CursorPosition(StartIndex, StartLine - 1);
+                return new CursorPosition(EndPosition, EndLine );
             }
         }
 
@@ -238,8 +273,8 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             Debug.WriteLine("--Remove text--");
             int StartLine = Math.Min(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
             int EndLine = Math.Max(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
-            int StartPosition = 0;
-            int EndPosition = 0;
+            int StartPosition;
+            int EndPosition;
 
             if (StartLine == EndLine)
             {

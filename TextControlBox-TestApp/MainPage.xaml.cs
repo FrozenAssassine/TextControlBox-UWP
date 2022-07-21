@@ -44,7 +44,8 @@ namespace TextControlBox_TestApp
             StringBuilder sb = new StringBuilder();
             for (int i = 1; i < 10; i++)
             {
-                sb.Append("Line" + i + " Line" + (i+9) + (i == 9 ? "" : "\n"));
+                sb.Append("Line" + i + (i == 9 ? "" : "\n"));
+                //sb.Append("Line" + i + " Line" + (i+9) + (i == 9 ? "" : "\n"));
             }
             return sb.ToString();
         }
