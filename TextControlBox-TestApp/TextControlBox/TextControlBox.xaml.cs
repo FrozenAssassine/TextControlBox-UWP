@@ -321,6 +321,15 @@ namespace TextControlBox_TestApp.TextControlBox
                 UpdateSelection();
             }
         }
+        private void ClearSelection()
+        {
+            if (selectionrenderer.HasSelection)
+            {
+                selectionrenderer.ClearSelection();
+                TextSelection = null;
+                UpdateSelection();
+            }
+        }
         private bool CursorIsInUnrenderedRegion()
         {
             return CursorPosition.LineNumber < NumberOfUnrenderedLinesToRenderStart +1 || CursorPosition.LineNumber > NumberOfUnrenderedLinesToRenderStart + RenderedLines.Count-1;
@@ -607,6 +616,11 @@ namespace TextControlBox_TestApp.TextControlBox
                         UpdateCursor();
                         break;
                     }
+                case VirtualKey.Escape:
+                    {
+                        ClearSelection();
+                        break;
+                    }
             }
         }
 
@@ -890,6 +904,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 string Text = LineEndings.ChangeLineEndings(await dataPackageView.GetTextAsync(), LineEnding);
                 CursorPosition = Selection.InsertText(TextSelection, CursorPosition, TotalLines, Text, NewLineCharacter);
                 UpdateText();
+                ClearSelection();
             }
         }
         public void Copy()
@@ -906,6 +921,7 @@ namespace TextControlBox_TestApp.TextControlBox
             DeleteText(); //Delete the selected text
             dataPackage.RequestedOperation = DataPackageOperation.Move;
             Clipboard.SetContent(dataPackage);
+            ClearSelection();
         }
         public string SelectedText()
         {

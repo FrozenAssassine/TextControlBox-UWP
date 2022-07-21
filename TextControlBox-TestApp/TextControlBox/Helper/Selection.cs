@@ -32,6 +32,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 return Pos1.CharacterPosition > Pos2.CharacterPosition ? Pos1 : Pos2;
             return Pos1.LineNumber > Pos2.LineNumber ? Pos2 : Pos1;
         }
+        
         public static CursorPosition InsertText(TextSelection Selection, CursorPosition CursorPosition, List<Line> TotalLines, string Text, string NewLineCharacter)
         {
             Debug.WriteLine("--Insert text--");
@@ -82,75 +83,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 TotalLines.Insert(CursorPosition.LineNumber - 1 + i, line);
             }
             return new CursorPosition(CursorPosition.CharacterPosition + LastLineLength, CursorPosition.LineNumber + lines.Length - 1);
-        }
-        public static CursorPosition Replace2(TextSelection Selection, List<Line> TotalLines, string Text, string NewLineCharacter)
-        {
-            int StartLine = Math.Min(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
-            int EndLine = Math.Max(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
-            int EndIndex;
-            int StartIndex;
-
-            //Just delete the text if the string is emty
-            if (Text == string.Empty)
-            {
-                return Remove(Selection, TotalLines, NewLineCharacter);
-            }
-
-            if (StartLine == EndLine) //Singleline
-            {
-                EndIndex = Math.Max(Selection.StartPosition.CharacterPosition, Selection.EndPosition.CharacterPosition);
-                StartIndex = Math.Min(Selection.StartPosition.CharacterPosition, Selection.EndPosition.CharacterPosition);
-                TotalLines[StartLine].ReplaceText(StartIndex, EndIndex, Text);
-                return new CursorPosition(StartIndex, StartLine + 1);
-            }
-            else if (WholeTextSelected(Selection, TotalLines))
-            {
-                Debug.WriteLine("Whole text is selected");
-                TotalLines.Clear();
-
-                var SplittedText = Text.Split(NewLineCharacter);
-                for (int i = 0; i < SplittedText.Length; i++)
-                {
-                    TotalLines.Add(new Line(SplittedText[i]));
-                }
-
-                //Set the Cursor to the end of the text
-                return new CursorPosition(TotalLines[TotalLines.Count - 1].Content.Length, TotalLines.Count);
-            }
-            else
-            {
-                if (StartLine == Selection.StartPosition.LineNumber)
-                {
-                    StartIndex = Selection.StartPosition.CharacterPosition;
-                    EndIndex = Selection.EndPosition.CharacterPosition;
-                }
-                else
-                {
-                    StartIndex = Selection.EndPosition.CharacterPosition;
-                    EndIndex = Selection.StartPosition.CharacterPosition;
-                }
-
-                TotalLines[EndLine].Substring(EndIndex);
-                TotalLines[StartLine].Remove(StartIndex);
-
-                var SplittedText = Text.Split(NewLineCharacter);
-                Debug.WriteLine(StartLine + "::" + EndLine);
-                if (EndLine - StartLine > 2)
-                {
-                    TotalLines.RemoveRange(StartLine, EndLine - StartLine - 1);
-                }
-
-                for (int i = 0; i < SplittedText.Length; i++)
-                {
-                    if (i == 0)
-                        TotalLines[StartLine].AddToEnd(SplittedText[i]);
-                    else if (i == SplittedText.Length - 1)
-                        TotalLines[EndLine].AddToEnd(SplittedText[i]);
-                    else
-                        TotalLines.Insert(StartLine + i, new Line(SplittedText[i]));
-                }
-                return new CursorPosition(StartIndex, StartLine + 1);
-            }
         }
 
         public static CursorPosition Replace(TextSelection Selection, List<Line> TotalLines, string Text, string NewLineCharacter)
