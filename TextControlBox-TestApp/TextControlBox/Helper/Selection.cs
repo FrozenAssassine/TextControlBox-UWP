@@ -238,55 +238,70 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             Debug.WriteLine("--Remove text--");
             int StartLine = Math.Min(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
             int EndLine = Math.Max(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
-            int StartIndex;
-            int EndIndex;
+            int StartPosition = 0;
+            int EndPosition = 0;
 
-            if (StartLine == EndLine) //Selection is singleline
+            if (StartLine == EndLine)
             {
-                Debug.WriteLine("--> 1");
-                StartIndex = Math.Min(Selection.StartPosition.CharacterPosition, Selection.EndPosition.CharacterPosition);
-                EndIndex = Math.Max(Selection.StartPosition.CharacterPosition, Selection.EndPosition.CharacterPosition);
-                if (StartIndex == 0 && EndIndex == TotalLines[EndLine].Content.Length)
+                StartPosition = Math.Min(Selection.StartPosition.CharacterPosition, Selection.EndPosition.CharacterPosition);
+                EndPosition = Math.Max(Selection.StartPosition.CharacterPosition, Selection.EndPosition.CharacterPosition);
+                if (StartPosition == 0 && EndPosition == TotalLines[EndLine].Content.Length)
                     TotalLines[EndLine].Content = "";
                 else
-                    TotalLines[StartLine].Remove(StartIndex, EndIndex - StartIndex);
-                return new CursorPosition(StartIndex, StartLine+1);
+                    TotalLines[StartLine].Remove(StartPosition, EndPosition - StartPosition);
             }
             else if (WholeTextSelected(Selection, TotalLines))
             {
-                Debug.WriteLine("--> 2");
                 TotalLines.Clear();
                 TotalLines.Add(new Line());
                 return new CursorPosition(TotalLines[TotalLines.Count - 1].Content.Length, TotalLines.Count);
             }
             else
             {
-                Debug.WriteLine("--> 3");
-                if (StartLine < EndLine)
+                if (Selection.StartPosition.LineNumber < Selection.EndPosition.LineNumber)
                 {
-                    EndIndex = Selection.StartPosition.CharacterPosition;
-                    StartIndex = Selection.EndPosition.CharacterPosition;
+                    EndPosition = Selection.EndPosition.CharacterPosition;
+                    StartPosition = Selection.StartPosition.CharacterPosition;
                 }
                 else
                 {
-                    EndIndex = Selection.EndPosition.CharacterPosition;
-                    StartIndex = Selection.StartPosition.CharacterPosition;
+                    EndPosition = Selection.StartPosition.CharacterPosition;
+                    StartPosition = Selection.EndPosition.CharacterPosition;
                 }
 
-                string StartLineContent = TotalLines[StartLine].Remove(StartIndex);
-                string EndLineContent = TotalLines[EndLine].Substring(EndIndex);
-
-                TotalLines[StartLine].Content = StartLineContent + EndLineContent;
-                Debug.WriteLine((StartLine) + "::" + (EndLine - StartLine));
-
-                TotalLines.RemoveRange(StartLine + 1, EndLine - StartLine);
+                Line Start_Line = TotalLines[StartLine];
+                Line End_Line = TotalLines[EndLine];
                 
-                //Add a new line if no line exists
-                if (TotalLines.Count == 0)
-                    TotalLines.Add(new Line());
-
-                return new CursorPosition(StartIndex, StartLine - 1);
+                //Whole lines are selected from start to finish
+                if (StartPosition == 0 && EndPosition == End_Line.Content.Length)
+                {
+                    TotalLines.RemoveRange(StartLine, EndLine - StartLine +1);
+                }
+                //Only the startline is completely selected
+                else if(StartPosition == 0 && EndPosition != End_Line.Content.Length)
+                {
+                    End_Line.Substring(EndPosition);
+                    TotalLines.RemoveRange(StartLine, EndLine - StartLine);
+                }
+                //Only the endline is completely selected
+                else if(StartPosition != 0 && EndPosition == End_Line.Content.Length)
+                {
+                    Start_Line.Remove(StartPosition);
+                    TotalLines.RemoveRange(StartLine + 1, EndLine - StartLine);
+                }
+                //Both startline and endline are not completely selected
+                else
+                {
+                    Start_Line.Remove(StartPosition);
+                    Start_Line.Content += End_Line.Content.Substring(EndPosition);
+                    TotalLines.RemoveRange(StartLine + 1, EndLine - StartLine);
+                }
             }
+
+            if (TotalLines.Count == 0)
+                TotalLines.Add(new Line()); 
+
+             return new CursorPosition(StartPosition, StartLine + 1);
         }
 
         public static TextSelectionPosition GetIndexOfSelection(List<Line> TotalLines, CursorPosition StartPos, CursorPosition EndPos)

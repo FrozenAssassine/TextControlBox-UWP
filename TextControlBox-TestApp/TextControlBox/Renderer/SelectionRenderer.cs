@@ -181,6 +181,11 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
 
         public CursorPosition StartPosition { get; set; }
         public CursorPosition EndPosition { get; set; }
+
+        public new string ToString()
+        {
+            return StartPosition.LineNumber + ":" + StartPosition.CharacterPosition + " | " + EndPosition.LineNumber + ":" + EndPosition.CharacterPosition;
+        }
     }
 
     public class TextSelectionPosition
