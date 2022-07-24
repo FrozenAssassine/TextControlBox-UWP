@@ -147,8 +147,13 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             else if (WholeTextSelected(Selection, TotalLines))
             {
                 TotalLines.Clear();
-                TotalLines.Add(new Line());
-                return new CursorPosition(TotalLines[TotalLines.Count - 1].Content.Length, TotalLines.Count);
+                for (int i = 0; i < SplittedText.Length; i++)
+                {
+                    TotalLines.Add(new Line(SplittedText[i]));
+                }
+                if (TotalLines.Count == 0)
+                    TotalLines.Add(new Line());
+                return new CursorPosition(TotalLines[TotalLines.Count - 1 > 0 ? TotalLines.Count - 1 : 0].Content.Length, TotalLines.Count);
             }
             else
             {
