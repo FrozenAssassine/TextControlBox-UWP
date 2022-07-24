@@ -257,7 +257,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             int StartPosition;
             int EndPosition;
             Line Start_Line = TotalLines[StartLine];
-            Line End_Line = TotalLines[EndLine];
+            Line End_Line = TotalLines[EndLine < TotalLines.Count ? EndLine : TotalLines.Count -1];
 
             if (StartLine == EndLine)
             {

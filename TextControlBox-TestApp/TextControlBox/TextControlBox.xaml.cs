@@ -298,6 +298,12 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         private void AddNewLine()
         {
+            if(TextSelection != null)
+            {
+                CursorPosition = Selection.Remove(TextSelection, TotalLines, NewLineCharacter);
+                ClearSelection();
+            }
+
             var NewLine = new Line();
             CursorPosition OldCursorPos = new CursorPosition(CursorPosition);
 
@@ -311,8 +317,14 @@ namespace TextControlBox_TestApp.TextControlBox
                     NewLine.SetText(NewLineContent);
                 }
             }
-            TotalLines.Insert(CursorPosition.LineNumber, NewLine);
-            CursorPosition.Change(0, CursorPosition.LineNumber + 1);
+
+            Debug.WriteLine(CursorPosition.LineNumber + "::" + TotalLines.Count);
+            if (CursorPosition.LineNumber >= TotalLines.Count)
+                TotalLines.Add(new Line());
+            else
+                TotalLines.Insert(CursorPosition.LineNumber, NewLine);
+
+            CursorPosition.Change(0, CursorPosition.LineNumber+1);
 
             UndoRedo.RecordNewLineUndo(NewLine, OldCursorPos);
 
