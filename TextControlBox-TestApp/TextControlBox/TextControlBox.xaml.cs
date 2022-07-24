@@ -25,6 +25,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Shapes;
 using Color = Windows.UI.Color;
 using Size = Windows.Foundation.Size;
 
@@ -191,19 +192,33 @@ namespace TextControlBox_TestApp.TextControlBox
             if (CurrentLine == null)
                 return;
 
-            UndoRedo.RecordSingleLineUndo(CurrentLine, CursorPosition);
+            var SplittedText = text.Split(NewLineCharacter);
 
-            if (TextSelection == null)
+            //Nothing is selected
+            if (TextSelection == null && SplittedText.Length == 1)
             {
+                UndoRedo.RecordSingleLineUndo(CurrentLine, CursorPosition);
+
                 if (CursorPosition.CharacterPosition > GetLineContentWidth(CurrentLine) - 1)
                     CurrentLine.AddToEnd(text);
                 else
                     CurrentLine.AddText(text, CursorPosition.CharacterPosition);
                 CursorPosition.CharacterPosition += text.Length;
             }
+            else if (TextSelection == null && SplittedText.Length > 1)
+            {
+                int ItemRangeCount = TotalLines.Count > CursorPosition.LineNumber ? 2 : 1;
+
+                UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, TotalLines.GetRange(CursorPosition.LineNumber-1, 1), SplittedText.Length);
+                Selection.InsertText(TextSelection, CursorPosition, TotalLines, text, NewLineCharacter);
+            }
             else
             {
+                List<Line> Lines = Selection.GetSelectedTextLines(TotalLines, TextSelection, NewLineCharacter);
+
+                UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, Lines, SplittedText.Length);
                 CursorPosition = Selection.Replace(TextSelection, TotalLines, text, NewLineCharacter);
+
                 selectionrenderer.ClearSelection();
                 TextSelection = null;
                 UpdateSelection();
@@ -479,7 +494,7 @@ namespace TextControlBox_TestApp.TextControlBox
                         ScrollOneLineDown();
                         break;
                     case VirtualKey.Z:
-                        UndoRedo.Undo(TotalLines, this);
+                        Undo();
                         UpdateText();
                         break;
                     case VirtualKey.V:
@@ -902,7 +917,7 @@ namespace TextControlBox_TestApp.TextControlBox
             if (dataPackageView.Contains(StandardDataFormats.Text))
             {
                 string Text = LineEndings.ChangeLineEndings(await dataPackageView.GetTextAsync(), LineEnding);
-                CursorPosition = Selection.InsertText(TextSelection, CursorPosition, TotalLines, Text, NewLineCharacter);
+                AddCharacter(Text);
                 UpdateText();
                 ClearSelection();
             }
@@ -956,7 +971,17 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         public void Undo()
         {
-            UndoRedo.Undo(TotalLines, this);
+            var sel = UndoRedo.Undo(TotalLines, this, NewLineCharacter);
+            if (sel == null)
+                return;
+
+            selectionrenderer.SelectionStartPosition = sel.StartPosition;
+            selectionrenderer.SelectionEndPosition = sel.EndPosition;
+            selectionrenderer.HasSelection = true;
+            selectionrenderer.IsSelecting = false;
+            Debug.WriteLine(sel.ToString());
+
+            UpdateSelection();
         }
         public void Redo()
         {
@@ -1016,7 +1041,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 _LineEnding = value;
             }
         }
-        public float SpaceBetweenLineNumberAndText = 20;
+        public float SpaceBetweenLineNumberAndText = 0;
         public CursorPosition CursorPosition
         {
             get => _CursorPosition;
@@ -1040,7 +1065,6 @@ namespace TextControlBox_TestApp.TextControlBox
                 UpdateText();
             }
         }
-
 
         //Internal events:
         private void Internal_TextChanged()
@@ -1123,10 +1147,16 @@ namespace TextControlBox_TestApp.TextControlBox
             if (Index >= Content.Length || Index < 0)
                 return Content;
 
-            if (Count == -1)
-                Content = Content.Remove(Index);
-            else
-                Content = Content.Remove(Index, Count);
+            try
+            {
+                if (Count == -1)
+                    Content = Content.Remove(Index);
+                else
+                    Content = Content.Remove(Index, Count);
+            }
+            catch (ArgumentOutOfRangeException )
+            {
+            }
             return Content;
         }
         public string Substring(int Index, int Count = -1)

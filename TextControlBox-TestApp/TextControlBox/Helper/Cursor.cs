@@ -35,6 +35,11 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             return LineNumber + ":" + CharacterPosition;
         }
 
+        public void ChangeLineNumber(int LineNumber)
+        {
+            this.LineNumber = LineNumber;
+        }
+
         public static CursorPosition ChangeCharacterPosition(CursorPosition CurrentCursorPosition, int CharacterPosition)
         {
             CurrentCursorPosition.CharacterPosition = CharacterPosition;

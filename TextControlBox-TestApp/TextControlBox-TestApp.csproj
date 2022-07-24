@@ -124,6 +124,7 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TextControlBox\Helper\Cursor.cs" />
+    <Compile Include="TextControlBox\Helper\DebugHelper.cs" />
     <Compile Include="TextControlBox\Helper\LineEndings.cs" />
     <Compile Include="TextControlBox\Helper\Selection.cs" />
     <Compile Include="TextControlBox\Helper\UndoRedo.cs" />

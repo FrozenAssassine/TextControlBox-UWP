@@ -143,10 +143,10 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
 
                 SelectionStart = Math.Min(SelStartIndex, SelEndIndex);
 
-                 if(SelEndIndex > SelStartIndex)
-                     SelectionLength = SelEndIndex - SelStartIndex;
-                 else
-                    SelectionLength = SelStartIndex - SelEndIndex;
+                if(SelEndIndex > SelStartIndex)
+                    SelectionLength = SelEndIndex - SelStartIndex;
+                else
+                   SelectionLength = SelStartIndex - SelEndIndex;
 
                 CanvasTextLayoutRegion[] descriptions = TextLayout.GetCharacterRegions(SelectionStart, SelectionLength);
                 for (int i = 0; i < descriptions.Length; i++)
@@ -172,6 +172,11 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
         {
             Index = index;
             Length = length;
+            StartPosition = startPosition;
+            EndPosition = endPosition;
+        }
+        public TextSelection(CursorPosition startPosition = null, CursorPosition endPosition = null)
+        {
             StartPosition = startPosition;
             EndPosition = endPosition;
         }

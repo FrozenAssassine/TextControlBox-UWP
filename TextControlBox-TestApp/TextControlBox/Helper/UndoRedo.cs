@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TextControlBox_TestApp.TextControlBox.Renderer;
+using Windows.UI.Text;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace TextControlBox_TestApp.TextControlBox.Helper
 {
@@ -12,15 +16,14 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         private Stack<UndoRedoClass> RedoStack = new Stack<UndoRedoClass>();
 
         //Multiline undo is used to undo longer textinserts using paste and stuff like that
-        public void RecordMultiLineUndo(Line StartLine, Line EndLine, CursorPosition CursorPosition)
+        public void RecordMultiLineUndo(int StartLine, List<Line> RemovedLines, int LinesToDelete)
         {
             UndoStack.Push(new UndoRedoClass
             {
                 UndoRedoType = UndoRedoType.MultilineEdit,
-                CharacterPosition = CursorPosition.CharacterPosition + 1,
-                LineNumber = CursorPosition.LineNumber,
-                StartLine = StartLine,
-                EndLine = EndLine
+                LineNumber = StartLine,
+                RemovedLines = RemovedLines,
+                LinesToDelete = LinesToDelete
             });
         }
         
@@ -30,7 +33,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             UndoStack.Push(new UndoRedoClass
             {
                 UndoRedoType = UndoRedoType.SingleLineEdit,
-                SingleLineText = CurrentLine.Content,
+                Text = CurrentLine.Content,
                 CharacterPosition = CursorPosition.CharacterPosition + 1,
                 LineNumber = CursorPosition.LineNumber,
             });
@@ -47,16 +50,16 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             });
         }
 
-        public void Undo(List<Line> TotalLines, TextControlBox Textbox)
+        public TextSelection Undo(List<Line> TotalLines, TextControlBox Textbox, string NewLineCharacter)
         {
             if (UndoStack.Count < 1)
-                return;
+                return null;
 
             UndoRedoClass item = UndoStack.Pop();
             if(item.UndoRedoType == UndoRedoType.SingleLineEdit)
             {
                 if(item.LineNumber - 1 >= 0 && item.LineNumber - 1 < TotalLines.Count)
-                TotalLines[item.LineNumber - 1].SetText(item.SingleLineText);
+                    TotalLines[item.LineNumber - 1].SetText(item.Text);
             }
             else if(item.UndoRedoType == UndoRedoType.NewLineEdit)
             {
@@ -64,21 +67,12 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
             else if(item.UndoRedoType == UndoRedoType.MultilineEdit)
             {
-                int StartLineIndex = item.StartLine != null ? TotalLines.IndexOf(item.StartLine) : 0;
-                int EndLineIndex = item.StartLine != null ? TotalLines.IndexOf(item.EndLine) : 0;
-
-                for (int i = StartLineIndex; i < EndLineIndex; i++)
-                {
-                    if (i == 0)
-                        TotalLines[i].SetText(item.StartLine.Content);
-                    else if (i == EndLineIndex - 1)
-                        TotalLines[i].SetText(item.EndLine.Content);
-                    else
-                        TotalLines.RemoveAt(i);
-                }
+                Selection.ReplaceUndo(item.LineNumber, TotalLines, item.RemovedLines, item.LinesToDelete);
+                return item.TextSelection;
             }
+            return null;
 
-            Textbox.CursorPosition = new CursorPosition(item.CharacterPosition, item.LineNumber);
+            //Textbox.CursorPosition = new CursorPosition(item.CharacterPosition, item.LineNumber);
         }
 
         public void Redo(List<Line> TotalLines, TextControlBox Textbox)
@@ -97,11 +91,12 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         public UndoRedoType UndoRedoType { get; set; } = UndoRedoType.SingleLineEdit;
         public int LineNumber { get; set; } = 0;
         public int CharacterPosition { get; set; } = 0;
+        public string Text { get; set; } = "";
 
-        public string SingleLineText { get; set; } = ""; //Used for SingleLineEdit
         public Line LineToRemove { get; set; } = null; //Used for NewLineEdit
-        public Line StartLine { get; set; } = null; //Used for MultiLineEdit
-        public Line EndLine { get; set; } = null; //Used for MultiLineEdit
-    }
 
+        public int LinesToDelete { get; set; } = 0; //Mutliline
+        public TextSelection TextSelection { get; set; } = null; //Multiline
+        public List<Line> RemovedLines { get; set; } = null; //Multiline
+    }
 }

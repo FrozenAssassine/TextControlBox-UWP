@@ -40,14 +40,14 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             if (Selection != null)
                 return Replace(Selection, TotalLines, Text, NewLineCharacter);
 
+            //CursorPosition.ChangeLineNumber(CursorPosition.LineNumber);
+
             string[] lines = Text.Split(NewLineCharacter);
             Line CurrentLine = TotalLines[CursorPosition.LineNumber - 1];
             string TextInFrontOfCursor = CurrentLine.Content.Substring(0, CursorPosition.CharacterPosition);
             string TextBehindCursor =
                 CurrentLine.Content.Length > CursorPosition.CharacterPosition ?
                 CurrentLine.Content.Remove(0, CursorPosition.CharacterPosition) : "";
-
-            //UndoRedo.RecordMultiLineUndo(GetLineFromIndex(InserStartPoint), GetLineFromIndex(InserStartPoint + lines.Length), CursorPosition);
 
             if (lines.Length == 1 && Text != string.Empty) //Singleline
             {
@@ -59,11 +59,11 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             //Multiline
             void RemoveLine(int Index)
             {
-                if (Index < TotalLines.Count && Index > 0)
+                if (Index < TotalLines.Count && Index >= 0)
                     TotalLines.RemoveAt(Index);
             }
             RemoveLine(CursorPosition.LineNumber - 1); //Startline
-            RemoveLine(CursorPosition.LineNumber - 1 + lines.Length - 1);//Endline
+            //RemoveLine(CursorPosition.LineNumber - 1 + lines.Length - 1);//Endline
 
             //Paste the text
             int LastLineLength = 0;
@@ -80,12 +80,41 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 else
                     line = new Line(lines[i]);
 
+                Debug.WriteLine(line.Content);
+
                 TotalLines.Insert(CursorPosition.LineNumber - 1 + i, line);
             }
+  
             return new CursorPosition(CursorPosition.CharacterPosition + LastLineLength, CursorPosition.LineNumber + lines.Length - 1);
         }
+        
+        public static CursorPosition ReplaceUndo(int StartLine, List<Line> TotalLines, List<Line> Replace, int LinesToDelete)
+        {
+            StartLine -= 1;
 
-        public static CursorPosition Replace(TextSelection Selection, List<Line> TotalLines, string Text, string NewLineCharacter)
+            Debug.WriteLine("--ReplaceUndo--");
+            Debug.WriteLine("\t" + LinesToDelete);
+            Debug.WriteLine("\t" + StartLine);
+
+            try
+            {
+                TotalLines.RemoveRange(StartLine, LinesToDelete);
+            }
+            catch (ArgumentException)
+            {
+                TotalLines.Clear();
+            }
+
+            //Either add or insert to the List
+            if (StartLine >= TotalLines.Count)
+                TotalLines.AddRange(Replace);
+            else 
+                TotalLines.InsertRange(StartLine, Replace);
+
+            return new CursorPosition(Replace[Replace.Count - 1].Content.Length-1, StartLine);
+        }
+
+        public static CursorPosition Replace(TextSelection Selection, List<Line> TotalLines, string Text, string NewLineCharacter, bool UseForUndoRedo = false)
         {
             Debug.WriteLine("--Replace text--");
 
@@ -134,7 +163,11 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                     StartPosition = Selection.EndPosition.CharacterPosition;
                 }
 
+                Debug.WriteLine(StartPosition + "::" + EndPosition);
+
                 Line Start_Line = TotalLines[StartLine];
+                if (EndLine > TotalLines.Count)
+                    EndLine = TotalLines.Count - 1;
                 Line End_Line = TotalLines[EndLine];
 
                 //all lines are selected from start to finish
@@ -157,7 +190,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                     for (int i = 0; i < SplittedText.Length; i++)
                     {
                         if (i == SplittedText.Length - 1)
-                            TotalLines[EndLine].AddToStart(SplittedText[i]);
+                            End_Line.AddToStart(SplittedText[i]);
                         else
                             TotalLines.Insert(StartLine + i, new Line(SplittedText[i]));
                     }
@@ -172,30 +205,46 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                     for (int i = 0; i < SplittedText.Length; i++)
                     {
                         if (i == 0)
-                            TotalLines[StartLine].AddToEnd(SplittedText[i]);
+                            Start_Line.AddToEnd(SplittedText[i]);
                         else
                             TotalLines.Insert(StartLine + i, new Line(SplittedText[i]));
                     }
                 }
                 //Both startline and endline are not completely selected
+                else if(UseForUndoRedo)
+                {
+                    Start_Line.Remove(StartPosition);
+                    End_Line.Substring(EndPosition);
+
+                    int Remove = EndLine - StartLine - 1;
+                    TotalLines.RemoveRange(StartLine, Remove < 0 ? 1 : Remove);
+
+                    for (int i = 0; i < SplittedText.Length; i++)
+                    {
+                        TotalLines.Insert(StartLine + i, new Line(SplittedText[i]));
+                    }
+                }
                 else
                 {
                     Start_Line.Remove(StartPosition);
                     End_Line.Substring(EndPosition);
 
-                    TotalLines.RemoveRange(StartLine + 1, EndLine - StartLine - 1);
+                    int Remove = EndLine - StartLine - 1;
+                    TotalLines.RemoveRange(StartLine + 1, Remove < 0 ? 0 : Remove);
 
                     for (int i = 0; i < SplittedText.Length; i++)
                     {
                         if (i == 0)
-                            TotalLines[StartLine].AddToEnd(SplittedText[i]);
-                        else if (i == SplittedText.Length - 1)
-                            TotalLines[EndLine].AddToStart(SplittedText[i]);
-                        else
+                            Start_Line.AddToEnd(SplittedText[i]);
+                        if (i != 0 && i != SplittedText.Length - 1)
                             TotalLines.Insert(StartLine + i, new Line(SplittedText[i]));
+                        if (i == SplittedText.Length - 1)
+                        {
+                            Start_Line.AddToEnd(End_Line.Content);
+                        }
                     }
+                    TotalLines.Remove(End_Line);
                 }
-
                 return new CursorPosition(EndPosition, EndLine );
             }
         }
@@ -207,15 +256,17 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             int EndLine = Math.Max(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
             int StartPosition;
             int EndPosition;
+            Line Start_Line = TotalLines[StartLine];
+            Line End_Line = TotalLines[EndLine];
 
             if (StartLine == EndLine)
             {
                 StartPosition = Math.Min(Selection.StartPosition.CharacterPosition, Selection.EndPosition.CharacterPosition);
                 EndPosition = Math.Max(Selection.StartPosition.CharacterPosition, Selection.EndPosition.CharacterPosition);
                 if (StartPosition == 0 && EndPosition == TotalLines[EndLine].Content.Length)
-                    TotalLines[EndLine].Content = "";
+                    End_Line.Content = "";
                 else
-                    TotalLines[StartLine].Remove(StartPosition, EndPosition - StartPosition);
+                    Start_Line.Remove(StartPosition, EndPosition - StartPosition);
             }
             else if (WholeTextSelected(Selection, TotalLines))
             {
@@ -236,9 +287,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                     StartPosition = Selection.EndPosition.CharacterPosition;
                 }
 
-                Line Start_Line = TotalLines[StartLine];
-                Line End_Line = TotalLines[EndLine];
-                
+
                 //Whole lines are selected from start to finish
                 if (StartPosition == 0 && EndPosition == End_Line.Content.Length)
                 {
@@ -312,6 +361,49 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 SelectionLength = SelStartIndex - SelEndIndex;
 
             return new TextSelectionPosition(SelectionStart, SelectionLength);
+        }
+
+        //Returns the whole lines, without respecting the characterposition of the selection
+        public static List<Line> GetNewListWithSelectedLines(List<Line>TotalLines, TextSelection Selection)
+        {
+            int StartLine = Math.Min(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
+            int EndLine = Math.Max(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
+
+            if (EndLine == StartLine)
+            {
+                return TotalLines.GetRange(StartLine, 1);
+            }
+            else
+            {
+                int Count = EndLine - StartLine + (EndLine - StartLine + 1 < TotalLines.Count ? 1 : 0);
+                return TotalLines.GetRange(StartLine, Count);
+            }
+        }
+        //Get the selected lines as a new Line without respecting the characterposition
+        public static List<Line> GetSelectedTextLines(List<Line>TotalLines, TextSelection Selection, string NewLineCharacter)
+        {
+            int StartLine = Math.Min(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
+            int EndLine = Math.Max(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
+            //Get the items into the list CurrentItems
+            List<Line> CurrentItems;
+            if (EndLine == StartLine)
+            {
+                CurrentItems = TotalLines.GetRange(StartLine, 1);
+            }
+            else
+            {
+                int Count = EndLine - StartLine + (EndLine - StartLine + 1 < TotalLines.Count ? 1 : 0);
+                CurrentItems = TotalLines.GetRange(StartLine, Count);
+            }
+
+            //Create new items with same content from CurrentItems into NewItems
+            List<Line> NewItems = new List<Line>();
+            for (int i = 0; i < CurrentItems.Count; i++)
+            {
+                NewItems.Add(new Line(CurrentItems[i].Content));
+            }
+            CurrentItems.Clear();
+            return NewItems;
         }
 
         public static string GetSelectedText(TextSelection TextSelection, List<Line> TotalLines, string NewLineCharacter)
