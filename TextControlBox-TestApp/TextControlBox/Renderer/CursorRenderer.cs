@@ -42,7 +42,6 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
         {
             if (TextLayout == null)
                 return;
-
             Vector2 vector = TextLayout.GetCaretPosition(CharacterPosition, false);
             args.DrawingSession.FillRectangle(vector.X + XOffset, Y, 1, FontSize, CursorColorBrush);
         }
