@@ -868,13 +868,9 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         private void Canvas_Cursor_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
-            Debug.WriteLine("Draw Cursor1");
-
             CurrentLine = GetCurrentLine();
             if (CurrentLine == null)
                 return;
-
-            Debug.WriteLine("Draw Cursor2");
 
             UpdateCurrentLineTextLayout();
 
