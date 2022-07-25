@@ -364,7 +364,7 @@ namespace TextControlBox_TestApp.TextControlBox
         private void StartSelectionIfNeeded()
         {
             if (!selectionrenderer.HasSelection)
-                selectionrenderer.SelectionStartPosition = selectionrenderer.SelectionEndPosition = CursorPosition.ChangeLineNumber(CursorPosition, CursorPosition.LineNumber - 1);
+                selectionrenderer.SelectionStartPosition = selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber - 1);
         }
         private bool SelectionIsNull()
         {
@@ -545,8 +545,8 @@ namespace TextControlBox_TestApp.TextControlBox
                         {
                             StartSelectionIfNeeded();
                             if (SelectionIsNull())
-                                return;                            
-
+                                return;
+                            selectionrenderer.HasSelection = true;
                             selectionrenderer.IsSelecting = true;
                             CursorPosition = selectionrenderer.SelectionEndPosition = Cursor.MoveSelectionLeft(selectionrenderer.SelectionEndPosition, TotalLines);
                             CursorPosition.Change(CursorPosition.CharacterPosition, CursorPosition.LineNumber + 1);

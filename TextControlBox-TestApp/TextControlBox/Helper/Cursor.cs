@@ -86,11 +86,11 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
             //If a selection has been started, continue the selection
             int Line = ReturnValue.LineNumber;
-            int StepsToMoveLeft = CalculateStepsToMoveLeft(TotalLines[Line - 1], SelectionEndPosition.CharacterPosition);
+            int StepsToMoveLeft = CalculateStepsToMoveLeft(TotalLines[Line < TotalLines.Count ? Line : TotalLines.Count -1], SelectionEndPosition.CharacterPosition);
 
             if (SelectionEndPosition.CharacterPosition == 0)
             {
-                ReturnValue.LineNumber = Line > 1 ? Line-- : Line;
+                ReturnValue.LineNumber = Line > 0 ? Line-- : Line;
                 if (Line < ReturnValue.LineNumber)
                 {
                     ReturnValue.LineNumber--;
@@ -111,9 +111,10 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         {
             CursorPosition ReturnValue = new CursorPosition(SelectionEndPosition);
 
-            if (SelectionEndPosition == null)
+            if (SelectionEndPosition == null || CurrentLine == null)
                 return ReturnValue;
-            int StepsToMoveRight = CalculateStepsToMoveRight(TotalLines[SelectionEndPosition.LineNumber - 1], SelectionEndPosition.CharacterPosition);
+
+            int StepsToMoveRight = CalculateStepsToMoveRight(TotalLines[SelectionEndPosition.LineNumber], SelectionEndPosition.CharacterPosition);
 
             if (SelectionEndPosition.CharacterPosition == CurrentLine.Content.Length)
             {
@@ -296,6 +297,9 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 ReturnValue.LineNumber = CurrentCursorPosition.LineNumber;
                 ReturnValue.CharacterPosition += StepsToMoveRight;
             }
+            var LineLength = TotalLines[ReturnValue.LineNumber-1].Content.Length;
+            if (ReturnValue.CharacterPosition >= LineLength)
+                ReturnValue.CharacterPosition = LineLength;
             return ReturnValue;
         }
         public static CursorPosition MoveDown(CursorPosition CurrentCursorPosition, List<Line> TotalLines)
