@@ -85,7 +85,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 TotalLines.Insert(CursorPosition.LineNumber - 1 + i, line);
             }
   
-            return new CursorPosition(CursorPosition.CharacterPosition + LastLineLength, CursorPosition.LineNumber + lines.Length - 1);
+            return new CursorPosition(CursorPosition.CharacterPosition + LastLineLength -1, CursorPosition.LineNumber + lines.Length - 1);
         }
         
         public static CursorPosition ReplaceUndo(int StartLine, List<Line> TotalLines, List<Line> Replace, int LinesToDelete)
@@ -250,6 +250,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                     }
                     TotalLines.Remove(End_Line);
                 }
+                Debug.WriteLine("Return CursorPosition: " + EndPosition + "::" + EndLine);
                 return new CursorPosition(EndPosition, EndLine );
             }
         }

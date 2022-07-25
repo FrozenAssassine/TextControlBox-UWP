@@ -210,7 +210,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 int ItemRangeCount = TotalLines.Count > CursorPosition.LineNumber ? 2 : 1;
 
                 UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, TotalLines.GetRange(CursorPosition.LineNumber-1, 1), SplittedText.Length);
-                Selection.InsertText(TextSelection, CursorPosition, TotalLines, text, NewLineCharacter);
+                CursorPosition = Selection.InsertText(TextSelection, CursorPosition, TotalLines, text, NewLineCharacter);
             }
             else
             {
