@@ -39,12 +39,13 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             });
         }
 
-        public void RecordNewLineUndo(Line NewLine, CursorPosition CursorPosition)
+        public void RecordNewLineUndo(List<Line> RemovedLines, Line NewLine, CursorPosition CursorPosition)
         {
             UndoStack.Push(new UndoRedoClass
             {
                 UndoRedoType = UndoRedoType.NewLineEdit,
                 LineToRemove = NewLine,
+                RemovedLines = RemovedLines,
                 CharacterPosition = CursorPosition.CharacterPosition + 1,
                 LineNumber = CursorPosition.LineNumber,
             });
@@ -63,7 +64,8 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
             else if(item.UndoRedoType == UndoRedoType.NewLineEdit)
             {
-                TotalLines.Remove(item.LineToRemove);
+                TotalLines.RemoveRange(item.LineNumber-1, 2);
+                TotalLines.InsertRange(item.LineNumber-1, item.RemovedLines);
             }
             else if(item.UndoRedoType == UndoRedoType.MultilineEdit)
             {

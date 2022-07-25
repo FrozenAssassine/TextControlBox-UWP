@@ -84,7 +84,7 @@ namespace TextControlBox_TestApp.TextControlBox
         float SingleLineHeight = 0;
 
         //CursorPosition
-        CursorPosition _CursorPosition = new CursorPosition(0, 0);
+        CursorPosition _CursorPosition = new CursorPosition(0, 1);
         Line CurrentLine = null;
         CanvasTextLayout CurrentLineTextLayout = null;
         TextSelection TextSelection = null;
@@ -296,20 +296,55 @@ namespace TextControlBox_TestApp.TextControlBox
             UpdateText();
             UpdateCursor();
         }
-        private void AddNewLine()
+        private void AddNewLine(bool RecordUndo = false)
         {
-            if(TextSelection != null)
+            var NewLine = new Line("");
+            CursorPosition OldCursorPos = new CursorPosition(CursorPosition);
+            List<Line> Lines;
+
+            //If the whole text is selected
+            if (Selection.WholeTextSelected(TextSelection, TotalLines))
+            {
+                Lines = Selection.GetSelectedTextLines(TotalLines, TextSelection, NewLineCharacter);
+                DebugHelper.DebugList(Lines);
+                if (RecordUndo)
+                    UndoRedo.RecordNewLineUndo(Lines, NewLine, OldCursorPos);
+
+                TotalLines.Clear();
+                TotalLines.Add(NewLine);
+                CursorPosition = new CursorPosition(0, 1);
+
+                ClearSelection();
+                UpdateText();
+                UpdateSelection();
+                UpdateCursor();
+                return;
+            }
+
+            //Record Undo
+            if (TextSelection == null && CurrentLine != null)
+            {
+                Lines = new List<Line>
+                {
+                    new Line(CurrentLine.Content)
+                };
+            }
+            else
+                Lines = Selection.GetSelectedTextLines(TotalLines, TextSelection, NewLineCharacter);
+            if(RecordUndo)
+                UndoRedo.RecordNewLineUndo(Lines, NewLine, OldCursorPos);
+
+            //Delete the selection
+            if (TextSelection != null)
             {
                 CursorPosition = Selection.Remove(TextSelection, TotalLines, NewLineCharacter);
                 ClearSelection();
             }
 
-            var NewLine = new Line();
-            CursorPosition OldCursorPos = new CursorPosition(CursorPosition);
-
+            //Split the line on the cursorposition
             if (CurrentLine != null)
             {
-                if (CursorPosition.CharacterPosition < CurrentLine.Content.Length && CurrentLine.Content != "")
+                if (CursorPosition.CharacterPosition < CurrentLine.Content.Length && CurrentLine.Content.Length != 0)
                 {
                     string CurrentLineContent = CurrentLine.Content.Substring(0, CursorPosition.CharacterPosition);
                     string NewLineContent = CurrentLine.Content.Substring(CursorPosition.CharacterPosition);
@@ -318,16 +353,15 @@ namespace TextControlBox_TestApp.TextControlBox
                 }
             }
 
-            Debug.WriteLine(CursorPosition.LineNumber + "::" + TotalLines.Count);
+            //Add the line to the collection
             if (CursorPosition.LineNumber >= TotalLines.Count)
-                TotalLines.Add(new Line());
+                TotalLines.Add(NewLine);
             else
                 TotalLines.Insert(CursorPosition.LineNumber, NewLine);
 
             CursorPosition.Change(0, CursorPosition.LineNumber+1);
-
-            UndoRedo.RecordNewLineUndo(NewLine, OldCursorPos);
-
+            
+            //Scroll into view
             if (CursorPosition.LineNumber > NumberOfStartLine + RenderedLines.Count)
             {
                 ScrollOneLineDown();
@@ -531,7 +565,7 @@ namespace TextControlBox_TestApp.TextControlBox
             switch (e.VirtualKey)
             {
                 case VirtualKey.Enter:
-                    AddNewLine();
+                    AddNewLine(true);
                     break;
                 case VirtualKey.Back:
                     RemoveText(ctrl);
@@ -977,7 +1011,7 @@ namespace TextControlBox_TestApp.TextControlBox
         public void SelectAll()
         {
             selectionrenderer.SelectionStartPosition = new CursorPosition(0, 0);
-            selectionrenderer.SelectionEndPosition = new CursorPosition(TotalLines[TotalLines.Count-1].Content.Length, TotalLines.Count);
+            CursorPosition = selectionrenderer.SelectionEndPosition = new CursorPosition(TotalLines[TotalLines.Count-1].Content.Length, TotalLines.Count);
             selectionrenderer.HasSelection = true;
             Canvas_Selection.Invalidate();
         }
@@ -1141,7 +1175,7 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         public void AddText(string Value, int Position)
         {
-            if (Content == "")
+            if (Content.Length == 0)
                 AddToEnd(Value);
             else
                 Content = Content.Insert(Position, Value);

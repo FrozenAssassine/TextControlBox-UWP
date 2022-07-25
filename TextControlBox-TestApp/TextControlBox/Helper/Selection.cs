@@ -17,6 +17,9 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
     {
         public static bool WholeTextSelected(TextSelection Selection, List<Line> TotalLines)
         {
+            if (Selection == null)
+                return false;
+
             return Utils.CursorPositionsAreEqual(Selection.StartPosition, new CursorPosition(0, 0)) &&
                 Utils.CursorPositionsAreEqual(Selection.EndPosition, new CursorPosition(TotalLines[TotalLines.Count - 1].Content.Length, TotalLines.Count));
         }
@@ -387,6 +390,9 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         //Get the selected lines as a new Line without respecting the characterposition
         public static List<Line> GetSelectedTextLines(List<Line>TotalLines, TextSelection Selection, string NewLineCharacter)
         {
+            if (Selection == null)
+                return null;
+
             int StartLine = Math.Min(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
             int EndLine = Math.Max(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
             //Get the items into the list CurrentItems
@@ -398,6 +404,10 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             else
             {
                 int Count = EndLine - StartLine + (EndLine - StartLine + 1 < TotalLines.Count ? 1 : 0);
+
+                if (StartLine + Count >= TotalLines.Count)
+                    Count = TotalLines.Count - StartLine;
+                
                 CurrentItems = TotalLines.GetRange(StartLine, Count);
             }
 
