@@ -216,7 +216,11 @@ namespace TextControlBox_TestApp.TextControlBox
             {
                 List<Line> Lines = Selection.GetSelectedTextLines(TotalLines, TextSelection, NewLineCharacter);
 
-                UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, Lines, SplittedText.Length);
+                DebugHelper.DebugList(Lines);
+
+                Debug.WriteLine(SplittedText.Length);
+
+                UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, Lines, text.Length == 0 ? 0 : SplittedText.Length);
                 CursorPosition = Selection.Replace(TextSelection, TotalLines, text, NewLineCharacter);
 
                 selectionrenderer.ClearSelection();
@@ -291,7 +295,6 @@ namespace TextControlBox_TestApp.TextControlBox
                 TextSelection = null;
                 UpdateSelection();
             }
-
 
             UpdateText();
             UpdateCursor();

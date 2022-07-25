@@ -105,6 +105,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
             catch (ArgumentException)
             {
+                Debug.WriteLine("Exception in ReplaceUndo");
                 TotalLines.Clear();
             }
 
