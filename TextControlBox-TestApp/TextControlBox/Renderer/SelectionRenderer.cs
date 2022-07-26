@@ -94,14 +94,24 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                 int SelEndIndex = 0;
                 int CharacterPosStart = SelectionStartPosition.CharacterPosition;
                 int CharacterPosEnd = SelectionEndPosition.CharacterPosition;
+                Debug.WriteLine(CharacterPosStart + "::" + CharacterPosEnd);
+
+                Debug.WriteLine("UnrenderedLinesToRenderStart: " + UnrenderedLinesToRenderStart);
 
                 //Render the selection on position 0 if the user scrolled the start away
-                if(SelectionEndPosition.LineNumber < SelectionStartPosition.LineNumber)
+                if (SelectionEndPosition.LineNumber < SelectionStartPosition.LineNumber)
                 {
                     if (SelectionEndPosition.LineNumber < UnrenderedLinesToRenderStart)
                         CharacterPosEnd = 0;
                     if (SelectionStartPosition.LineNumber < UnrenderedLinesToRenderStart+1)
                         CharacterPosStart = 0;
+                }
+                else if(SelectionEndPosition.LineNumber == SelectionStartPosition.LineNumber)
+                {
+                    if (SelectionStartPosition.LineNumber < UnrenderedLinesToRenderStart)
+                        CharacterPosStart = 0;
+                    if (SelectionEndPosition.LineNumber < UnrenderedLinesToRenderStart)
+                        CharacterPosEnd = 0;
                 }
                 else
                 {
@@ -118,7 +128,8 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                     {
                         LenghtToLine += RenderedLines[i].Content.Length + 2;
                     }
-                    
+
+
                     SelStartIndex = CharacterPosStart + LenghtToLine;
                     SelEndIndex = CharacterPosEnd + LenghtToLine;
                 }
