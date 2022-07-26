@@ -44,19 +44,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 sb.Append(Splitted[i] + (i == Splitted.Length - 1 ? "" : LineEndingToInsert));
             }
             return sb.ToString();
-
-            //THIS doesn't work, because it replaces the replaced occurences again and again...
-            //if (LineEnding == LineEnding.CR) //-> \r
-            //    return Text.Replace('\n', '\r').Replace("\r\n", "\r");
-            //else if (LineEnding == LineEnding.LF) //-> \n
-            //    return Text.Replace('\r', '\n').Replace("\r\n", "\n");
-            //else if (LineEnding == LineEnding.CRLF) //-> \r
-            //    return Text.Replace("", Text.Replace("\r", "\r\n").Replace("\n", "\r\n");
-            //else
-            //{
-            //    Debug.WriteLine("Could not replace any NewLine character");
-            //    return Text;
-            //}
         }
     }
 }

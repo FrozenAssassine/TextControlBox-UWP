@@ -719,7 +719,6 @@ namespace TextControlBox_TestApp.TextControlBox
 
             if (PointerClickCount == 3)
             {
-                Debug.WriteLine("TripleClicked");
                 SelectLine(CursorPosition.LineNumber);
                 PointerClickCount = 0;
                 return;
@@ -727,7 +726,6 @@ namespace TextControlBox_TestApp.TextControlBox
             else if (PointerClickCount == 2)
             {
                 SelectDoubleClick(e);
-                Debug.WriteLine("DoubleClicked");
             }
             else
             {
@@ -1033,7 +1031,6 @@ namespace TextControlBox_TestApp.TextControlBox
             selectionrenderer.SelectionEndPosition = sel.EndPosition;
             selectionrenderer.HasSelection = true;
             selectionrenderer.IsSelecting = false;
-            Debug.WriteLine(sel.ToString());
 
             UpdateSelection();
         }
@@ -1228,7 +1225,6 @@ namespace TextControlBox_TestApp.TextControlBox
             int end = Math.Max(Start, End);
             int start = Math.Min(Start, End);
 
-            Debug.WriteLine(start + "::" + end + "::" + Content.Length);
             if (start == 0 && end >= Content.Length)
                 Content = "";
             else

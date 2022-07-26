@@ -73,8 +73,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 return item.TextSelection;
             }
             return null;
-
-            //Textbox.CursorPosition = new CursorPosition(item.CharacterPosition, item.LineNumber);
         }
 
         public void Redo(List<Line> TotalLines, TextControlBox Textbox)

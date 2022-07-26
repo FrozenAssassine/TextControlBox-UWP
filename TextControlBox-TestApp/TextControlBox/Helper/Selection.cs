@@ -43,8 +43,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             if (Selection != null)
                 return Replace(Selection, TotalLines, Text, NewLineCharacter);
 
-            //CursorPosition.ChangeLineNumber(CursorPosition.LineNumber);
-
             string[] lines = Text.Split(NewLineCharacter);
             Line CurrentLine = TotalLines[CursorPosition.LineNumber - 1];
             string TextInFrontOfCursor = CurrentLine.Content.Substring(0, CursorPosition.CharacterPosition);
@@ -66,7 +64,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                     TotalLines.RemoveAt(Index);
             }
             RemoveLine(CursorPosition.LineNumber - 1); //Startline
-            //RemoveLine(CursorPosition.LineNumber - 1 + lines.Length - 1);//Endline
 
             //Paste the text
             int LastLineLength = 0;
@@ -83,8 +80,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 else
                     line = new Line(lines[i]);
 
-                Debug.WriteLine(line.Content);
-
                 TotalLines.Insert(CursorPosition.LineNumber - 1 + i, line);
             }
   
@@ -94,14 +89,8 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         public static CursorPosition ReplaceUndo(int StartLine, List<Line> TotalLines, List<Line> Replace, int LinesToDelete)
         {
             StartLine -= 1;
-
-            Debug.WriteLine("--ReplaceUndo--");
-            Debug.WriteLine("\t" + LinesToDelete);
-            Debug.WriteLine("\t" + StartLine);
-
             try
             {
-                Debug.WriteLine(StartLine + "::" + LinesToDelete);
                 TotalLines.RemoveRange(StartLine, LinesToDelete);
             }
             catch (ArgumentException)
@@ -173,8 +162,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                     StartPosition = Selection.EndPosition.CharacterPosition;
                 }
 
-                Debug.WriteLine(StartPosition + "::" + EndPosition);
-
                 Line Start_Line = TotalLines[StartLine];
                 if (EndLine > TotalLines.Count)
                     EndLine = TotalLines.Count - 1;
@@ -193,7 +180,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 //Only the startline is completely selected
                 else if (StartPosition == 0 && EndPosition != End_Line.Content.Length)
                 {
-                    Debug.WriteLine("1");
                     End_Line.Substring(EndPosition);
                     TotalLines.RemoveRange(StartLine, EndLine - StartLine);
 
@@ -208,7 +194,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 //Only the endline is completely selected
                 else if (StartPosition != 0 && EndPosition == End_Line.Content.Length)
                 {
-                    Debug.WriteLine("2");
                     Start_Line.Remove(StartPosition);
                     TotalLines.RemoveRange(StartLine + 1, EndLine - StartLine);
 
@@ -255,7 +240,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                     }
                     TotalLines.Remove(End_Line);
                 }
-                Debug.WriteLine("Return CursorPosition: " + EndPosition + "::" + EndLine);
                 return new CursorPosition(EndPosition, EndLine );
             }
         }
@@ -460,7 +444,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                         StringBuilder.Append(EndIndex == TotalLines[EndLine].Content.Length ? TotalLines[EndLine].Content : TotalLines[EndLine].Content.Remove(EndIndex) + NewLineCharacter);
                     else
                         StringBuilder.Append(TotalLines[i].Content + NewLineCharacter);
-                    Debug.WriteLine(i + "::" + EndLine);
                 }
             }
             string text = StringBuilder.ToString();
