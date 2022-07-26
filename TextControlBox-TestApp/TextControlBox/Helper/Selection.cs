@@ -35,7 +35,10 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 return Pos1.CharacterPosition > Pos2.CharacterPosition ? Pos1 : Pos2;
             return Pos1.LineNumber > Pos2.LineNumber ? Pos2 : Pos1;
         }
-        
+        public static CursorPosition GetMin(TextSelection Selection)
+        {
+            return GetMin(Selection.StartPosition, Selection.EndPosition);
+        }
         public static CursorPosition InsertText(TextSelection Selection, CursorPosition CursorPosition, List<Line> TotalLines, string Text, string NewLineCharacter)
         {
             Debug.WriteLine("--Insert text--");
