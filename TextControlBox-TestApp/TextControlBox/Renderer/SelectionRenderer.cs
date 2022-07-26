@@ -94,9 +94,6 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                 int SelEndIndex = 0;
                 int CharacterPosStart = SelectionStartPosition.CharacterPosition;
                 int CharacterPosEnd = SelectionEndPosition.CharacterPosition;
-                Debug.WriteLine(CharacterPosStart + "::" + CharacterPosEnd);
-
-                Debug.WriteLine("UnrenderedLinesToRenderStart: " + UnrenderedLinesToRenderStart);
 
                 //Render the selection on position 0 if the user scrolled the start away
                 if (SelectionEndPosition.LineNumber < SelectionStartPosition.LineNumber)
