@@ -216,11 +216,16 @@ namespace TextControlBox_TestApp.TextControlBox
             {
                 List<Line> Lines = Selection.GetSelectedTextLines(TotalLines, TextSelection, NewLineCharacter);
 
-                DebugHelper.DebugList(Lines);
-
-                Debug.WriteLine(SplittedText.Length);
-
-                UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, Lines, text.Length == 0 ? 0 : SplittedText.Length);
+                //Check whether the startline and endline are completely selected to calculate the number of lines to delete
+                CursorPosition StartLine = Selection.GetMin(TextSelection.StartPosition, TextSelection.EndPosition);        
+                int DeleteCount = StartLine.CharacterPosition == 0 ? 0 : 1;
+                if(DeleteCount == 0)
+                {
+                    CursorPosition EndLine = Selection.GetMax(TextSelection.StartPosition, TextSelection.EndPosition);
+                    DeleteCount = EndLine.CharacterPosition == TotalLines[EndLine.LineNumber].Content.Length ? 0 : 1;
+                }
+                
+                UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, Lines, text.Length == 0 ? DeleteCount : SplittedText.Length);
                 CursorPosition = Selection.Replace(TextSelection, TotalLines, text, NewLineCharacter);
 
                 selectionrenderer.ClearSelection();

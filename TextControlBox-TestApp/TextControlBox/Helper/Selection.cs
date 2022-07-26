@@ -101,6 +101,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
             try
             {
+                Debug.WriteLine(StartLine + "::" + LinesToDelete);
                 TotalLines.RemoveRange(StartLine, LinesToDelete);
             }
             catch (ArgumentException)
