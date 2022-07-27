@@ -44,7 +44,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             int OldLenght = 0;
             for (int i = 0; i < Lines.Count; i++)
             {
-                var lenght = Lines[i].Content.Length;
+                var lenght = Lines[i].Length;
                 if (lenght > OldLenght)
                 {
                     OldLenght = lenght;

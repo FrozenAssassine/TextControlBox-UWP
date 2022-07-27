@@ -25,19 +25,21 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         }
         public int CharacterPosition { get; set; } = 0;
         public int LineNumber { get; set; } = 0;
-        public void Change(int CharacterPosition, int LineNumber)
+        public CursorPosition Change(int CharacterPosition, int LineNumber)
         {
             this.CharacterPosition = CharacterPosition;
             this.LineNumber = LineNumber;
+            return this;
         }
         public new string ToString()
         {
             return LineNumber + ":" + CharacterPosition;
         }
 
-        public void ChangeLineNumber(int LineNumber)
+        public CursorPosition ChangeLineNumber(int LineNumber)
         {
             this.LineNumber = LineNumber;
+            return this;
         }
 
         public static CursorPosition ChangeCharacterPosition(CursorPosition CurrentCursorPosition, int CharacterPosition)
@@ -61,7 +63,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             int CursorIndex = 0;
             for (int i = 0; i < CursorPosition.LineNumber; i++)
             {
-                CursorIndex += TotalLines[i].Content.Length + 2;
+                CursorIndex += TotalLines[i].Length + 2;
             }
             return CursorIndex + CursorPosition.CharacterPosition;
         }
@@ -94,7 +96,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 if (Line < ReturnValue.LineNumber)
                 {
                     ReturnValue.LineNumber--;
-                    ReturnValue.CharacterPosition = TotalLines[ReturnValue.LineNumber].Content.Length;
+                    ReturnValue.CharacterPosition = TotalLines[ReturnValue.LineNumber].Length;
                 }
                 else
                     ReturnValue.CharacterPosition -= StepsToMoveLeft;
@@ -116,7 +118,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
             int StepsToMoveRight = CalculateStepsToMoveRight(TotalLines[SelectionEndPosition.LineNumber], SelectionEndPosition.CharacterPosition);
 
-            if (SelectionEndPosition.CharacterPosition == CurrentLine.Content.Length)
+            if (SelectionEndPosition.CharacterPosition == CurrentLine.Length)
             {
                 ReturnValue.LineNumber += SelectionEndPosition.LineNumber < TotalLines.Count ? 1 : 0;
                 if (SelectionEndPosition.LineNumber < ReturnValue.LineNumber)
@@ -144,7 +146,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 if (PreviousLine == null)
                     return ReturnValue;
 
-                int PreviousLineLenght = PreviousLine.Content.Length;
+                int PreviousLineLenght = PreviousLine.Length;
                 ReturnValue.LineNumber--;
                 if (PreviousLineLenght > SelectionEndPosition.CharacterPosition)
                     ReturnValue.CharacterPosition = SelectionEndPosition.CharacterPosition;
@@ -166,7 +168,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
             if (TotalLines.Count > SelectionEndPosition.LineNumber)
             {
-                int NextLineLenght = TotalLines[SelectionEndPosition.LineNumber].Content.Length;
+                int NextLineLenght = TotalLines[SelectionEndPosition.LineNumber].Length;
                 ReturnValue.LineNumber++;
                 if (NextLineLenght > SelectionEndPosition.CharacterPosition)
                     ReturnValue.CharacterPosition = SelectionEndPosition.CharacterPosition;
@@ -198,7 +200,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         public static int CalculateStepsToMoveRight2(Line CurrentLine, int CursorCharPosition)
         {
             int Count = 0;
-            for(int i = CursorCharPosition; i < CurrentLine.Content.Length; i++)
+            for(int i = CursorCharPosition; i < CurrentLine.Length; i++)
             {
                 if (char.IsLetterOrDigit(CurrentLine.Content[i]))
                     Count++;
@@ -238,7 +240,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             if (!ControlIsPressed)
                 return 1;
             int Count = 0;
-            for (int i = CursorCharPosition; i < CurrentLine.Content.Length; i++)
+            for (int i = CursorCharPosition; i < CurrentLine.Length; i++)
             {
                 if (char.IsLetterOrDigit(CurrentLine.Content[i]))
                     Count++;
@@ -265,7 +267,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 if (Line < ReturnValue.LineNumber)
                 {
                     ReturnValue.LineNumber -= StepsToMoveLeft;
-                    ReturnValue.CharacterPosition = TotalLines[ReturnValue.LineNumber - 1].Content.Length;
+                    ReturnValue.CharacterPosition = TotalLines[ReturnValue.LineNumber - 1].Length;
                 }
                 else
                     ReturnValue.CharacterPosition -= StepsToMoveLeft;
@@ -284,7 +286,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         {
             CursorPosition ReturnValue = new CursorPosition(CurrentCursorPosition);
             int StepsToMoveRight = CalculateStepsToMoveRight(CurrentLine, CurrentCursorPosition.CharacterPosition);
-            if (CurrentCursorPosition.CharacterPosition == CurrentLine.Content.Length)
+            if (CurrentCursorPosition.CharacterPosition == CurrentLine.Length)
             {
                 ReturnValue.LineNumber += CurrentCursorPosition.LineNumber < TotalLines.Count ? 1 : 0;
                 if (CurrentCursorPosition.LineNumber < ReturnValue.LineNumber)
@@ -297,7 +299,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 ReturnValue.LineNumber = CurrentCursorPosition.LineNumber;
                 ReturnValue.CharacterPosition += StepsToMoveRight;
             }
-            var LineLength = TotalLines[ReturnValue.LineNumber-1].Content.Length;
+            var LineLength = TotalLines[ReturnValue.LineNumber-1].Length;
             if (ReturnValue.CharacterPosition >= LineLength)
                 ReturnValue.CharacterPosition = LineLength;
             return ReturnValue;
@@ -307,7 +309,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             CursorPosition ReturnValue = new CursorPosition(CurrentCursorPosition);
             if (TotalLines.Count > CurrentCursorPosition.LineNumber && CurrentCursorPosition.LineNumber > 0)
             {
-                int NextLineLenght = TotalLines[CurrentCursorPosition.LineNumber].Content.Length;
+                int NextLineLenght = TotalLines[CurrentCursorPosition.LineNumber].Length;
                 ReturnValue.LineNumber++;
                 if (NextLineLenght > CurrentCursorPosition.CharacterPosition)
                     ReturnValue.CharacterPosition = CurrentCursorPosition.CharacterPosition;
@@ -326,7 +328,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 if (PreviousLine == null)
                     return CurrentCursorPosition;
 
-                int PreviousLineLenght = PreviousLine.Content.Length;
+                int PreviousLineLenght = PreviousLine.Length;
                 if (PreviousLineLenght > CurrentCursorPosition.CharacterPosition)
                     CurrentCursorPosition.CharacterPosition = CurrentCursorPosition.CharacterPosition;
                 else

@@ -165,7 +165,7 @@ namespace TextControlBox_TestApp.TextControlBox
         {
             if (line == null || line.Content == null)
                 return -1;
-            return line.Content.Length;
+            return line.Length;
         }
         private Line GetCurrentLine()
         {
@@ -222,7 +222,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 if(DeleteCount == 0)
                 {
                     CursorPosition EndLine = Selection.GetMax(TextSelection.StartPosition, TextSelection.EndPosition);
-                    DeleteCount = EndLine.CharacterPosition == TotalLines[EndLine.LineNumber].Content.Length ? 0 : 1;
+                    DeleteCount = EndLine.CharacterPosition == TotalLines[EndLine.LineNumber].Length ? 0 : 1;
                 }
                 
                 UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, Lines, text.Length == 0 ? DeleteCount : SplittedText.Length);
@@ -260,7 +260,7 @@ namespace TextControlBox_TestApp.TextControlBox
                     LineOnTop.AddToEnd(CurrentLine.Content);
                     TotalLines.Remove(CurrentLine);
                     CursorPosition.LineNumber -= 1;
-                    CursorPosition.CharacterPosition = LineOnTop.Content.Length - CurrentLine.Content.Length;
+                    CursorPosition.CharacterPosition = LineOnTop.Length - CurrentLine.Length;
                     Internal_CharacterAddedOrRemoved();
                 }
             }
@@ -283,7 +283,7 @@ namespace TextControlBox_TestApp.TextControlBox
             if (TextSelection == null)
             {
                 int StepsToMove = ControlIsPressed ? Cursor.CalculateStepsToMoveRight(CurrentLine, CursorPosition.CharacterPosition) : 1;
-                if (CursorPosition.CharacterPosition < CurrentLine.Content.Length)
+                if (CursorPosition.CharacterPosition < CurrentLine.Length)
                 {
                     CurrentLine.Remove(CursorPosition.CharacterPosition, StepsToMove);
                 }
@@ -309,6 +309,7 @@ namespace TextControlBox_TestApp.TextControlBox
             var NewLine = new Line("");
             CursorPosition OldCursorPos = new CursorPosition(CursorPosition);
             CursorPosition StartLine = new CursorPosition(TextSelection == null ? CursorPosition : Selection.GetMin(TextSelection));
+            CursorPosition EndLine = new CursorPosition(TextSelection == null ? CursorPosition : Selection.GetMax(TextSelection));
 
             List<Line> Lines;
             int DeleteCount = 0;
@@ -946,7 +947,7 @@ namespace TextControlBox_TestApp.TextControlBox
         public void SelectLine(int index, bool CursorAtStart = false)
         {
             selectionrenderer.SelectionStartPosition = new CursorPosition(0, index - 1);
-            CursorPosition pos = selectionrenderer.SelectionEndPosition = new CursorPosition(TotalLines[index-1].Content.Length, index - 1);
+            CursorPosition pos = selectionrenderer.SelectionEndPosition = new CursorPosition(TotalLines[index-1].Length, index - 1);
             CursorPosition.LineNumber = index;
             CursorPosition.CharacterPosition = CursorAtStart ? 0 : pos.CharacterPosition;
 
@@ -1027,7 +1028,7 @@ namespace TextControlBox_TestApp.TextControlBox
         public void SelectAll()
         {
             selectionrenderer.SelectionStartPosition = new CursorPosition(0, 0);
-            CursorPosition = selectionrenderer.SelectionEndPosition = new CursorPosition(TotalLines[TotalLines.Count-1].Content.Length, TotalLines.Count);
+            CursorPosition = selectionrenderer.SelectionEndPosition = new CursorPosition(TotalLines[TotalLines.Count-1].Length, TotalLines.Count);
             selectionrenderer.HasSelection = true;
             Canvas_Selection.Invalidate();
         }
@@ -1178,7 +1179,10 @@ namespace TextControlBox_TestApp.TextControlBox
 
     public class Line
     {
-        public string Content { get; set; } = "";
+        private string _Content = "";
+        public string Content { get => _Content; set { _Content = value; this.Length = value.Length; } }
+        public int Length { get; private set; }
+
 
         public Line(string Content = "")
         {
@@ -1190,7 +1194,7 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         public void AddText(string Value, int Position)
         {
-            if (Content.Length == 0)
+            if (Length == 0)
                 AddToEnd(Value);
             else
                 Content = Content.Insert(Position, Value);
@@ -1205,7 +1209,7 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         public string Remove(int Index, int Count = -1)
         {
-            if (Index >= Content.Length || Index < 0)
+            if (Index >= Length || Index < 0)
                 return Content;
 
             try
@@ -1222,7 +1226,7 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         public string Substring(int Index, int Count = -1)
         {
-            if (Index >= Content.Length)
+            if (Index >= Length)
                 Content = "";
             else if (Count == -1)
                 Content = Content.Substring(Index);
@@ -1235,7 +1239,7 @@ namespace TextControlBox_TestApp.TextControlBox
             int end = Math.Max(Start, End);
             int start = Math.Min(Start, End);
 
-            if (start == 0 && end >= Content.Length)
+            if (start == 0 && end >= Length)
                 Content = "";
             else
             {

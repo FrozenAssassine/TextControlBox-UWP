@@ -123,7 +123,7 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                     int LenghtToLine = 0;
                     for (int i = 0; i < SelectionStartPosition.LineNumber - UnrenderedLinesToRenderStart; i++)
                     {
-                        LenghtToLine += RenderedLines[i].Content.Length + 2;
+                        LenghtToLine += RenderedLines[i].Length + 2;
                     }
 
 
@@ -136,7 +136,7 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                     {
                         if (i >= NumberOfRenderedLines) //Out of range of the List (do nothing)
                             break;
-                        SelStartIndex += RenderedLines[i].Content.Length + 2;
+                        SelStartIndex += RenderedLines[i].Length + 2;
                     }
                     SelStartIndex += CharacterPosStart;
 
@@ -144,7 +144,7 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                     {
                         if (i >= NumberOfRenderedLines) //Out of range of the List (do nothing)
                             break;
-                        SelEndIndex += RenderedLines[i].Content.Length + 2;
+                        SelEndIndex += RenderedLines[i].Length + 2;
                     }
                     SelEndIndex += CharacterPosEnd;
                 }
