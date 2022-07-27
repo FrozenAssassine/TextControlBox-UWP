@@ -224,8 +224,8 @@ namespace TextControlBox_TestApp.TextControlBox
                     CursorPosition EndLine = Selection.GetMax(TextSelection.StartPosition, TextSelection.EndPosition);
                     DeleteCount = EndLine.CharacterPosition == TotalLines[EndLine.LineNumber].Content.Length ? 0 : 1;
                 }
-                
-                UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, Lines, text.Length == 0 ? DeleteCount : SplittedText.Length);
+
+                UndoRedo.RecordMultiLineUndo(StartLine.LineNumber+1, Lines, text.Length == 0 ? DeleteCount : SplittedText.Length);
                 CursorPosition = Selection.Replace(TextSelection, TotalLines, text, NewLineCharacter);
 
                 selectionrenderer.ClearSelection();
