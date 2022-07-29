@@ -26,6 +26,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Shapes;
+using static System.Net.Mime.MediaTypeNames;
 using Color = Windows.UI.Color;
 using Size = Windows.Foundation.Size;
 
@@ -306,24 +307,36 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         private void AddNewLine(bool RecordUndo = false)
         {
-            var NewLine = new Line("");
-            CursorPosition OldCursorPos = new CursorPosition(CursorPosition);
-            CursorPosition StartLine = new CursorPosition(TextSelection == null ? CursorPosition : Selection.GetMin(TextSelection));
-            CursorPosition EndLine = new CursorPosition(TextSelection == null ? CursorPosition : Selection.GetMax(TextSelection));
+            if (TotalLines.Count == 0)
+            {
+                TotalLines.Add(new Line());
+                return;
+            }
 
-            List<Line> Lines;
-            int DeleteCount = 0;
+            CursorPosition NormalCurPos = CursorPosition.ChangeLineNumber(CursorPosition, CursorPosition.LineNumber - 1);
+            CursorPosition StartLinePos = new CursorPosition(TextSelection == null ? NormalCurPos : Selection.GetMin(TextSelection));
+            CursorPosition EndLinePos = new CursorPosition(TextSelection == null ? NormalCurPos : Selection.GetMax(TextSelection));
+
+            List<Line> Lines = new List<Line>();
+
+            int Index = StartLinePos.LineNumber;
+            if (Index >= TotalLines.Count)
+                Index = TotalLines.Count - 1;
+            if (Index < 0)
+                Index = 0;
+
+            Line EndLine = new Line();
+            Line StartLine = TotalLines[Index];
 
             //If the whole text is selected
             if (Selection.WholeTextSelected(TextSelection, TotalLines))
             {
                 Lines = Selection.GetSelectedTextLines(TotalLines, TextSelection, NewLineCharacter);
                 DebugHelper.DebugList(Lines);
-                if (RecordUndo)
-                    UndoRedo.RecordNewLineUndo(Lines, 2, OldCursorPos);
+                UndoRedo.RecordNewLineUndo(Lines, 2, StartLinePos.LineNumber);
 
                 TotalLines.Clear();
-                TotalLines.Add(NewLine);
+                TotalLines.Add(EndLine);
                 CursorPosition = new CursorPosition(0, 1);
 
                 ClearSelection();
@@ -333,63 +346,62 @@ namespace TextControlBox_TestApp.TextControlBox
                 return;
             }
 
-            //Record Undo
-            if (TextSelection == null && CurrentLine != null)
+            //Undo        
+
+            if (TextSelection == null)
             {
                 Lines = new List<Line>
                 {
-                    new Line(CurrentLine.Content)
+                    new Line(StartLine.Content)
                 };
             }
             else
+            {
                 Lines = Selection.GetSelectedTextLines(TotalLines, TextSelection, NewLineCharacter);
+            }
 
-            if(RecordUndo)
-                UndoRedo.RecordNewLineUndo(Lines, StartLine.CharacterPosition == 0 ? 1 : 2, StartLine);
+            int UndoDeleteCount = 2;
+            //Whole lines are selected
+            if(StartLinePos.CharacterPosition == 0 && EndLinePos.CharacterPosition == TotalLines[EndLinePos.LineNumber].Length)
+            {
+                UndoDeleteCount = 1;
+            }
 
-            //Delete the selection
+            UndoRedo.RecordNewLineUndo(Lines, UndoDeleteCount, StartLinePos.LineNumber);
+
+            DebugHelper.DebugList(Lines);
+
+            Debug.WriteLine(StartLinePos.LineNumber);
+
             if (TextSelection != null)
             {
                 CursorPosition = Selection.Remove(TextSelection, TotalLines, NewLineCharacter);
-                DeleteCount = StartLine.CharacterPosition == 0 ? 1 : 0;
-
                 ClearSelection();
-            }
-
-            //Split the line on the cursorposition
-            if (CurrentLine != null)
-            {
-                if (StartLine.CharacterPosition < CurrentLine.Content.Length && CurrentLine.Content.Length != 0)
+                //Inline selection
+                if (StartLinePos.LineNumber == EndLinePos.LineNumber)
                 {
-                    string CurrentLineContent = CurrentLine.Content.Substring(0, StartLine.CharacterPosition);
-                    string NewLineContent = "";
-                    if (StartLine.CharacterPosition != 0)
-                        CurrentLine.Content.Substring(StartLine.CharacterPosition);
-
-                    CurrentLine.SetText(CurrentLineContent);
-                    NewLine.SetText(NewLineContent);
+                    StartLinePos.CharacterPosition = CursorPosition.CharacterPosition;
                 }
             }
 
+            string[] SplittedLine = Utils.SplitAt(StartLine.Content, StartLinePos.CharacterPosition);
+            StartLine.SetText(SplittedLine[1]);
+            EndLine.SetText(SplittedLine[0]);
+
             //Add the line to the collection
-            if (StartLine.LineNumber >= TotalLines.Count)
-                TotalLines.Add(NewLine);
+            if (StartLinePos.LineNumber >= TotalLines.Count)
+                TotalLines.Add(EndLine);
             else
-                TotalLines.Insert(CursorPosition.LineNumber - DeleteCount, NewLine);
+                TotalLines.Insert(StartLinePos.LineNumber, EndLine);
 
-            CursorPosition.Change(0, CursorPosition.LineNumber + 1);
-
-            //Scroll into view
-            if (CursorPosition.LineNumber > NumberOfStartLine + RenderedLines.Count)
-            {
-                ScrollOneLineDown();
-            }
-
-            Internal_CharacterAddedOrRemoved();
+            CursorPosition.LineNumber += 1;
+            CursorPosition.CharacterPosition = 0;
 
             UpdateText();
+            UpdateSelection();
             UpdateCursor();
         }
+
 
         private void ClearSelectionIfNeeded()
         {

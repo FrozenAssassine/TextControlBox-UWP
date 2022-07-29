@@ -34,19 +34,17 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             {
                 UndoRedoType = UndoRedoType.SingleLineEdit,
                 Text = CurrentLine.Content,
-                CharacterPosition = CursorPosition.CharacterPosition + 1,
                 LineNumber = CursorPosition.LineNumber,
             });
         }
 
-        public void RecordNewLineUndo(List<Line> RemovedLines, int LinesToDelete, CursorPosition CursorPosition)
+        public void RecordNewLineUndo(List<Line> RemovedLines, int LinesToDelete, int StartLine)
         {
             UndoStack.Push(new UndoRedoClass
             {
                 UndoRedoType = UndoRedoType.NewLineEdit,
                 RemovedLines = RemovedLines,
-                CharacterPosition = CursorPosition.CharacterPosition + 1,
-                LineNumber = CursorPosition.LineNumber,
+                LineNumber = StartLine,
                 LinesToDelete = LinesToDelete
             });
         }
@@ -64,7 +62,10 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
             else if(item.UndoRedoType == UndoRedoType.NewLineEdit)
             {
-                int LineNumber = item.LineNumber - 1 < 0 ? 0 : item.LineNumber - 1;
+                int LineNumber = item.LineNumber < 0 ? 0 : item.LineNumber;
+                if (LineNumber + item.LinesToDelete >= TotalLines.Count)
+                    item.LinesToDelete = TotalLines.Count - LineNumber < 0 ? 0 : TotalLines.Count - LineNumber;
+
                 TotalLines.RemoveRange(LineNumber, item.LinesToDelete);
                 TotalLines.InsertRange(LineNumber, item.RemovedLines);
             }
@@ -91,7 +92,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
     {
         public UndoRedoType UndoRedoType { get; set; } = UndoRedoType.SingleLineEdit;
         public int LineNumber { get; set; } = 0;
-        public int CharacterPosition { get; set; } = 0;
         public string Text { get; set; } = "";
 
         public int LinesToDelete { get; set; } = 0; //Mutliline

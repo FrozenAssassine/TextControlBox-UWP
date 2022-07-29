@@ -61,5 +61,13 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         {
             return Index < Lines.Count && Index > -1;
         }
+
+        public static string[] SplitAt(string Text, int Index)
+        {
+            string First = Index<Text.Length ? Text.Remove(Index) : Text;
+            string Second = Index < Text.Length ? Text.Substring(Index) : "";
+            return new string[] { First, Second };
+        }
+
     }
 }
