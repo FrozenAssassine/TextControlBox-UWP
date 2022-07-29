@@ -249,12 +249,17 @@ namespace TextControlBox_TestApp.TextControlBox
                 int StepsToMove = ControlIsPressed ? Cursor.CalculateStepsToMoveLeft(CurrentLine, CursorPosition.CharacterPosition) : 1;
                 if (CursorPosition.CharacterPosition > 0)
                 {
+                    UndoRedo.RecordSingleLineUndo(CurrentLine, CursorPosition);
                     CurrentLine.Remove(CursorPosition.CharacterPosition - StepsToMove, StepsToMove);
                     CursorPosition.CharacterPosition -= StepsToMove;
                     Internal_CharacterAddedOrRemoved();
                 }
                 else if (CursorPosition.LineNumber > 1)
                 {
+                    List<Line> Items = new List<Line>();
+                    Items.Add(new Line(TotalLines[CursorPosition.LineNumber - 1].Content));
+                    UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, Items, 0);
+
                     //Move the cursor one line up, if the beginning of the line is reached
                     Line LineOnTop = TotalLines[CursorPosition.LineNumber - 2];
                     LineOnTop.AddToEnd(CurrentLine.Content);
