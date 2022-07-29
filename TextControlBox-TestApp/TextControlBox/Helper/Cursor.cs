@@ -44,13 +44,11 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
         public static CursorPosition ChangeCharacterPosition(CursorPosition CurrentCursorPosition, int CharacterPosition)
         {
-            CurrentCursorPosition.CharacterPosition = CharacterPosition;
-            return CurrentCursorPosition; 
+            return new CursorPosition(CharacterPosition, CurrentCursorPosition.LineNumber); 
         }
         public static CursorPosition ChangeLineNumber(CursorPosition CurrentCursorPosition, int LineNumber)
         {
-            CurrentCursorPosition.LineNumber = LineNumber;
-            return CurrentCursorPosition;
+            return new CursorPosition(CurrentCursorPosition.CharacterPosition, LineNumber);
         }
     }
     

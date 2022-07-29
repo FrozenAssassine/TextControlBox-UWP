@@ -97,15 +97,15 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         public static CursorPosition ReplaceUndo(int StartLine, List<Line> TotalLines, List<Line> Replace, int LinesToDelete)
         {
             StartLine -= 1;
-            try
-            {
-                TotalLines.RemoveRange(StartLine, LinesToDelete);
-            }
-            catch (ArgumentException)
-            {
-                Debug.WriteLine("Exception in ReplaceUndo");
-                TotalLines.Clear();
-            }
+
+            int Count = LinesToDelete;
+            if (StartLine + Count > TotalLines.Count)
+                Count = TotalLines.Count - StartLine;
+            if (Count < 0)
+                Count = 0;
+
+            Debug.WriteLine("Undo:" + Count + "::" + StartLine);
+            TotalLines.RemoveRange(StartLine, Count);
 
             //Either add or insert to the List
             if (StartLine >= TotalLines.Count)
