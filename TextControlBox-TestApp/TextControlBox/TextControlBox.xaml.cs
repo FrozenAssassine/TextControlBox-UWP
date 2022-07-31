@@ -292,6 +292,7 @@ namespace TextControlBox_TestApp.TextControlBox
 
                 if (CursorPosition.CharacterPosition < CurrentLine.Length)
                 {
+                    UndoRedo.RecordSingleLineUndo(CurrentLine, CursorPosition);
                     CurrentLine.Remove(CursorPosition.CharacterPosition, StepsToMove);
                 }
                 else if (TotalLines.Count > CursorPosition.LineNumber)
@@ -299,6 +300,13 @@ namespace TextControlBox_TestApp.TextControlBox
                     Line LineToAdd = CursorPosition.LineNumber < TotalLines.Count ? TotalLines[CursorPosition.LineNumber] : null;
                     if (LineToAdd != null)
                     {
+                        List<Line> Lines = new List<Line>()
+                        {
+                            new Line(CurrentLine.Content),
+                            new Line(LineToAdd.Content),
+                        };
+
+                        UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, Lines, 1);
                         CurrentLine.Content += LineToAdd.Content;
                         TotalLines.Remove(LineToAdd);
                     }
