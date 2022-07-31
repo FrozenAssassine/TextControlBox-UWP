@@ -289,14 +289,19 @@ namespace TextControlBox_TestApp.TextControlBox
             if (TextSelection == null)
             {
                 int StepsToMove = ControlIsPressed ? Cursor.CalculateStepsToMoveRight(CurrentLine, CursorPosition.CharacterPosition) : 1;
+
                 if (CursorPosition.CharacterPosition < CurrentLine.Length)
                 {
                     CurrentLine.Remove(CursorPosition.CharacterPosition, StepsToMove);
                 }
                 else if (TotalLines.Count > CursorPosition.LineNumber)
                 {
-                    TotalLines.Remove(CurrentLine);
-                    TotalLines[CursorPosition.LineNumber].Remove(CursorPosition.CharacterPosition, StepsToMove);
+                    Line LineToAdd = CursorPosition.LineNumber < TotalLines.Count ? TotalLines[CursorPosition.LineNumber] : null;
+                    if (LineToAdd != null)
+                    {
+                        CurrentLine.Content += LineToAdd.Content;
+                        TotalLines.Remove(LineToAdd);
+                    }
                 }
             }
             else
