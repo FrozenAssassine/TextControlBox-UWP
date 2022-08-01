@@ -391,8 +391,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             int StartLine = Math.Min(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
             int EndLine = Math.Max(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
 
-            Debug.WriteLine("Lines: " + StartLine + "::" + EndLine);
-
             //Get the items into the list CurrentItems
             List<Line> CurrentItems;
             if (EndLine == StartLine)
@@ -402,7 +400,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             else
             {
                 int Count = EndLine - StartLine + 1;
-                Debug.WriteLine("Count: " + Count);
                 if (StartLine + Count >= TotalLines.Count)
                     Count = TotalLines.Count - StartLine;
                 

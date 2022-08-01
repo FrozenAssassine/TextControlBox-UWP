@@ -217,8 +217,6 @@ namespace TextControlBox_TestApp.TextControlBox
             {
                 List<Line> Lines = Selection.GetSelectedTextLines(TotalLines, TextSelection, NewLineCharacter);
 
-                DebugHelper.DebugList(Lines, "Lines are:");
-
                 //Check whether the startline and endline are completely selected to calculate the number of lines to delete
                 CursorPosition StartLine = Selection.GetMin(TextSelection.StartPosition, TextSelection.EndPosition);        
                 int DeleteCount = StartLine.CharacterPosition == 0 ? 0 : 1;
