@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="500"
+   height="300"
+   viewBox="0 0 132.29166 79.375"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2 (dc2aedaf03, 2022-05-15)"
+   sodipodi:docname="Icon1.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#505050"
+     bordercolor="#ffffff"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="1"
+     inkscape:deskcolor="#505050"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.9902471"
+     inkscape:cx="95.935651"
+     inkscape:cy="175.71372"
+     inkscape:window-width="1920"
+     inkscape:window-height="982"
+     inkscape:window-x="-10"
+     inkscape:window-y="-10"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient10822">
+      <stop
+         style="stop-color:#2a2a2a;stop-opacity:1;"
+         offset="0"
+         id="stop10818" />
+      <stop
+         style="stop-color:#000000;stop-opacity:0;"
+         offset="1"
+         id="stop10820" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient5084">
+      <stop
+         style="stop-color:#454545;stop-opacity:1;"
+         offset="0"
+         id="stop5080" />
+      <stop
+         style="stop-color:#000000;stop-opacity:0;"
+         offset="1"
+         id="stop5082" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient5084"
+       id="linearGradient5086"
+       x1="-5.8781624"
+       y1="34.467407"
+       x2="111.55149"
+       y2="34.467407"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(3.013453,0,0,3.0134529,-8.2239856,-5.6982758)" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient10822"
+       id="linearGradient10824"
+       x1="1.3229169"
+       y1="39.687501"
+       x2="130.96875"
+       y2="39.687501"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:14.8831px;line-height:1.05;font-family:sans-serif;fill:url(#linearGradient5086);fill-opacity:1;stroke:none;stroke-width:0.797308"
+       x="34.481026"
+       y="18.766134"
+       id="text3349"
+       transform="scale(1.0289027,0.97190919)"><tspan
+         sodipodi:role="line"
+         style="font-size:14.8831px;fill:url(#linearGradient5086);fill-opacity:1;stroke-width:0.797308"
+         x="34.481026"
+         y="18.766134"
+         id="tspan3371" /></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:34.8889px;line-height:1.25;font-family:sans-serif;fill:#2a2a2a;fill-opacity:1;stroke:none;stroke-width:0.872459;stroke-dasharray:none"
+       x="15.621985"
+       y="50.384724"
+       id="text5893"
+       transform="scale(0.99331469,1.0067303)"><tspan
+         sodipodi:role="line"
+         id="tspan5891"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:sans-serif;-inkscape-font-specification:'sans-serif Bold';fill:#ffffff;fill-opacity:1;stroke-width:0.872459;stroke-dasharray:none"
+         x="15.621985"
+         y="50.384724">&lt;/&gt;|</tspan></text>
+    <rect
+       style="fill:url(#linearGradient10824);fill-opacity:1;stroke:#2a2a2a;stroke-width:3.28069;stroke-linecap:round;stroke-linejoin:bevel;stroke-opacity:1;paint-order:fill markers stroke"
+       id="rect7784"
+       width="126.36514"
+       height="73.448479"
+       x="2.9632618"
+       y="2.9632618"
+       ry="11.728685" />
+  </g>
+</svg>

@@ -23,6 +23,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             return Utils.CursorPositionsAreEqual(Selection.StartPosition, new CursorPosition(0, 0)) &&
                 Utils.CursorPositionsAreEqual(Selection.EndPosition, new CursorPosition(TotalLines[TotalLines.Count - 1].Length, TotalLines.Count));
         }
+        
         public static CursorPosition GetMax(CursorPosition Pos1, CursorPosition Pos2)
         {
             if (Pos1.LineNumber == Pos2.LineNumber)
@@ -99,12 +100,11 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             StartLine -= 1;
 
             int Count = LinesToDelete;
-            if (StartLine + Count > TotalLines.Count)
-                Count = TotalLines.Count - StartLine;
+            if (StartLine + Count >= TotalLines.Count)
+                Count = TotalLines.Count - StartLine - 1;
             if (Count < 0)
                 Count = 0;
 
-            Debug.WriteLine("Undo:" + Count + "::" + StartLine);
             TotalLines.RemoveRange(StartLine, Count);
 
             //Either add or insert to the List
@@ -390,6 +390,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
             int StartLine = Math.Min(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
             int EndLine = Math.Max(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
+
             //Get the items into the list CurrentItems
             List<Line> CurrentItems;
             if (EndLine == StartLine)
@@ -398,8 +399,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
             else
             {
-                int Count = EndLine - StartLine + (EndLine - StartLine + 1 < TotalLines.Count ? 1 : 0);
-
+                int Count = EndLine - StartLine + 1;
                 if (StartLine + Count >= TotalLines.Count)
                     Count = TotalLines.Count - StartLine;
                 
