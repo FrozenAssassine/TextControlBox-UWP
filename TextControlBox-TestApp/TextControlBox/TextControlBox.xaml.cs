@@ -223,7 +223,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 if(DeleteCount == 0)
                 {
                     CursorPosition EndLine = Selection.GetMax(TextSelection.StartPosition, TextSelection.EndPosition);
-                    DeleteCount = EndLine.CharacterPosition == TotalLines[EndLine.LineNumber].Length ? 0 : 1;
+                    DeleteCount = EndLine.CharacterPosition == TotalLines[EndLine.LineNumber < TotalLines.Count ? EndLine.LineNumber : TotalLines.Count - 1].Length ? 0 : 1;
                 }
 
                 UndoRedo.RecordMultiLineUndo(StartLine.LineNumber+1, Lines, text.Length == 0 ? DeleteCount : SplittedText.Length);
