@@ -390,6 +390,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
             int StartLine = Math.Min(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
             int EndLine = Math.Max(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
+
             //Get the items into the list CurrentItems
             List<Line> CurrentItems;
             if (EndLine == StartLine)
@@ -398,8 +399,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
             else
             {
-                int Count = EndLine - StartLine + (EndLine - StartLine + 1 < TotalLines.Count ? 1 : 0);
-
+                int Count = EndLine - StartLine + 1;
                 if (StartLine + Count >= TotalLines.Count)
                     Count = TotalLines.Count - StartLine;
                 
