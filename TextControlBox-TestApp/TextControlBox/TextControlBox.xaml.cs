@@ -90,6 +90,8 @@ namespace TextControlBox_TestApp.TextControlBox
         CanvasTextLayout CurrentLineTextLayout = null;
         TextSelection TextSelection = null;
 
+        bool GotKeyboardInput = false;
+
         //Store the lines in Lists
         private List<Line> TotalLines = new List<Line>();
         private List<Line> RenderedLines = new List<Line>();
@@ -198,7 +200,13 @@ namespace TextControlBox_TestApp.TextControlBox
             //Nothing is selected
             if (TextSelection == null && SplittedText.Length == 1)
             {
-                UndoRedo.RecordSingleLineUndo(CurrentLine, CursorPosition);
+                if (text.Length == 1)
+                    UndoRedo.EnteringText += text;
+                else
+                {
+                    UndoRedo.EnteringText = "";
+                    UndoRedo.RecordSingleLineUndo(CurrentLine, CursorPosition);
+                }
 
                 if (CursorPosition.CharacterPosition > GetLineContentWidth(CurrentLine) - 1)
                     CurrentLine.AddToEnd(text);
@@ -571,6 +579,12 @@ namespace TextControlBox_TestApp.TextControlBox
             if (args.KeyCode == 8) //Back-key was pressed
                 return;
 
+            if (!GotKeyboardInput)
+            {
+                UndoRedo.RecordSingleLineUndo(CurrentLine, CursorPosition);
+                GotKeyboardInput = true;
+            }
+
             AddCharacter(character.ToString());
         }
         //Handle keyinputs
@@ -613,7 +627,11 @@ namespace TextControlBox_TestApp.TextControlBox
 
             switch (e.VirtualKey)
             {
+                case VirtualKey.Space:
+                    UndoRedo.RecordUndoOnPress(CurrentLine, CursorPosition);
+                    break;
                 case VirtualKey.Enter:
+                    UndoRedo.RecordUndoOnPress(CurrentLine, CursorPosition);
                     AddNewLine(true);
                     break;
                 case VirtualKey.Back:

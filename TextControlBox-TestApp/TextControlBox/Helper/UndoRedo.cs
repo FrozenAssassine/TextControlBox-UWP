@@ -12,8 +12,18 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 {
     public class UndoRedo
     {
+        public string EnteringText { get; set; } = "";
         private Stack<UndoRedoClass> UndoStack = new Stack<UndoRedoClass>();
         private Stack<UndoRedoClass> RedoStack = new Stack<UndoRedoClass>();
+
+        public void RecordUndoOnPress(Line CurrentLine, CursorPosition CursorPosition)
+        {
+            if (EnteringText.Length > 0)
+            {
+                EnteringText = "";
+                RecordSingleLineUndo(CurrentLine, CursorPosition);
+            }
+        }
 
         //Multiline undo is used to undo longer textinserts using paste and stuff like that
         public void RecordMultiLineUndo(int StartLine, List<Line> RemovedLines, int LinesToDelete)
@@ -57,7 +67,11 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             UndoRedoClass item = UndoStack.Pop();
             if(item.UndoRedoType == UndoRedoType.SingleLineEdit)
             {
-                if(item.LineNumber - 1 >= 0 && item.LineNumber - 1 < TotalLines.Count)
+                if(this.EnteringText.Length > 0 && UndoStack.Count == 0)
+                {
+                    TotalLines[item.LineNumber - 1].SetText(this.EnteringText);
+                }
+                if (item.LineNumber - 1 >= 0 && item.LineNumber - 1 < TotalLines.Count)
                     TotalLines[item.LineNumber - 1].SetText(item.Text);
             }
             else if(item.UndoRedoType == UndoRedoType.NewLineEdit)
