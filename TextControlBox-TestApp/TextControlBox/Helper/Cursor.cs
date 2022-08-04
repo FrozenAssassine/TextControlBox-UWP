@@ -183,7 +183,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             int Count = 0;
             for (int i = CursorCharPosition - 1; i >= 0; i--)
             {
-                char CurrentCharacter = CurrentLine.Content[i];
+                char CurrentCharacter = CurrentLine.Content[i<CurrentLine.Length ? i : CurrentLine.Length - 1];
                 if (char.IsLetterOrDigit(CurrentCharacter))
                     Count++;
                 else if (i == CursorCharPosition - 1 && char.IsWhiteSpace(CurrentCharacter))
@@ -191,8 +191,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 else
                     break;
             }
-            //If it ignores the ControlKey return the real value of Count otherwise
-            //return 1 if Count is 0
             return Count;
         }
         public static int CalculateStepsToMoveRight2(Line CurrentLine, int CursorCharPosition)
@@ -221,7 +219,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             int Count = 0;
             for (int i = CursorCharPosition - 1; i >= 0; i--)
             {
-                char CurrentCharacter = CurrentLine.Content[i];
+                char CurrentCharacter = CurrentLine.Content[i < CurrentLine.Length ? i : CurrentLine.Length - 1];
                 if (char.IsLetterOrDigit(CurrentCharacter))
                     Count++;
                 else if (i == CursorCharPosition - 1 && char.IsWhiteSpace(CurrentCharacter))
