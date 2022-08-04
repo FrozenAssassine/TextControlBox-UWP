@@ -101,7 +101,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
             int Count = LinesToDelete;
             if (StartLine + Count >= TotalLines.Count)
-                Count = TotalLines.Count - StartLine - 1;
+                Count = TotalLines.Count - StartLine;
             if (Count < 0)
                 Count = 0;
 
