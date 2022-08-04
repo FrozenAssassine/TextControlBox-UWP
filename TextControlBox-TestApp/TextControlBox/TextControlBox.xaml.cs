@@ -358,7 +358,6 @@ namespace TextControlBox_TestApp.TextControlBox
             if (Selection.WholeTextSelected(TextSelection, TotalLines))
             {
                 Lines = Selection.GetSelectedTextLines(TotalLines, TextSelection, NewLineCharacter);
-                DebugHelper.DebugList(Lines);
                 UndoRedo.RecordNewLineUndo(Lines, 2, StartLinePos.LineNumber);
 
                 TotalLines.Clear();
@@ -372,8 +371,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 return;
             }
 
-            //Undo        
-
+            //Undo
             if (TextSelection == null)
             {
                 Lines = new List<Line>
@@ -394,10 +392,6 @@ namespace TextControlBox_TestApp.TextControlBox
             }
 
             UndoRedo.RecordNewLineUndo(Lines, UndoDeleteCount, StartLinePos.LineNumber);
-
-            DebugHelper.DebugList(Lines);
-
-            Debug.WriteLine(StartLinePos.LineNumber);
 
             if (TextSelection != null)
             {
@@ -1176,7 +1170,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 UpdateText();
             }
         }
-
+        
         //Internal events:
         private void Internal_TextChanged()
         {
