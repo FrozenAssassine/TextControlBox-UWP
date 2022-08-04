@@ -508,7 +508,7 @@ namespace TextControlBox_TestApp.TextControlBox
         {
             CursorPosition.LineNumber = CursorRenderer.GetCursorLineFromPoint(Canvas_Text, e, SingleLineHeight, RenderedLines.Count, NumberOfStartLine, NumberOfUnrenderedLinesToRenderStart);
             UpdateCurrentLineTextLayout();
-            CursorPosition.CharacterPosition = CursorRenderer.GetCharacterPositionFromPoint(GetCurrentLine(), CurrentLineTextLayout, e.GetCurrentPoint(Canvas_Text).Position, 0);
+            CursorPosition.CharacterPosition = CursorRenderer.GetCharacterPositionFromPoint(GetCurrentLine(), CurrentLineTextLayout, e.GetCurrentPoint(Canvas_Text).Position, (float)-HorizontalScrollbar.Value);
         }
 
         //Syntaxhighlighting
@@ -855,6 +855,7 @@ namespace TextControlBox_TestApp.TextControlBox
         private void HorizontalScrollbar_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
             Canvas_Text.Invalidate();
+            Canvas_Cursor.Invalidate();
             Canvas_Selection.Invalidate();
         }
 
@@ -887,8 +888,8 @@ namespace TextControlBox_TestApp.TextControlBox
             {
                 //Calculate the linenumbers             
                 float LineNumberWidth = (float)Utils.MeasureTextSize(CanvasDevice.GetSharedDevice(), (TotalLines.Count).ToString(), LineNumberTextFormat).Width;
-                Canvas_LineNumber.Width = LineNumberWidth + 10 + SpaceBetweenLineNumberAndText;
-                Canvas_Text.Margin = new Thickness(RenderingOffsetLeft, 0, 0, 0);
+                Canvas_LineNumber.Width = LineNumberWidth + 10;
+                Scroll.Margin = new Thickness(SpaceBetweenLineNumberAndText, 0, 0, 0);
             }
             else
                 Canvas_LineNumber.Width = SpaceBetweenLineNumberAndText;
@@ -944,7 +945,7 @@ namespace TextControlBox_TestApp.TextControlBox
 
             if (selectionrenderer.HasSelection)
             {
-                TextSelection = selectionrenderer.DrawSelection(DrawnTextLayout, RenderedLines, args, RenderingOffsetLeft, SingleLineHeight / 4, NumberOfUnrenderedLinesToRenderStart, RenderedLines.Count, new ScrollBarPosition(HorizontalScrollbar.Value, VerticalScrollbar.Value));
+                TextSelection = selectionrenderer.DrawSelection(DrawnTextLayout, RenderedLines, args, (float)-HorizontalScrollbar.Value, SingleLineHeight / 4, NumberOfUnrenderedLinesToRenderStart, RenderedLines.Count, new ScrollBarPosition(HorizontalScrollbar.Value, VerticalScrollbar.Value));
             }
         }
         private void Canvas_Cursor_Draw(CanvasControl sender, CanvasDrawEventArgs args)
@@ -956,8 +957,8 @@ namespace TextControlBox_TestApp.TextControlBox
             UpdateCurrentLineTextLayout();
 
             //Calculate the distance to the top for the cursorposition and render the cursor
-            float RenderPosition = (float)((CursorPosition.LineNumber - NumberOfUnrenderedLinesToRenderStart - 1) * SingleLineHeight) + SingleLineHeight / 4;
-            CursorRenderer.RenderCursor(CurrentLineTextLayout, CursorPosition.CharacterPosition, RenderingOffsetLeft, RenderPosition, FontSize, args, CursorColorBrush);
+            float RenderPosY = (float)((CursorPosition.LineNumber - NumberOfUnrenderedLinesToRenderStart - 1) * SingleLineHeight) + SingleLineHeight / 4;
+            CursorRenderer.RenderCursor(CurrentLineTextLayout, CursorPosition.CharacterPosition, (float)-HorizontalScrollbar.Value, RenderPosY, FontSize, args, CursorColorBrush);
         }
         private void Canvas_LineNumber_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
@@ -1133,7 +1134,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 _LineEnding = value;
             }
         }
-        public float SpaceBetweenLineNumberAndText = 0;
+        public float SpaceBetweenLineNumberAndText = 15;
         public CursorPosition CursorPosition
         {
             get => _CursorPosition;

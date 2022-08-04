@@ -534,9 +534,13 @@
         </Style>
     </UserControl.Resources>
 
-    <Grid x:Name="MainGrid">
-        <Grid Margin="10" x:Name="Scroll">
-            <xaml:CanvasControl
+    <Grid x:Name="MainGrid" Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <xaml:CanvasControl
+            Grid.Column="0"
                         x:Name="Canvas_LineNumber"
                         Draw="Canvas_LineNumber_Draw"
                         HorizontalAlignment="Left"
@@ -544,6 +548,7 @@
                         PointerEntered="Canvas_LineNumber_PointerEntered"
                         PointerExited="Canvas_LineNumber_PointerExited"
                         VerticalAlignment="Stretch"/>
+        <Grid Grid.Column="1" x:Name="Scroll">
             <xaml:CanvasControl x:Name="Canvas_Text"
                         Draw="Canvas_Text_Draw"
                         HorizontalAlignment="Stretch"
