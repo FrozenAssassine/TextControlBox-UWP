@@ -562,15 +562,15 @@ namespace TextControlBox_TestApp.TextControlBox
         {
             //Prevent key-entering if control key is pressed 
             var ctrl = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
-            if (ctrl)
+            var menu = Window.Current.CoreWindow.GetKeyState(VirtualKey.Menu).HasFlag(CoreVirtualKeyStates.Down);
+            if (ctrl && !menu || menu && !ctrl)
                 return;
 
             char character = (char)args.KeyCode;
-
             if (args.KeyCode == 13) //Enter
                 return;
 
-            if (args.KeyCode == 8) //Back-key was pressed
+            if (args.KeyCode == 8) //Back
                 return;
 
             if (!GotKeyboardInput)
