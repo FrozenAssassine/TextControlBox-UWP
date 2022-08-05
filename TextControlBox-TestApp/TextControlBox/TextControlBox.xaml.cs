@@ -41,12 +41,14 @@ namespace TextControlBox_TestApp.TextControlBox
         private CodeLanguages _CodeLanguages = CodeLanguages.None;
         private LineEnding _LineEnding = LineEnding.CRLF;
         private ObservableCollection<TextHighlight> _TextHighlights = new ObservableCollection<TextHighlight>();
+        private bool _ShowLineHighlighter = true;
 
         //Colors:
         CanvasSolidColorBrush TextColorBrush;
         CanvasSolidColorBrush SelectionTextBrush;
         CanvasSolidColorBrush CursorColorBrush;
         CanvasSolidColorBrush LineNumberColorBrush;
+        CanvasSolidColorBrush LineHighlighterBrush;
 
         bool ColorResourcesCreated = false;
         bool NeedsTextFormatUpdate = false;
@@ -130,6 +132,7 @@ namespace TextControlBox_TestApp.TextControlBox
             SelectionTextBrush = new CanvasSolidColorBrush(resourceCreator, SelectionColor);
             CursorColorBrush = new CanvasSolidColorBrush(resourceCreator, CursorColor);
             LineNumberColorBrush = new CanvasSolidColorBrush(resourceCreator, LineNumberColor);
+            LineHighlighterBrush = new CanvasSolidColorBrush(resourceCreator, LineHighlighterColor);
             ColorResourcesCreated = true;
         }
 
@@ -963,14 +966,20 @@ namespace TextControlBox_TestApp.TextControlBox
         private void Canvas_Cursor_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
             CurrentLine = GetCurrentLine();
-            if (CurrentLine == null)
+            if (CurrentLine == null || DrawnTextLayout == null)
                 return;
 
             UpdateCurrentLineTextLayout();
 
             //Calculate the distance to the top for the cursorposition and render the cursor
             float RenderPosY = (float)((CursorPosition.LineNumber - NumberOfUnrenderedLinesToRenderStart - 1) * SingleLineHeight) + SingleLineHeight / 4;
-            CursorRenderer.RenderCursor(CurrentLineTextLayout, CursorPosition.CharacterPosition, (float)-HorizontalScrollbar.Value, RenderPosY, FontSize, args, CursorColorBrush);
+            float OffsetX = (float)-HorizontalScrollbar.Value;
+            CursorRenderer.RenderCursor(CurrentLineTextLayout, CursorPosition.CharacterPosition, OffsetX, RenderPosY, FontSize, args, CursorColorBrush);
+
+            if (_ShowLineHighlighter && SelectionIsNull())
+            {
+                LineHighlighter.Render((float)sender.ActualWidth, CurrentLineTextLayout, OffsetX, RenderPosY, FontSize, args, LineHighlighterBrush);
+            }
         }
         private void Canvas_LineNumber_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
@@ -1158,6 +1167,7 @@ namespace TextControlBox_TestApp.TextControlBox
         public Color SelectionColor = Color.FromArgb(100, 0, 100, 255);
         public Color CursorColor = Color.FromArgb(255, 255, 255, 255);
         public Color LineNumberColor = Color.FromArgb(255, 0, 150, 255);
+        public Color LineHighlighterColor = Color.FromArgb(50, 0, 0, 0);
         public bool ShowLineNumbers
         {
             get
@@ -1169,6 +1179,11 @@ namespace TextControlBox_TestApp.TextControlBox
                 _ShowLineNumbers = value;
                 UpdateText();
             }
+        }
+        public bool ShowLineHighlighter
+        {
+            get =>_ShowLineHighlighter; 
+            set { _ShowLineHighlighter = value; UpdateCursor(); }
         }
         
         //Internal events:

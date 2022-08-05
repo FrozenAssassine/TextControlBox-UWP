@@ -133,6 +133,7 @@
     <Compile Include="TextControlBox\Languages\GCode.cs" />
     <Compile Include="TextControlBox\Languages\Html.cs" />
     <Compile Include="TextControlBox\Renderer\CursorRenderer.cs" />
+    <Compile Include="TextControlBox\Renderer\LineHighlighter.cs" />
     <Compile Include="TextControlBox\Renderer\SelectionRenderer.cs" />
     <Compile Include="TextControlBox\Renderer\TextRenderer.cs" />
     <Compile Include="TextControlBox\TextControlBox.xaml.cs">
