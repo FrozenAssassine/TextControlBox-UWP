@@ -386,7 +386,7 @@ namespace TextControlBox_TestApp.TextControlBox
 
             int UndoDeleteCount = 2;
             //Whole lines are selected
-            if(StartLinePos.CharacterPosition == 0 && EndLinePos.CharacterPosition == TotalLines[EndLinePos.LineNumber].Length)
+            if(TextSelection != null && StartLinePos.CharacterPosition == 0 && EndLinePos.CharacterPosition == TotalLines[EndLinePos.LineNumber].Length)
             {
                 UndoDeleteCount = 1;
             }
@@ -421,7 +421,6 @@ namespace TextControlBox_TestApp.TextControlBox
             UpdateSelection();
             UpdateCursor();
         }
-
 
         private void ClearSelectionIfNeeded()
         {
