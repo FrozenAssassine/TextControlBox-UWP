@@ -549,13 +549,13 @@
                         PointerExited="Canvas_LineNumber_PointerExited"
                         VerticalAlignment="Stretch"/>
         <Grid Grid.Column="1" x:Name="Scroll">
-            <xaml:CanvasControl x:Name="Canvas_Text"
-                        Draw="Canvas_Text_Draw"
+            <xaml:CanvasControl x:Name="Canvas_Cursor"
+                        Draw="Canvas_Cursor_Draw"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"/>
 
-            <xaml:CanvasControl x:Name="Canvas_Cursor"
-                        Draw="Canvas_Cursor_Draw"
+            <xaml:CanvasControl x:Name="Canvas_Text"
+                        Draw="Canvas_Text_Draw"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"/>
 
