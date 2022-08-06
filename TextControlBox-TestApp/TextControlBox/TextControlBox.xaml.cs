@@ -420,6 +420,7 @@ namespace TextControlBox_TestApp.TextControlBox
             CursorPosition.LineNumber += 1;
             CursorPosition.CharacterPosition = 0;
 
+            ScrollBottomIntoView();
             UpdateText();
             UpdateSelection();
             UpdateCursor();
@@ -889,13 +890,13 @@ namespace TextControlBox_TestApp.TextControlBox
             CreateColorResources(args.DrawingSession);
 
             //Calculate number of lines that needs to be rendered
-            int NumberOfLinesToBeRendered = (int)(this.ActualHeight / SingleLineHeight);
+            int NumberOfLinesToBeRendered = (int)(sender.ActualHeight / SingleLineHeight);
             NumberOfStartLine = (int)(VerticalScrollbar.Value / SingleLineHeight);
             NumberOfUnrenderedLinesToRenderStart = NumberOfStartLine;
             
             //Measure textposition and apply the value to the scrollbar
             VerticalScrollbar.Maximum = (TotalLines.Count + 1) * SingleLineHeight - Scroll.ActualHeight;
-            VerticalScrollbar.ViewportSize = this.ActualHeight;
+            VerticalScrollbar.ViewportSize = sender.ActualHeight;
 
             StringBuilder LineNumberContent = new StringBuilder();
             if (_ShowLineNumbers)
@@ -934,7 +935,7 @@ namespace TextControlBox_TestApp.TextControlBox
 
             //Measure horizontal Width of longest line and apply to scrollbar
             HorizontalScrollbar.Maximum = LongestLineLenght * CharWidth;
-            HorizontalScrollbar.ViewportSize = this.ActualWidth;
+            HorizontalScrollbar.ViewportSize = sender.ActualWidth;
 
             //Create the textlayout --> apply the Syntaxhighlighting --> render it
             DrawnTextLayout = TextRenderer.CreateTextResource(sender, DrawnTextLayout, TextFormat, RenderedText, new Size { Height = sender.Size.Height, Width = this.ActualWidth });
