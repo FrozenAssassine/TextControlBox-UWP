@@ -113,8 +113,8 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
             if (SelectionEndPosition == null || CurrentLine == null)
                 return ReturnValue;
-
-            int StepsToMoveRight = CalculateStepsToMoveRight(TotalLines[SelectionEndPosition.LineNumber], SelectionEndPosition.CharacterPosition);
+             
+            int StepsToMoveRight = CalculateStepsToMoveRight(TotalLines[SelectionEndPosition.LineNumber < TotalLines.Count ? SelectionEndPosition.LineNumber : TotalLines.Count - 1], SelectionEndPosition.CharacterPosition);
 
             if (SelectionEndPosition.CharacterPosition == CurrentLine.Length)
             {

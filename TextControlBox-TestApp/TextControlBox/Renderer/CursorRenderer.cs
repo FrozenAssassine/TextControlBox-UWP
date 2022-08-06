@@ -42,7 +42,7 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
         {
             if (TextLayout == null)
                 return;
-            Vector2 vector = TextLayout.GetCaretPosition(CharacterPosition, false);
+            Vector2 vector = TextLayout.GetCaretPosition(CharacterPosition == -1 ? 0 : CharacterPosition, false);
             args.DrawingSession.FillRectangle(vector.X + XOffset, Y, 1, FontSize, CursorColorBrush);
         }
         public static double GetCursorOverNewLine(CanvasTextLayout TextLayout, int Cursor_CharacterPosition)

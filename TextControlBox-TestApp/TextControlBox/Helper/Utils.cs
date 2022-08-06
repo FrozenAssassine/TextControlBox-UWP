@@ -39,18 +39,20 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         }
 
         //Get the longest line and create a string with all the content, that is in the textbox, to save performance by iterating just one time throught the list
-        public static int GetLongestLineLenght(List<Line> Lines)
+        public static int GetLongestLineIndex(List<Line> TotalLines)
         {
+            int LongestIndex = 0;
             int OldLenght = 0;
-            for (int i = 0; i < Lines.Count; i++)
+            for (int i = 0; i < TotalLines.Count; i++)
             {
-                var lenght = Lines[i].Length;
+                var lenght = TotalLines[i].Length;
                 if (lenght > OldLenght)
                 {
+                    LongestIndex = i;
                     OldLenght = lenght;
                 }
             }
-            return OldLenght;
+            return LongestIndex;
         }
 
         public static bool CursorPositionsAreEqual(CursorPosition First, CursorPosition Second)

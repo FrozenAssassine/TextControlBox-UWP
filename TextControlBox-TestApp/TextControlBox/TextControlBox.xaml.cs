@@ -881,7 +881,7 @@ namespace TextControlBox_TestApp.TextControlBox
             //Create resources and layouts:
             if (NeedsTextFormatUpdate || TextFormat == null)
             {
-                if(_ShowLineNumbers)
+                if (_ShowLineNumbers)
                     LineNumberTextFormat = TextRenderer.CreateLinenumberTextFormat(FontSize);
                 TextFormat = TextRenderer.CreateCanvasTextFormat(FontSize);
                 UpdateCharSize();
@@ -893,12 +893,13 @@ namespace TextControlBox_TestApp.TextControlBox
             int NumberOfLinesToBeRendered = (int)(sender.ActualHeight / SingleLineHeight);
             NumberOfStartLine = (int)(VerticalScrollbar.Value / SingleLineHeight);
             NumberOfUnrenderedLinesToRenderStart = NumberOfStartLine;
-            
+
             //Measure textposition and apply the value to the scrollbar
             VerticalScrollbar.Maximum = (TotalLines.Count + 1) * SingleLineHeight - Scroll.ActualHeight;
             VerticalScrollbar.ViewportSize = sender.ActualHeight;
 
             StringBuilder LineNumberContent = new StringBuilder();
+
             if (_ShowLineNumbers)
             {
                 //Calculate the linenumbers             
@@ -918,7 +919,7 @@ namespace TextControlBox_TestApp.TextControlBox
                     Line item = TotalLines[i];
                     RenderedLines.Add(item);
                     TextToRender.AppendLine(item.Content);
-                    if(_ShowLineNumbers)
+                    if (_ShowLineNumbers)
                         LineNumberContent.AppendLine((i + 1).ToString());
                 }
             }
@@ -931,20 +932,19 @@ namespace TextControlBox_TestApp.TextControlBox
             TextToRender.Clear();
 
             //Get text from longest line in whole text
-            int LongestLineLenght = Utils.GetLongestLineLenght(TotalLines);
+            Size LineLength = Utils.MeasureLineLenght(CanvasDevice.GetSharedDevice(), TotalLines[Utils.GetLongestLineIndex(TotalLines)], TextFormat);
 
             //Measure horizontal Width of longest line and apply to scrollbar
-            HorizontalScrollbar.Maximum = LongestLineLenght * CharWidth;
+            HorizontalScrollbar.Maximum = LineLength.Width <= sender.ActualWidth ? 0 : LineLength.Width - sender.ActualWidth + 50;
             HorizontalScrollbar.ViewportSize = sender.ActualWidth;
 
             //Create the textlayout --> apply the Syntaxhighlighting --> render it
             DrawnTextLayout = TextRenderer.CreateTextResource(sender, DrawnTextLayout, TextFormat, RenderedText, new Size { Height = sender.Size.Height, Width = this.ActualWidth });
             UpdateSyntaxHighlighting();
             args.DrawingSession.DrawTextLayout(DrawnTextLayout, (float)(-HorizontalScrollbar.Value), SingleLineHeight, TextColorBrush);
-            
+
             //UpdateTextHighlights(args.DrawingSession);
-            
-            if(_ShowLineNumbers)
+            if (_ShowLineNumbers)
                 Canvas_LineNumber.Invalidate();
         }
         private void Canvas_Selection_Draw(CanvasControl sender, CanvasDrawEventArgs args)
