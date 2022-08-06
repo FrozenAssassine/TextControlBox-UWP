@@ -433,7 +433,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
             if (StartLine == EndLine) //Singleline
             {
-                Line Line = TotalLines[StartLine < TotalLines.Count ? StartIndex : TotalLines.Count - 1];
+                Line Line = TotalLines[StartLine < TotalLines.Count ? StartLine : TotalLines.Count - 1];
                 if (StartIndex == 0 && EndIndex != Line.Length)
                     StringBuilder.Append(Line.Content.Remove(EndIndex));
                 else if (EndIndex == Line.Length && StartIndex != 0)
