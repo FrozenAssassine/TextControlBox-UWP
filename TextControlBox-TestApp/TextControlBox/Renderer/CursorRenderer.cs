@@ -16,10 +16,10 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
 {
     public class CursorRenderer
     {
-        public static int GetCursorLineFromPoint(CanvasControl Canvas, PointerRoutedEventArgs e, float SingleLineHeight, int NumberOfRenderedLines, int NumberOfStartLine, int NumberOfUnderedLines)
+        public static int GetCursorLineFromPoint(Point Point, float SingleLineHeight, int NumberOfRenderedLines, int NumberOfStartLine, int NumberOfUnderedLines)
         {
             //Calculate the relative linenumber, where the pointer was pressed at
-            int Linenumber = (int)(e.GetCurrentPoint(Canvas).Position.Y / SingleLineHeight) + 1;
+            int Linenumber = (int)((Point.Y) / SingleLineHeight) + 1;
 
             if (Linenumber > NumberOfStartLine + NumberOfRenderedLines)
                 Linenumber = NumberOfStartLine + NumberOfRenderedLines;

@@ -112,7 +112,8 @@ namespace TextControlBox_TestApp.TextControlBox
             //Events:
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             Window.Current.CoreWindow.CharacterReceived += CoreWindow_CharacterReceived;
-            _TextHighlights.CollectionChanged += _TextHighlights_CollectionChanged; ;
+            Window.Current.CoreWindow.PointerMoved += CoreWindow_PointerMoved;
+            _TextHighlights.CollectionChanged += _TextHighlights_CollectionChanged;
             InitialiseOnStart();
         }
 
@@ -465,10 +466,10 @@ namespace TextControlBox_TestApp.TextControlBox
             return null;
         }
 
-        private void SelectDoubleClick(PointerRoutedEventArgs e)
+        private void SelectDoubleClick(Point Point)
         {
             //Calculate the Characterposition from the current pointerposition:
-            int Characterpos = CursorRenderer.GetCharacterPositionFromPoint(GetCurrentLine(), CurrentLineTextLayout, e.GetCurrentPoint(Canvas_Text).Position, 0);
+            int Characterpos = CursorRenderer.GetCharacterPositionFromPoint(GetCurrentLine(), CurrentLineTextLayout, Point, 0);
             //Use a function to calculate the steps from one the current position to the next letter or digit
             int StepsLeft = Cursor.CalculateStepsToMoveLeft2(CurrentLine, Characterpos);
             int StepsRight = Cursor.CalculateStepsToMoveRight2(CurrentLine, Characterpos);
@@ -509,11 +510,11 @@ namespace TextControlBox_TestApp.TextControlBox
         }
 
         //Get the position of the cursor and set it to the CursorPosition variable
-        private void UpdateCursorVariable(PointerRoutedEventArgs e)
+        private void UpdateCursorVariable(Point Point)
         {
-            CursorPosition.LineNumber = CursorRenderer.GetCursorLineFromPoint(Canvas_Text, e, SingleLineHeight, RenderedLines.Count, NumberOfStartLine, NumberOfUnrenderedLinesToRenderStart);
+            CursorPosition.LineNumber = CursorRenderer.GetCursorLineFromPoint(Point, SingleLineHeight, RenderedLines.Count, NumberOfStartLine, NumberOfUnrenderedLinesToRenderStart);
             UpdateCurrentLineTextLayout();
-            CursorPosition.CharacterPosition = CursorRenderer.GetCharacterPositionFromPoint(GetCurrentLine(), CurrentLineTextLayout, e.GetCurrentPoint(Canvas_Text).Position, (float)-HorizontalScrollbar.Value);
+            CursorPosition.CharacterPosition = CursorRenderer.GetCharacterPositionFromPoint(GetCurrentLine(), CurrentLineTextLayout, Point, (float)-HorizontalScrollbar.Value);
         }
 
         //Syntaxhighlighting
@@ -750,6 +751,25 @@ namespace TextControlBox_TestApp.TextControlBox
         }
 
         //Draw the selection
+        private void CoreWindow_PointerMoved(CoreWindow sender, PointerEventArgs args)
+        {
+            Point PointerPosition = args.CurrentPoint.Position;
+
+            if (selectionrenderer.IsSelecting)
+            {
+                double CanvasWidth = Math.Round(this.ActualWidth, 2);
+                double CurPosX = Math.Round(PointerPosition.X, 2);
+                if (CurPosX > CanvasWidth - 100)
+                {
+                    HorizontalScrollbar.Value -= (CurPosX > CanvasWidth + 30 ? -20 : (-CanvasWidth - CurPosX) / 150);
+                }
+                else if (CurPosX < 100)
+                {
+                    HorizontalScrollbar.Value += CurPosX < - 30 ? -20 : -(100 - CurPosX) / 10;
+                }
+            }
+        }
+
         private void Canvas_Selection_PointerReleased(object sender, PointerRoutedEventArgs e)
         {
             if (selectionrenderer.IsSelecting)
@@ -761,18 +781,18 @@ namespace TextControlBox_TestApp.TextControlBox
         {
             if (selectionrenderer.IsSelecting)
             {
-                UpdateCursorVariable(e);
+                UpdateCursorVariable(e.GetCurrentPoint(Canvas_Selection).Position);
                 UpdateCursor();
 
-                selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber-1);
+                selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber - 1);
                 UpdateSelection();
-                e.Handled = true;
             }
         }
         private void Canvas_Selection_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
-            PointerClickCount++;
+            Point PointerPosition = e.GetCurrentPoint(sender as UIElement).Position;
 
+            PointerClickCount++;
             if (PointerClickCount == 3)
             {
                 SelectLine(CursorPosition.LineNumber);
@@ -781,7 +801,7 @@ namespace TextControlBox_TestApp.TextControlBox
             }
             else if (PointerClickCount == 2)
             {
-                SelectDoubleClick(e);
+                SelectDoubleClick(PointerPosition);
             }
             else
             {
@@ -794,7 +814,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 //Shift + click = set selection
                 if (IsShiftPressed && LeftButtonPressed)
                 {
-                    UpdateCursorVariable(e);
+                    UpdateCursorVariable(PointerPosition);
 
                     selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber - 1);
                     selectionrenderer.HasSelection = true;
@@ -805,7 +825,7 @@ namespace TextControlBox_TestApp.TextControlBox
 
                 if (LeftButtonPressed)
                 {
-                    UpdateCursorVariable(e);
+                    UpdateCursorVariable(PointerPosition);
                     selectionrenderer.SelectionStartPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber - 1);
                     if (selectionrenderer.HasSelection)
                     {
@@ -828,8 +848,6 @@ namespace TextControlBox_TestApp.TextControlBox
                 PointerClickTimer.Stop();
                 PointerClickCount = 0;
             };
-
-            e.Handled = true;
         }
         private void Canvas_Selection_PointerWheelChanged(object sender, PointerRoutedEventArgs e)
         {
