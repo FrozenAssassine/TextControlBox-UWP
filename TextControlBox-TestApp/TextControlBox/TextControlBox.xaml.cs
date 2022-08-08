@@ -35,6 +35,7 @@ namespace TextControlBox_TestApp.TextControlBox
     public partial class TextControlBox : UserControl
     {
         private string NewLineCharacter = "\r\n";
+        private string TabCharacter = "\t";
         private InputPane inputPane;
         private bool _ShowLineNumbers = true;
         private CodeLanguage _CodeLanguage = null;
@@ -220,14 +221,12 @@ namespace TextControlBox_TestApp.TextControlBox
             }
             else if (TextSelection == null && SplittedText.Length > 1)
             {
-                int ItemRangeCount = TotalLines.Count > CursorPosition.LineNumber ? 2 : 1;
-
                 UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, TotalLines.GetRange(CursorPosition.LineNumber-1, 1), SplittedText.Length);
                 CursorPosition = Selection.InsertText(TextSelection, CursorPosition, TotalLines, text, NewLineCharacter);
             }
             else
             {
-                List<Line> Lines = Selection.GetSelectedTextLines(TotalLines, TextSelection, NewLineCharacter);
+                List<Line> Lines = Selection.GetCopyOfSelectedLines(TotalLines, TextSelection, NewLineCharacter);
 
                 //Check whether the startline and endline are completely selected to calculate the number of lines to delete
                 CursorPosition StartLine = Selection.GetMin(TextSelection.StartPosition, TextSelection.EndPosition);        
@@ -347,7 +346,7 @@ namespace TextControlBox_TestApp.TextControlBox
             CursorPosition StartLinePos = new CursorPosition(TextSelection == null ? NormalCurPos : Selection.GetMin(TextSelection));
             CursorPosition EndLinePos = new CursorPosition(TextSelection == null ? NormalCurPos : Selection.GetMax(TextSelection));
 
-            List<Line> Lines = new List<Line>();
+            List<Line> Lines;
 
             int Index = StartLinePos.LineNumber;
             if (Index >= TotalLines.Count)
@@ -361,7 +360,7 @@ namespace TextControlBox_TestApp.TextControlBox
             //If the whole text is selected
             if (Selection.WholeTextSelected(TextSelection, TotalLines))
             {
-                Lines = Selection.GetSelectedTextLines(TotalLines, TextSelection, NewLineCharacter);
+                Lines = Selection.GetCopyOfSelectedLines(TotalLines, TextSelection, NewLineCharacter);
                 UndoRedo.RecordNewLineUndo(Lines, 2, StartLinePos.LineNumber);
 
                 TotalLines.Clear();
@@ -385,7 +384,7 @@ namespace TextControlBox_TestApp.TextControlBox
             }
             else
             {
-                Lines = Selection.GetSelectedTextLines(TotalLines, TextSelection, NewLineCharacter);
+                Lines = Selection.GetCopyOfSelectedLines(TotalLines, TextSelection, NewLineCharacter);
             }
 
             int UndoDeleteCount = 2;
@@ -564,6 +563,12 @@ namespace TextControlBox_TestApp.TextControlBox
         //Draw characters to textbox
         private void CoreWindow_CharacterReceived(CoreWindow sender, CharacterReceivedEventArgs args)
         {
+            //Don't enter any of these characters as chracter -> 
+            if (args.KeyCode == 13 || //Enter
+                args.KeyCode == 9 || //Tab
+                args.KeyCode == 8)  //Back
+                return;
+
             //Prevent key-entering if control key is pressed 
             var ctrl = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
             var menu = Window.Current.CoreWindow.GetKeyState(VirtualKey.Menu).HasFlag(CoreVirtualKeyStates.Down);
@@ -571,11 +576,6 @@ namespace TextControlBox_TestApp.TextControlBox
                 return;
 
             char character = (char)args.KeyCode;
-            if (args.KeyCode == 13) //Enter
-                return;
-
-            if (args.KeyCode == 8) //Back
-                return;
 
             if (!GotKeyboardInput)
             {
@@ -747,6 +747,36 @@ namespace TextControlBox_TestApp.TextControlBox
                         ClearSelection();
                         break;
                     }
+            }
+
+            //Tab-key
+            if(e.VirtualKey == VirtualKey.Tab)
+            {
+                TextSelection Selection;
+                if (shift)
+                    Selection = TabKey.MoveTabBack(TotalLines, TextSelection, CursorPosition, TabCharacter, NewLineCharacter);
+                else
+                    Selection = TabKey.MoveTab(TotalLines, TextSelection, CursorPosition, TabCharacter, NewLineCharacter);
+
+                if (Selection != null)
+                {
+                    if (Selection.EndPosition == null)
+                    {
+                        CursorPosition = Selection.StartPosition;
+                    }
+                    else
+                    {
+                        
+                        selectionrenderer.SelectionStartPosition = Selection.StartPosition;
+                        CursorPosition = selectionrenderer.SelectionEndPosition = Selection.EndPosition;
+                        selectionrenderer.HasSelection = true;
+                        selectionrenderer.IsSelecting = false;
+                    }
+                }
+                UpdateText();
+                UpdateCursor();
+                UpdateSelection();
+
             }
         }
 
@@ -969,12 +999,12 @@ namespace TextControlBox_TestApp.TextControlBox
         {
             if (selectionrenderer.SelectionStartPosition != null && selectionrenderer.SelectionEndPosition != null)
             {
-                if (selectionrenderer.SelectionStartPosition.LineNumber != selectionrenderer.SelectionEndPosition.LineNumber &&
-                    selectionrenderer.SelectionStartPosition.CharacterPosition != selectionrenderer.SelectionEndPosition.CharacterPosition)
-                {
-                    selectionrenderer.HasSelection = true;
-                }
+                selectionrenderer.HasSelection =
+                    !(selectionrenderer.SelectionStartPosition.LineNumber == selectionrenderer.SelectionEndPosition.LineNumber &&
+                    selectionrenderer.SelectionStartPosition.CharacterPosition == selectionrenderer.SelectionEndPosition.CharacterPosition);
             }
+            else
+                selectionrenderer.HasSelection = false;
 
             if (selectionrenderer.HasSelection)
             {
@@ -1259,7 +1289,6 @@ namespace TextControlBox_TestApp.TextControlBox
         public string Content { get => _Content; set { _Content = value; this.Length = value.Length; } }
         public int Length { get; private set; }
 
-
         public Line(string Content = "")
         {
             this.Content = Content;
@@ -1270,7 +1299,9 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         public void AddText(string Value, int Position)
         {
-            if (Length == 0)
+            if (Position > Content.Length)
+                Content += Value;
+            else if (Length == 0)
                 AddToEnd(Value);
             else
                 Content = Content.Insert(Position, Value);
@@ -1380,6 +1411,11 @@ namespace TextControlBox_TestApp.TextControlBox
 }
 public static class Extensions
 {
+    public static string RemoveFirstOccurence(this string value, string removeString)
+    {
+        int index = value.IndexOf(removeString, StringComparison.Ordinal);
+        return index < 0 ? value : value.Remove(index, removeString.Length);
+    }
     public static string ToDelimitedString<T>(this IEnumerable<T> source, string delimiter, Func<T, string> func)
     {
         return String.Join(delimiter, source.Select(func).ToArray());

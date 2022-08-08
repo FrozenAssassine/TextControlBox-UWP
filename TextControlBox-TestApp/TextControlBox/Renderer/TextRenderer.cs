@@ -27,8 +27,10 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                 HorizontalAlignment = CanvasHorizontalAlignment.Left,
                 VerticalAlignment = CanvasVerticalAlignment.Top,
                 WordWrapping = CanvasWordWrapping.NoWrap,
-                LineSpacing = FontSize + 2,
+                LineSpacing = FontSize + 2,  
             };
+            Debug.WriteLine("Default tabsize: " + textFormat.IncrementalTabStop);
+            textFormat.IncrementalTabStop = 137;
             textFormat.FontFamily = "Consolas";
             textFormat.TrimmingGranularity = CanvasTextTrimmingGranularity.None;
             textFormat.TrimmingSign = CanvasTrimmingSign.None;

@@ -15,6 +15,35 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 {
     public class Selection
     {
+        //Oder the selection so StartPosition is always smaller than EndPosition
+        public static TextSelection OrderTextSelection(TextSelection Selection)
+        {
+            int StartLine = Math.Min(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
+            int EndLine = Math.Max(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
+            int StartPosition;
+            int EndPosition;
+            if (StartLine == EndLine)
+            {
+                StartPosition = Math.Min(Selection.StartPosition.CharacterPosition, Selection.EndPosition.CharacterPosition);
+                EndPosition = Math.Max(Selection.StartPosition.CharacterPosition, Selection.EndPosition.CharacterPosition);
+            }
+            else
+            {
+                if (Selection.StartPosition.LineNumber < Selection.EndPosition.LineNumber)
+                {
+                    EndPosition = Selection.EndPosition.CharacterPosition;
+                    StartPosition = Selection.StartPosition.CharacterPosition;
+                }
+                else
+                {
+                    EndPosition = Selection.StartPosition.CharacterPosition;
+                    StartPosition = Selection.EndPosition.CharacterPosition;
+                }
+            }
+
+            return new TextSelection(Selection.Index, Selection.Length, new CursorPosition(StartPosition, StartLine), new CursorPosition(EndPosition, EndLine));
+        }
+
         public static bool WholeTextSelected(TextSelection Selection, List<Line> TotalLines)
         {
             if (Selection == null)
@@ -116,14 +145,16 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             return new CursorPosition(Replace[Replace.Count - 1].Length-1, StartLine);
         }
 
-        public static CursorPosition Replace(TextSelection Selection, List<Line> TotalLines, string Text, string NewLineCharacter, bool UseForUndoRedo = false)
+        public static CursorPosition Replace(TextSelection Selection, List<Line> TotalLines, string Text, string NewLineCharacter)
         {
             Debug.WriteLine("--Replace text--");
 
-            int StartLine = Math.Min(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
-            int EndLine = Math.Max(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
-            int StartPosition;
-            int EndPosition;
+            Selection = OrderTextSelection(Selection);
+            int StartLine = Selection.StartPosition.LineNumber;
+            int EndLine = Selection.EndPosition.LineNumber;
+            int StartPosition = Selection.StartPosition.CharacterPosition;
+            int EndPosition = Selection.EndPosition.CharacterPosition;
+
             string[] SplittedText = Text.Split(NewLineCharacter);
 
             //Just delete the text if the string is emty
@@ -134,9 +165,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             //Selection is singleline and Text to paste is only a singleline
             if (StartLine == EndLine && SplittedText.Length == 1)
             {
-                StartPosition = Math.Min(Selection.StartPosition.CharacterPosition, Selection.EndPosition.CharacterPosition);
-                EndPosition = Math.Max(Selection.StartPosition.CharacterPosition, Selection.EndPosition.CharacterPosition);
-
                 if (StartPosition == 0 && EndPosition == TotalLines[EndLine].Length)
                     TotalLines[StartLine].Content = "";
                 else
@@ -159,17 +187,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
             else
             {
-                if (Selection.StartPosition.LineNumber < Selection.EndPosition.LineNumber)
-                {
-                    EndPosition = Selection.EndPosition.CharacterPosition;
-                    StartPosition = Selection.StartPosition.CharacterPosition;
-                }
-                else
-                {
-                    EndPosition = Selection.StartPosition.CharacterPosition;
-                    StartPosition = Selection.EndPosition.CharacterPosition;
-                }
-
                 Line Start_Line = TotalLines[StartLine];
                 if (EndLine > TotalLines.Count)
                     EndLine = TotalLines.Count - 1;
@@ -213,20 +230,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                             TotalLines.Insert(StartLine + i, new Line(SplittedText[i]));
                     }
                 }
-                //Both startline and endline are not completely selected
-                else if(UseForUndoRedo)
-                {
-                    Start_Line.Remove(StartPosition);
-                    End_Line.Substring(EndPosition);
-
-                    int Remove = EndLine - StartLine - 1;
-                    TotalLines.RemoveRange(StartLine, Remove < 0 ? 1 : Remove);
-
-                    for (int i = 0; i < SplittedText.Length; i++)
-                    {
-                        TotalLines.Insert(StartLine + i, new Line(SplittedText[i]));
-                    }
-                }
                 else
                 {
                     Start_Line.Remove(StartPosition);
@@ -255,17 +258,17 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         public static CursorPosition Remove(TextSelection Selection, List<Line> TotalLines, string NewLineCharacter)
         {
             Debug.WriteLine("--Remove text--");
-            int StartLine = Math.Min(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
-            int EndLine = Math.Max(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
-            int StartPosition;
-            int EndPosition;
+            Selection = OrderTextSelection(Selection);
+            int StartLine = Selection.StartPosition.LineNumber;
+            int EndLine = Selection.EndPosition.LineNumber;
+            int StartPosition = Selection.StartPosition.CharacterPosition;
+            int EndPosition = Selection.EndPosition.CharacterPosition;
+
             Line Start_Line = TotalLines[StartLine];
             Line End_Line = TotalLines[EndLine < TotalLines.Count ? EndLine : TotalLines.Count -1];
 
             if (StartLine == EndLine)
             {
-                StartPosition = Math.Min(Selection.StartPosition.CharacterPosition, Selection.EndPosition.CharacterPosition);
-                EndPosition = Math.Max(Selection.StartPosition.CharacterPosition, Selection.EndPosition.CharacterPosition);
                 if (StartPosition == 0 && EndPosition == TotalLines[EndLine].Length)
                     End_Line.Content = "";
                 else
@@ -279,18 +282,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
             else
             {
-                if (Selection.StartPosition.LineNumber < Selection.EndPosition.LineNumber)
-                {
-                    EndPosition = Selection.EndPosition.CharacterPosition;
-                    StartPosition = Selection.StartPosition.CharacterPosition;
-                }
-                else
-                {
-                    EndPosition = Selection.StartPosition.CharacterPosition;
-                    StartPosition = Selection.EndPosition.CharacterPosition;
-                }
-
-
                 //Whole lines are selected from start to finish
                 if (StartPosition == 0 && EndPosition == End_Line.Length)
                 {
@@ -367,8 +358,11 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         }
 
         //Returns the whole lines, without respecting the characterposition of the selection
-        public static List<Line> GetNewListWithSelectedLines(List<Line>TotalLines, TextSelection Selection)
+        public static List<Line> GetPointerToSelectedLines(List<Line>TotalLines, TextSelection Selection)
         {
+            if (Selection == null)
+                return null;
+
             int StartLine = Math.Min(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
             int EndLine = Math.Max(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
 
@@ -383,7 +377,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
         }
         //Get the selected lines as a new Line without respecting the characterposition
-        public static List<Line> GetSelectedTextLines(List<Line>TotalLines, TextSelection Selection, string NewLineCharacter)
+        public static List<Line> GetCopyOfSelectedLines(List<Line>TotalLines, TextSelection Selection, string NewLineCharacter)
         {
             if (Selection == null)
                 return null;
