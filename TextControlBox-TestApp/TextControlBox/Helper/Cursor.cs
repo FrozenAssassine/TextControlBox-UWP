@@ -31,6 +31,14 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             this.LineNumber = LineNumber;
             return this;
         }
+        public void AddToCharacterPos(int Add)
+        {
+            CharacterPosition += Add;
+        }
+        public void SubtractFromCharacterPos(int Value)
+        {
+            CharacterPosition -= Value;
+        }
         public new string ToString()
         {
             return LineNumber + ":" + CharacterPosition;
