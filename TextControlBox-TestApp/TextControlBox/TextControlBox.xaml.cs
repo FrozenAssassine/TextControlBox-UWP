@@ -1,4 +1,4 @@
-﻿    using Microsoft.Graphics.Canvas;
+﻿   using Microsoft.Graphics.Canvas;
     using Microsoft.Graphics.Canvas.Brushes;
     using Microsoft.Graphics.Canvas.Text;
     using Microsoft.Graphics.Canvas.UI.Xaml;
@@ -143,13 +143,24 @@
             }
             private void UpdateCharSize()
             {
-                Size charsize = Utils.MeasureTextSize(CanvasDevice.GetSharedDevice(), "M", TextFormat);
                 SingleLineHeight = TextFormat.LineSpacing;
             }
             private void UpdateCurrentLineTextLayout()
             {
                 CurrentLineTextLayout = CreateTextLayoutForLine(Canvas_Text, CursorPosition.LineNumber - 1);
             }
+            private void SetSelection(TextSelection Selection)
+            {
+                if (Selection == null)
+                    return;
+
+                selectionrenderer.SelectionStartPosition = Selection.StartPosition;
+                selectionrenderer.SelectionEndPosition = Selection.EndPosition;
+                selectionrenderer.HasSelection = true;
+                selectionrenderer.IsSelecting = false;
+                UpdateSelection();
+            }
+            
 
             private int GetLineContentWidth(Line line)
             {
