@@ -88,40 +88,35 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 CurrentLine.Length > CursorPosition.CharacterPosition ?
                 CurrentLine.Content.Remove(0, CursorPosition.CharacterPosition) : "";
 
-            if (lines.Length == 1 && Text != string.Empty) //Singleline
+            //Singleline
+            if (lines.Length == 1 && Text != string.Empty)
             {
                 Text = Text.Replace("\r", string.Empty).Replace("\n", string.Empty);
                 TotalLines[CursorPosition.LineNumber - 1].AddText(Text, CursorPosition.CharacterPosition);
-                return CursorPosition.ChangeCharacterPosition(CursorPosition, CursorPosition.CharacterPosition + Text.Length);
+                CursorPosition.AddToCharacterPos(Text.Length);
+                return CursorPosition;
             }
 
             //Multiline
-            void RemoveLine(int Index)
-            {
-                if (Index < TotalLines.Count && Index >= 0)
-                    TotalLines.RemoveAt(Index);
-            }
-            RemoveLine(CursorPosition.LineNumber - 1); //Startline
+            int DelIndex = CursorPosition.LineNumber - 1;
+            if (DelIndex < TotalLines.Count && DelIndex >= 0)
+                TotalLines.RemoveAt(DelIndex); //Startline
 
             //Paste the text
-            int LastLineLength = 0;
             for (int i = 0; i < lines.Length; i++)
             {
                 Line line;
                 if (i == 0)
                     line = new Line(TextInFrontOfCursor + lines[i]);
                 else if (i == lines.Length - 1)
-                {
                     line = new Line(lines[i] + TextBehindCursor);
-                    LastLineLength = lines[i].Length;
-                }
                 else
                     line = new Line(lines[i]);
 
                 TotalLines.Insert(CursorPosition.LineNumber - 1 + i, line);
             }
   
-            return new CursorPosition(CursorPosition.CharacterPosition + LastLineLength -1, CursorPosition.LineNumber + lines.Length - 1);
+            return new CursorPosition(CursorPosition.CharacterPosition + lines.Length > 0 ? lines[lines.Length - 1].Length : 0, CursorPosition.LineNumber + lines.Length - 1);
         }
         
         public static CursorPosition ReplaceUndo(int StartLine, List<Line> TotalLines, List<Line> Replace, int LinesToDelete)
@@ -149,6 +144,12 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         {
             Debug.WriteLine("--Replace text--");
 
+            //Just delete the text if the string is emty
+            if (Text == string.Empty)
+            {
+                return Remove(Selection, TotalLines, NewLineCharacter);
+            }
+
             Selection = OrderTextSelection(Selection);
             int StartLine = Selection.StartPosition.LineNumber;
             int EndLine = Selection.EndPosition.LineNumber;
@@ -157,22 +158,17 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
             string[] SplittedText = Text.Split(NewLineCharacter);
 
-            //Just delete the text if the string is emty
-            if (Text == string.Empty)
-            {
-                return Remove(Selection, TotalLines, NewLineCharacter);
-            }
-            //Selection is singleline and Text to paste is only a singleline
+            //Selection is singleline and text to paste is also singleline
             if (StartLine == EndLine && SplittedText.Length == 1)
             {
                 if (StartPosition == 0 && EndPosition == TotalLines[EndLine].Length)
                     TotalLines[StartLine].Content = "";
                 else
                     TotalLines[StartLine].Remove(StartPosition, EndPosition - StartPosition);
-                
+
                 TotalLines[StartLine].AddText(Text, StartPosition);
 
-                return new CursorPosition(EndPosition, StartLine + 1);
+                return new CursorPosition(EndPosition + Text.Length, StartLine + 1);
             }
             else if (WholeTextSelected(Selection, TotalLines))
             {
@@ -251,7 +247,8 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                     }
                     TotalLines.Remove(End_Line);
                 }
-                return new CursorPosition(EndPosition, EndLine );
+
+                return new CursorPosition(Start_Line.Length + End_Line.Length - 1, StartLine + SplittedText.Length);
             }
         }
 

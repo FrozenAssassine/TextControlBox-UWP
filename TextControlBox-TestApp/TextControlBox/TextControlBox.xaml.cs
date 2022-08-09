@@ -168,6 +168,17 @@ namespace TextControlBox_TestApp.TextControlBox
         {
             CurrentLineTextLayout = CreateTextLayoutForLine(Canvas_Text, CursorPosition.LineNumber - 1);
         }
+        private void SetSelection(TextSelection Selection)
+        {
+            if (Selection == null)
+                return;
+
+            selectionrenderer.SelectionStartPosition = Selection.StartPosition;
+            selectionrenderer.SelectionEndPosition = Selection.EndPosition;
+            selectionrenderer.HasSelection = true;
+            selectionrenderer.IsSelecting = false;
+            UpdateSelection();
+        }
 
         private int GetLineContentWidth(Line line)
         {
@@ -1081,8 +1092,6 @@ namespace TextControlBox_TestApp.TextControlBox
             {
                 string Text = LineEndings.ChangeLineEndings(await dataPackageView.GetTextAsync(), LineEnding);
                 AddCharacter(Text);
-                UpdateText();
-                ClearSelection();
             }
         }
         public void Copy()
@@ -1134,16 +1143,7 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         public void Undo()
         {
-            var sel = UndoRedo.Undo(TotalLines, this, NewLineCharacter);
-            if (sel == null)
-                return;
-
-            selectionrenderer.SelectionStartPosition = sel.StartPosition;
-            selectionrenderer.SelectionEndPosition = sel.EndPosition;
-            selectionrenderer.HasSelection = true;
-            selectionrenderer.IsSelecting = false;
-
-            UpdateSelection();
+            SetSelection(UndoRedo.Undo(TotalLines, this, NewLineCharacter));
         }
         public void Redo()
         {
