@@ -1,11 +1,6 @@
 ﻿using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Windows.Foundation;
 
 namespace TextControlBox_TestApp.TextControlBox.Renderer
@@ -27,7 +22,7 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                 HorizontalAlignment = CanvasHorizontalAlignment.Left,
                 VerticalAlignment = CanvasVerticalAlignment.Top,
                 WordWrapping = CanvasWordWrapping.NoWrap,
-                LineSpacing = FontSize + 2,  
+                LineSpacing = FontSize + 2,
             };
             Debug.WriteLine("Default tabsize: " + textFormat.IncrementalTabStop);
             textFormat.IncrementalTabStop = 137;

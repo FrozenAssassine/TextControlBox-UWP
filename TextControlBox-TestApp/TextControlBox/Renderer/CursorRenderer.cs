@@ -1,16 +1,8 @@
 ﻿using Microsoft.Graphics.Canvas.Brushes;
 using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
-using TextControlBox_TestApp.TextControlBox.Helper;
 using Windows.Foundation;
-using Windows.UI.Xaml.Input;
 
 namespace TextControlBox_TestApp.TextControlBox.Renderer
 {
@@ -32,7 +24,7 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                 return 0;
 
             TextLayout.HitTest(
-                (float)CursorPosition.X-MarginLeft, 0,
+                (float)CursorPosition.X - MarginLeft, 0,
                 out var textLayoutRegion);
             return textLayoutRegion.CharacterIndex;
         }

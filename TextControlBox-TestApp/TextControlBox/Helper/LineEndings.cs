@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Windows.UI.Popups;
 
 namespace TextControlBox_TestApp.TextControlBox.Helper
 {
@@ -39,7 +33,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             string LineEndingToInsert = LineEndingToString(LineEnding);
             StringBuilder sb = new StringBuilder();
             var Splitted = Text.Split(LineEndingToString(CurrentLineEnding));
-            for (int i = 0; i< Splitted.Length; i++)
+            for (int i = 0; i < Splitted.Length; i++)
             {
                 sb.Append(Splitted[i] + (i == Splitted.Length - 1 ? "" : LineEndingToInsert));
             }
