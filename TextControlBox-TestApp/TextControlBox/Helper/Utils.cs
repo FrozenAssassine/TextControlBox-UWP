@@ -1,15 +1,7 @@
-﻿using Microsoft.Graphics.Canvas.Text;
-using Microsoft.Graphics.Canvas;
-using System;
+﻿using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Text;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Windows.Foundation;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media;
-using System.Diagnostics;
-using TextControlBox_TestApp.TextControlBox.Renderer;
 
 namespace TextControlBox_TestApp.TextControlBox.Helper
 {
@@ -27,7 +19,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
             //If the text starts with a tab or a whitespace, replace them with the last character of the line, to
             //get the actual width of the line, because tabs and whitespaces at the beginning are not counted to the lenght
-            double WidthOfPlaceHolder = 0; 
+            double WidthOfPlaceHolder = 0;
 
             if (text.StartsWith('\t') || text.StartsWith(' '))
             {
@@ -57,7 +49,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
         public static bool CursorPositionsAreEqual(CursorPosition First, CursorPosition Second)
         {
-           return First.LineNumber == Second.LineNumber && First.CharacterPosition == Second.CharacterPosition;
+            return First.LineNumber == Second.LineNumber && First.CharacterPosition == Second.CharacterPosition;
         }
         public static bool IndexIsInRangeOf(List<Line> Lines, int Index)
         {
@@ -66,7 +58,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
         public static string[] SplitAt(string Text, int Index)
         {
-            string First = Index<Text.Length ? Text.Remove(Index) : Text;
+            string First = Index < Text.Length ? Text.Remove(Index) : Text;
             string Second = Index < Text.Length ? Text.Substring(Index) : "";
             return new string[] { First, Second };
         }

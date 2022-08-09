@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
-using Windows.UI;
+﻿using Windows.UI;
 
 namespace TextControlBox_TestApp.TextControlBox.Languages
 {

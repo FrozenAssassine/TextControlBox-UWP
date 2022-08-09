@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
+﻿using System.Collections.Generic;
 using Windows.UI;
 
 namespace TextControlBox_TestApp.TextControlBox.Languages
@@ -19,8 +14,8 @@ namespace TextControlBox_TestApp.TextControlBox.Languages
         Color lightgray = Color.FromArgb(255, 120, 120, 120);
         Color red = Color.FromArgb(255, 255, 50, 0);
 
-        readonly IEnumerable<string> Variables = new string[] {"object", "string", "var", "bool", "int", "double", "float", "uint", "long" };
-        readonly IEnumerable<string> Attributes = new string[] {"break", "typeof", "this", "null", "class", "get", "set", "init", "void", "const", "readonly", "class", "sealed", "partial", "namespace", "while", "foreach", "for", "if", "else", "true", "false", "new", "private", "public", "protected", "override", "using", "return", "static", "switch", "case", "do", "enum" };
+        readonly IEnumerable<string> Variables = new string[] { "object", "string", "var", "bool", "int", "double", "float", "uint", "long" };
+        readonly IEnumerable<string> Attributes = new string[] { "break", "typeof", "this", "null", "class", "get", "set", "init", "void", "const", "readonly", "class", "sealed", "partial", "namespace", "while", "foreach", "for", "if", "else", "true", "false", "new", "private", "public", "protected", "override", "using", "return", "static", "switch", "case", "do", "enum" };
         readonly IEnumerable<string> Classes = new string[] { "List", "Color", "Console", "Debug" };
         readonly IEnumerable<string> Regions = new string[] { "#region", "#endregion", "#elif", "#else", "#endif", "#error", "#warning", "#line", "#nullable", "#if" };
 
@@ -38,7 +33,7 @@ namespace TextControlBox_TestApp.TextControlBox.Languages
             Highlights.Add(new SyntaxHighlights($"(?i)\\b(try|catch|finally)\\b", red));//try catch finally
 
             //Strings
-            Highlights.Add(new SyntaxHighlights(@"""[^\n]*?""", orange)); 
+            Highlights.Add(new SyntaxHighlights(@"""[^\n]*?""", orange));
             Highlights.Add(new SyntaxHighlights(@"'[^\n]*?'", orange));
             Highlights.Add(new SyntaxHighlights(@"(?s)(\""\""\"")(.*?)(\""\""\"")", orange));
 

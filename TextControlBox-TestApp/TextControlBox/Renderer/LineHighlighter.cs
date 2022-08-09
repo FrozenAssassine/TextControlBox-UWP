@@ -1,12 +1,6 @@
 ﻿using Microsoft.Graphics.Canvas.Brushes;
 using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TextControlBox_TestApp.TextControlBox.Renderer
 {

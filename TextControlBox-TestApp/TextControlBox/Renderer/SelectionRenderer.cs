@@ -2,7 +2,6 @@
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using TextControlBox_TestApp.TextControlBox.Helper;
 using Windows.Foundation;
 using Windows.UI;
@@ -59,7 +58,7 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
             }
             return new CursorPosition(StartCharacterPos, StartLine);
         }
-        
+
         //Create the rect, to render
         public Rect CreateRect(Rect r, float MarginLeft = 0, float MarginTop = 0)
         {
@@ -100,10 +99,10 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                 {
                     if (SelectionEndPosition.LineNumber < UnrenderedLinesToRenderStart)
                         CharacterPosEnd = 0;
-                    if (SelectionStartPosition.LineNumber < UnrenderedLinesToRenderStart+1)
+                    if (SelectionStartPosition.LineNumber < UnrenderedLinesToRenderStart + 1)
                         CharacterPosStart = 0;
                 }
-                else if(SelectionEndPosition.LineNumber == SelectionStartPosition.LineNumber)
+                else if (SelectionEndPosition.LineNumber == SelectionStartPosition.LineNumber)
                 {
                     if (SelectionStartPosition.LineNumber < UnrenderedLinesToRenderStart)
                         CharacterPosStart = 0;
@@ -114,7 +113,7 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                 {
                     if (SelectionStartPosition.LineNumber < UnrenderedLinesToRenderStart)
                         CharacterPosStart = 0;
-                    if (SelectionEndPosition.LineNumber < UnrenderedLinesToRenderStart+1)
+                    if (SelectionEndPosition.LineNumber < UnrenderedLinesToRenderStart + 1)
                         CharacterPosEnd = 0;
                 }
 
@@ -151,10 +150,10 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
 
                 SelectionStart = Math.Min(SelStartIndex, SelEndIndex);
 
-                if(SelEndIndex > SelStartIndex)
+                if (SelEndIndex > SelStartIndex)
                     SelectionLength = SelEndIndex - SelStartIndex;
                 else
-                   SelectionLength = SelStartIndex - SelEndIndex;
+                    SelectionLength = SelStartIndex - SelEndIndex;
 
                 CanvasTextLayoutRegion[] descriptions = TextLayout.GetCharacterRegions(SelectionStart, SelectionLength);
                 for (int i = 0; i < descriptions.Length; i++)

@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using TextControlBox_TestApp.TextControlBox.Renderer;
-using Windows.UI.Text;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace TextControlBox_TestApp.TextControlBox.Helper
 {
@@ -36,7 +29,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 LinesToDelete = LinesToDelete
             });
         }
-        
+
         //Singleline undo is used for textchanges in a line
         public void RecordSingleLineUndo(Line CurrentLine, CursorPosition CursorPosition)
         {
@@ -65,16 +58,16 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 return null;
 
             UndoRedoClass item = UndoStack.Pop();
-            if(item.UndoRedoType == UndoRedoType.SingleLineEdit)
+            if (item.UndoRedoType == UndoRedoType.SingleLineEdit)
             {
-                if(this.EnteringText.Length > 0 && UndoStack.Count == 0)
+                if (this.EnteringText.Length > 0 && UndoStack.Count == 0)
                 {
                     TotalLines[item.LineNumber - 1].SetText(this.EnteringText);
                 }
                 if (item.LineNumber - 1 >= 0 && item.LineNumber - 1 < TotalLines.Count)
                     TotalLines[item.LineNumber - 1].SetText(item.Text);
             }
-            else if(item.UndoRedoType == UndoRedoType.NewLineEdit)
+            else if (item.UndoRedoType == UndoRedoType.NewLineEdit)
             {
                 int LineNumber = item.LineNumber < 0 ? 0 : item.LineNumber;
                 if (LineNumber + item.LinesToDelete >= TotalLines.Count)
@@ -83,7 +76,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 TotalLines.RemoveRange(LineNumber, item.LinesToDelete);
                 TotalLines.InsertRange(LineNumber, item.RemovedLines);
             }
-            else if(item.UndoRedoType == UndoRedoType.MultilineEdit)
+            else if (item.UndoRedoType == UndoRedoType.MultilineEdit)
             {
                 Selection.ReplaceUndo(item.LineNumber, TotalLines, item.RemovedLines, item.LinesToDelete);
                 return item.TextSelection;
