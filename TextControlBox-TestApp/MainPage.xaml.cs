@@ -25,9 +25,9 @@ namespace TextControlBox_TestApp
         private string GenerateContent()
         {
             StringBuilder sb = new StringBuilder();
-            for (int i = 1; i < 10; i++)
+            for (int i = 1; i < 40; i++)
             {
-                sb.Append("Line" + i + (i == 9 ? "" : "\n"));
+                sb.Append("Line" + i + (i == 39 ? "" : "\n"));
                 //sb.Append("Line" + i + " Line" + (i+9) + (i == 9 ? "" : "\n"));
             }
             return sb.ToString();
