@@ -1268,7 +1268,7 @@
             }
             private void Canvas_LineNumber_PointerEntered(object sender, PointerRoutedEventArgs e)
             {
-                ChangeCursor(CoreCursorType.UpArrow);
+                ChangeCursor(CoreCursorType.Arrow);
             }
             private void Canvas_LineNumber_PointerExited(object sender, PointerRoutedEventArgs e)
             {
