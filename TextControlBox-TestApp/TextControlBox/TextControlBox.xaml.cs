@@ -1278,15 +1278,15 @@
 
             UpdateText();
         }
-
         //Cursor:
+         
         private void ChangeCursor(CoreCursorType CursorType)
         {
             Window.Current.CoreWindow.PointerCursor = new CoreCursor(CursorType, 0);
         }
         private void Canvas_LineNumber_PointerEntered(object sender, PointerRoutedEventArgs e)
         {
-            ChangeCursor(CoreCursorType.UpArrow);
+            ChangeCursor(CoreCursorType.Arrow);
         }
         private void Canvas_LineNumber_PointerExited(object sender, PointerRoutedEventArgs e)
         {
@@ -1294,133 +1294,133 @@
         }
     }
 
-        public class Line
-        {
-            private string _Content = "";
-            public string Content { get => _Content; set { _Content = value; this.Length = value.Length; } }
-            public int Length { get; private set; }
+    public class Line
+    {
+        private string _Content = "";
+        public string Content { get => _Content; set { _Content = value; this.Length = value.Length; } }
+        public int Length { get; private set; }
 
-            public Line(string Content = "")
-            {
-                this.Content = Content;
-            }
-            public void SetText(string Value)
-            {
-                Content = Value;
-            }
-            public void AddText(string Value, int Position)
-            {
-                if (Position > Content.Length)
-                    Content += Value;
-                else if (Length == 0)
-                    AddToEnd(Value);
-                else
-                    Content = Content.Insert(Position, Value);
-            }
-            public void AddToEnd(string Value)
-            {
+        public Line(string Content = "")
+        {
+            this.Content = Content;
+        }
+        public void SetText(string Value)
+        {
+            Content = Value;
+        }
+        public void AddText(string Value, int Position)
+        {
+            if (Position > Content.Length)
                 Content += Value;
-            }
-            public void AddToStart(string Value)
-            {
-                Content = Content.Insert(0, Value);
-            }
-            public string Remove(int Index, int Count = -1)
-            {
-                if (Index >= Length || Index < 0)
-                    return Content;
-
-                try
-                {
-                    if (Count == -1)
-                        Content = Content.Remove(Index);
-                    else
-                        Content = Content.Remove(Index, Count);
-                }
-                catch (ArgumentOutOfRangeException)
-                {
-                }
+            else if (Length == 0)
+                AddToEnd(Value);
+            else
+                Content = Content.Insert(Position, Value);
+        }
+        public void AddToEnd(string Value)
+        {
+            Content += Value;
+        }
+        public void AddToStart(string Value)
+        {
+            Content = Content.Insert(0, Value);
+        }
+        public string Remove(int Index, int Count = -1)
+        {
+            if (Index >= Length || Index < 0)
                 return Content;
-            }
-            public string Substring(int Index, int Count = -1)
+
+            try
             {
-                if (Index >= Length)
-                    Content = "";
-                else if (Count == -1)
-                    Content = Content.Substring(Index);
+                if (Count == -1)
+                    Content = Content.Remove(Index);
                 else
-                    Content = Content.Substring(Index, Count);
-                return Content;
+                    Content = Content.Remove(Index, Count);
             }
-            public void ReplaceText(int Start, int End, string Text)
+            catch (ArgumentOutOfRangeException)
             {
-                int end = Math.Max(Start, End);
-                int start = Math.Min(Start, End);
-
-                if (start == 0 && end >= Length)
-                    Content = "";
-                else
-                {
-                    Content = Content.Remove(End) + Text + Content.Remove(0, start);
-                }
             }
+            return Content;
         }
-        public enum CodeLanguages
+        public string Substring(int Index, int Count = -1)
         {
-            Csharp, Gcode, Html, None
+            if (Index >= Length)
+                Content = "";
+            else if (Count == -1)
+                Content = Content.Substring(Index);
+            else
+                Content = Content.Substring(Index, Count);
+            return Content;
         }
-        public class TextHighlight
+        public void ReplaceText(int Start, int End, string Text)
         {
-            public int StartIndex { get; }
-            public int EndIndex { get; }
-            public Color HighlightColor { get; }
+            int end = Math.Max(Start, End);
+            int start = Math.Min(Start, End);
 
-            public TextHighlight(int StartIndex, int EndIndex, Color HighlightColor)
+            if (start == 0 && end >= Length)
+                Content = "";
+            else
             {
-                this.StartIndex = StartIndex;
-                this.EndIndex = EndIndex;
-                this.HighlightColor = HighlightColor;
+                Content = Content.Remove(End) + Text + Content.Remove(0, start);
             }
-        }
-        public class CodeLanguage
-        {
-            public string Name { get; set; }
-            public List<SyntaxHighlights> Highlights = new List<SyntaxHighlights>();
-        }
-        public class SyntaxHighlights
-        {
-            public SyntaxHighlights(string Pattern, Windows.UI.Color Color)
-            {
-                this.Pattern = Pattern;
-                this.Color = Color;
-            }
-
-            public string Pattern { get; set; }
-            public Color Color { get; set; }
-        }
-        public class ScrollBarPosition
-        {
-            public ScrollBarPosition(ScrollBarPosition ScrollBarPosition)
-            {
-                this.ValueX = ScrollBarPosition.ValueX;
-                this.ValueY = ScrollBarPosition.ValueY;
-            }
-            public ScrollBarPosition(double ValueX = 0, double ValueY = 0)
-            {
-                this.ValueX = ValueX;
-                this.ValueY = ValueY;
-            }
-
-            public double ValueX { get; set; }
-            public double ValueY { get; set; }
-        }
-
-        public enum LineEnding
-        {
-            LF, CRLF, CR
         }
     }
-    public static class Extensions
+    public enum CodeLanguages
+    {
+        Csharp, Gcode, Html, None
+    }
+    public class TextHighlight
+    {
+        public int StartIndex { get; }
+        public int EndIndex { get; }
+        public Color HighlightColor { get; }
+
+        public TextHighlight(int StartIndex, int EndIndex, Color HighlightColor)
+        {
+            this.StartIndex = StartIndex;
+            this.EndIndex = EndIndex;
+            this.HighlightColor = HighlightColor;
+        }
+    }
+    public class CodeLanguage
+    {
+        public string Name { get; set; }
+        public List<SyntaxHighlights> Highlights = new List<SyntaxHighlights>();
+    }
+    public class SyntaxHighlights
+    {
+        public SyntaxHighlights(string Pattern, Windows.UI.Color Color)
+        {
+            this.Pattern = Pattern;
+            this.Color = Color;
+        }
+
+        public string Pattern { get; set; }
+        public Color Color { get; set; }
+    }
+    public class ScrollBarPosition
+    {
+        public ScrollBarPosition(ScrollBarPosition ScrollBarPosition)
+        {
+            this.ValueX = ScrollBarPosition.ValueX;
+            this.ValueY = ScrollBarPosition.ValueY;
+        }
+        public ScrollBarPosition(double ValueX = 0, double ValueY = 0)
+        {
+            this.ValueX = ValueX;
+            this.ValueY = ValueY;
+        }
+
+        public double ValueX { get; set; }
+        public double ValueY { get; set; }
+    }
+
+    public enum LineEnding
+    {
+        LF, CRLF, CR
+    }
+}
+public static class Extensions
 {
     public static string RemoveFirstOccurence(this string value, string removeString)
     {
