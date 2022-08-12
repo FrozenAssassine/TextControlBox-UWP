@@ -1,6 +1,7 @@
 ﻿using Microsoft.Graphics.Canvas.Brushes;
 using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
+using System.Diagnostics;
 using System.Numerics;
 using Windows.Foundation;
 
@@ -34,7 +35,9 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
         {
             if (TextLayout == null)
                 return;
-            Vector2 vector = TextLayout.GetCaretPosition(CharacterPosition == -1 ? 0 : CharacterPosition, false);
+
+            Vector2 vector = TextLayout.GetCaretPosition(CharacterPosition < 0 ? 0 : CharacterPosition, false);
+            Debug.WriteLine("Render Cursor at: " + Y);
             args.DrawingSession.FillRectangle(vector.X + XOffset, Y, 1, FontSize, CursorColorBrush);
         }
         public static double GetCursorOverNewLine(CanvasTextLayout TextLayout, int Cursor_CharacterPosition)

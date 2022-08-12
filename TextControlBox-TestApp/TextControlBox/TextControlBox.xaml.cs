@@ -26,6 +26,7 @@ using Size = Windows.Foundation.Size;
 
 namespace TextControlBox_TestApp.TextControlBox
 {
+
     public partial class TextControlBox : UserControl
     {
         private string NewLineCharacter = "\r\n";
@@ -1269,7 +1270,7 @@ namespace TextControlBox_TestApp.TextControlBox
         public Color TextColor = Color.FromArgb(255, 255, 255, 255);
         public Color SelectionColor = Color.FromArgb(100, 0, 100, 255);
         public Color CursorColor = Color.FromArgb(255, 255, 255, 255);
-        public Color LineNumberColor = Color.FromArgb(255, 0, 150, 255);
+        public Color LineNumberColor = Color.FromArgb(255, 150, 150, 150);
         public Color LineHighlighterColor = Color.FromArgb(50, 0, 0, 0);
         public bool ShowLineNumbers
         {
@@ -1306,9 +1307,12 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         public void AddText(string Value, int Position)
         {
-            if (Position > Content.Length)
+            if (Position < 0)
+                Position = 0;
+
+            if (Position >= Content.Length)
                 Content += Value;
-            else if (Length == 0)
+            else if (Length <= 0)
                 AddToEnd(Value);
             else
                 Content = Content.Insert(Position, Value);
