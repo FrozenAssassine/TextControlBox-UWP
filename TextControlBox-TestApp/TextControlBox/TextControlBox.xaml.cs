@@ -1,30 +1,30 @@
-﻿   using Microsoft.Graphics.Canvas;
-    using Microsoft.Graphics.Canvas.Brushes;
-    using Microsoft.Graphics.Canvas.Text;
-    using Microsoft.Graphics.Canvas.UI.Xaml;
-    using System;
-    using System.Collections.Generic;
-    using System.Collections.ObjectModel;
-    using System.Diagnostics;
-    using System.Linq;
-    using System.Text;
-    using System.Text.RegularExpressions;
-    using TextControlBox_TestApp.TextControlBox.Helper;
-    using TextControlBox_TestApp.TextControlBox.Languages;
-    using TextControlBox_TestApp.TextControlBox.Renderer;
-    using Windows.ApplicationModel.DataTransfer;
-    using Windows.Foundation;
-    using Windows.System;
-    using Windows.UI.Core;
-    using Windows.UI.ViewManagement;
-    using Windows.UI.Xaml;
-    using Windows.UI.Xaml.Controls;
-    using Windows.UI.Xaml.Controls.Primitives;
-    using Windows.UI.Xaml.Input;
-    using Color = Windows.UI.Color;
-    using Size = Windows.Foundation.Size;
+﻿using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Brushes;
+using Microsoft.Graphics.Canvas.Text;
+using Microsoft.Graphics.Canvas.UI.Xaml;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using TextControlBox_TestApp.TextControlBox.Helper;
+using TextControlBox_TestApp.TextControlBox.Languages;
+using TextControlBox_TestApp.TextControlBox.Renderer;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Foundation;
+using Windows.System;
+using Windows.UI.Core;
+using Windows.UI.ViewManagement;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Input;
+using Color = Windows.UI.Color;
+using Size = Windows.Foundation.Size;
 
-    namespace TextControlBox_TestApp.TextControlBox
+namespace TextControlBox_TestApp.TextControlBox
     {
     public partial class TextControlBox : UserControl
     {
@@ -921,7 +921,6 @@
         //Scrolling and Zooming
         private void VerticalScrollbar_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            Debug.WriteLine(VerticalScrollbar.Value);
             Canvas_Text.Invalidate();
             Canvas_Selection.Invalidate();
             UpdateCursor();
@@ -1225,7 +1224,7 @@
         public Color TextColor = Color.FromArgb(255, 255, 255, 255);
         public Color SelectionColor = Color.FromArgb(100, 0, 100, 255);
         public Color CursorColor = Color.FromArgb(255, 255, 255, 255);
-        public Color LineNumberColor = Color.FromArgb(255, 0, 150, 255);
+        public Color LineNumberColor = Color.FromArgb(255, 150, 150, 150);
         public Color LineHighlighterColor = Color.FromArgb(50, 0, 0, 0);
         public bool ShowLineNumbers
         {
@@ -1310,9 +1309,12 @@
         }
         public void AddText(string Value, int Position)
         {
-            if (Position > Content.Length)
+            if (Position < 0)
+                Position = 0;
+
+            if (Position >= Content.Length)
                 Content += Value;
-            else if (Length == 0)
+            else if (Length <= 0)
                 AddToEnd(Value);
             else
                 Content = Content.Insert(Position, Value);
