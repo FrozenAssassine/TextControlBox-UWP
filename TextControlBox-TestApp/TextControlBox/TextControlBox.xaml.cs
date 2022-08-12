@@ -1,31 +1,31 @@
-﻿   using Microsoft.Graphics.Canvas;
-    using Microsoft.Graphics.Canvas.Brushes;
-    using Microsoft.Graphics.Canvas.Text;
-    using Microsoft.Graphics.Canvas.UI.Xaml;
-    using System;
-    using System.Collections.Generic;
-    using System.Collections.ObjectModel;
-    using System.Diagnostics;
-    using System.Linq;
-    using System.Text;
-    using System.Text.RegularExpressions;
-    using TextControlBox_TestApp.TextControlBox.Helper;
-    using TextControlBox_TestApp.TextControlBox.Languages;
-    using TextControlBox_TestApp.TextControlBox.Renderer;
-    using Windows.ApplicationModel.DataTransfer;
-    using Windows.Foundation;
-    using Windows.System;
-    using Windows.UI.Core;
-    using Windows.UI.ViewManagement;
-    using Windows.UI.Xaml;
-    using Windows.UI.Xaml.Controls;
-    using Windows.UI.Xaml.Controls.Primitives;
-    using Windows.UI.Xaml.Input;
-    using Color = Windows.UI.Color;
-    using Size = Windows.Foundation.Size;
+﻿using Microsoft.Graphics.Canvas;
+using Microsoft.Graphics.Canvas.Brushes;
+using Microsoft.Graphics.Canvas.Text;
+using Microsoft.Graphics.Canvas.UI.Xaml;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using TextControlBox_TestApp.TextControlBox.Helper;
+using TextControlBox_TestApp.TextControlBox.Languages;
+using TextControlBox_TestApp.TextControlBox.Renderer;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Foundation;
+using Windows.System;
+using Windows.UI.Core;
+using Windows.UI.ViewManagement;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Input;
+using Color = Windows.UI.Color;
+using Size = Windows.Foundation.Size;
 
-    namespace TextControlBox_TestApp.TextControlBox
-    {
+namespace TextControlBox_TestApp.TextControlBox
+{
     public partial class TextControlBox : UserControl
     {
         private string NewLineCharacter = "\r\n";
@@ -40,7 +40,6 @@
 
         //Colors:
         CanvasSolidColorBrush TextColorBrush;
-        CanvasSolidColorBrush SelectionTextBrush;
         CanvasSolidColorBrush CursorColorBrush;
         CanvasSolidColorBrush LineNumberColorBrush;
         CanvasSolidColorBrush LineHighlighterBrush;
@@ -48,6 +47,7 @@
         bool ColorResourcesCreated = false;
         bool NeedsTextFormatUpdate = false;
         bool GotKeyboardInput = false;
+        bool ScrollEventsLocked = false;
 
         CanvasTextFormat TextFormat = null;
         CanvasTextLayout DrawnTextLayout = null;
@@ -104,7 +104,7 @@
         private void InitialiseOnStart()
         {
             if (TotalLines.Count == 0)
-                AddNewLine();
+                TotalLines.Add(new Line());
         }
 
         //Assing the colors to the CanvasSolidColorBrush
@@ -114,7 +114,6 @@
                 return;
 
             TextColorBrush = new CanvasSolidColorBrush(resourceCreator, TextColor);
-            SelectionTextBrush = new CanvasSolidColorBrush(resourceCreator, SelectionColor);
             CursorColorBrush = new CanvasSolidColorBrush(resourceCreator, CursorColor);
             LineNumberColorBrush = new CanvasSolidColorBrush(resourceCreator, LineNumberColor);
             LineHighlighterBrush = new CanvasSolidColorBrush(resourceCreator, LineHighlighterColor);
@@ -134,6 +133,7 @@
         }
         private void UpdateText()
         {
+
             ChangeCursor(CoreCursorType.IBeam);
             Canvas_Text.Invalidate();
         }
@@ -161,7 +161,6 @@
             UpdateSelection();
         }
 
-
         private int GetLineContentWidth(Line line)
         {
             if (line == null || line.Content == null)
@@ -170,36 +169,15 @@
         }
         private Line GetCurrentLine()
         {
-            return GetLineFromIndex(CursorPosition.LineNumber - 1);
-        }
-        private Line GetLineFromIndex(int Index)
-        {
-            if (IndexIsInLines(Index))
-                return TotalLines[Index];
-            return null;
-        }
-        private bool IndexIsInLines(int Value)
-        {
-            return Value < TotalLines.Count && Value > -1;
-        }
-        private void RemoveLine(int Index)
-        {
-            if (Index < TotalLines.Count && Index > 0)
-                TotalLines.RemoveAt(Index);
+            return Utils.GetLineFromList(CursorPosition.LineNumber - 1, TotalLines);
         }
 
         private void UpdateScrollToShowCursor()
         {
             if (NumberOfStartLine + RenderedLines.Count <= CursorPosition.LineNumber - 1)
-            {
-                Debug.WriteLine("ScrollBottomIntoView");
                 ScrollBottomIntoView();
-            }
             else if(NumberOfStartLine > CursorPosition.LineNumber)
-            {
-                Debug.WriteLine("ScrollTopIntoView");
                 ScrollTopIntoView();
-            }
         }
 
         private void AddCharacter(string text)
@@ -344,7 +322,7 @@
             UpdateText();
             UpdateCursor();
         }
-        private void AddNewLine(bool RecordUndo = false)
+        private void AddNewLine()
         {
             if (TotalLines.Count == 0)
             {
@@ -378,9 +356,9 @@
                 CursorPosition = new CursorPosition(0, 1);
 
                 ClearSelection();
+                UpdateCursor();
                 UpdateText();
                 UpdateSelection();
-                UpdateCursor();
                 return;
             }
 
@@ -430,7 +408,11 @@
             CursorPosition.LineNumber += 1;
             CursorPosition.CharacterPosition = 0;
 
-            UpdateScrollToShowCursor();
+            if (TextSelection == null && CursorPosition.LineNumber - 1 == RenderedLines.Count + NumberOfUnrenderedLinesToRenderStart)
+                ScrollOneLineDown();
+            else
+                UpdateScrollToShowCursor();
+
             UpdateText();
             UpdateSelection();
             UpdateCursor();
@@ -466,6 +448,8 @@
         }
         private bool SelectionIsNull()
         {
+            if (TextSelection == null)
+                return true;
             return selectionrenderer.SelectionStartPosition == null || selectionrenderer.SelectionEndPosition == null;
         }
         private CanvasTextLayout CreateTextLayoutForLine(CanvasControl sender, int LineIndex)
@@ -522,6 +506,7 @@
         private void UpdateCursorVariable(Point Point)
         {
             CursorPosition.LineNumber = CursorRenderer.GetCursorLineFromPoint(Point, SingleLineHeight, RenderedLines.Count, NumberOfStartLine, NumberOfUnrenderedLinesToRenderStart);
+
             UpdateCurrentLineTextLayout();
             CursorPosition.CharacterPosition = CursorRenderer.GetCharacterPositionFromPoint(GetCurrentLine(), CurrentLineTextLayout, Point, (float)-HorizontalScrollbar.Value);
         }
@@ -640,7 +625,7 @@
                     break;
                 case VirtualKey.Enter:
                     UndoRedo.RecordUndoOnPress(CurrentLine, CursorPosition);
-                    AddNewLine(true);
+                    AddNewLine();
                     break;
                 case VirtualKey.Back:
                     RemoveText(ctrl);
@@ -786,7 +771,6 @@
                 UpdateText();
                 UpdateCursor();
                 UpdateSelection();
-
             }
         }
 
@@ -902,7 +886,7 @@
                 CheckFontSize();
                 NeedsTextFormatUpdate = true;
                 ScrollLineIntoView(TotalLines.IndexOf(CurrentLine));
-                Canvas_Text.Invalidate();
+                UpdateText();
                 Canvas_Selection.Invalidate();
                 e.Handled = true;
             }
@@ -921,16 +905,21 @@
         //Scrolling and Zooming
         private void VerticalScrollbar_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            Debug.WriteLine(VerticalScrollbar.Value);
+            if (ScrollEventsLocked)
+                return;
+
             Canvas_Text.Invalidate();
             Canvas_Selection.Invalidate();
-            UpdateCursor();
+            Canvas_Cursor.Invalidate();
         }
         private void HorizontalScrollbar_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
+            if (ScrollEventsLocked)
+                return;
+            
             Canvas_Text.Invalidate();
-            Canvas_Cursor.Invalidate();
             Canvas_Selection.Invalidate();
+            Canvas_Cursor.Invalidate();
         }
 
         private void Canvas_Text_Draw(CanvasControl sender, CanvasDrawEventArgs args)
@@ -951,6 +940,7 @@
             //Calculate number of lines that needs to be rendered
             int NumberOfLinesToBeRendered = (int)(sender.ActualHeight / SingleLineHeight);
             NumberOfStartLine = (int)(VerticalScrollbar.Value / SingleLineHeight);
+
             NumberOfUnrenderedLinesToRenderStart = NumberOfStartLine;
 
             //Measure textposition and apply the value to the scrollbar
@@ -1024,17 +1014,20 @@
         }
         private void Canvas_Cursor_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
+
             CurrentLine = GetCurrentLine();
             if (CurrentLine == null || DrawnTextLayout == null)
                 return;
 
-            UpdateCurrentLineTextLayout();
-
             //Calculate the distance to the top for the cursorposition and render the cursor
             float RenderPosY = (float)((CursorPosition.LineNumber - NumberOfUnrenderedLinesToRenderStart - 1) * SingleLineHeight) + SingleLineHeight / 4;
+            //Out of display-region:
+            if (RenderPosY > RenderedLines.Count * SingleLineHeight || RenderPosY < 0)
+                return;
+
+            UpdateCurrentLineTextLayout();
             float OffsetX = (float)-HorizontalScrollbar.Value;
             CursorRenderer.RenderCursor(CurrentLineTextLayout, CursorPosition.CharacterPosition, OffsetX, RenderPosY, FontSize, args, CursorColorBrush);
-
             if (_ShowLineHighlighter && SelectionIsNull())
             {
                 LineHighlighter.Render((float)sender.ActualWidth, CurrentLineTextLayout, OffsetX, RenderPosY, FontSize, args, LineHighlighterBrush);
@@ -1048,6 +1041,55 @@
             CanvasTextLayout LineNumberLayout = TextRenderer.CreateTextLayout(sender, LineNumberTextFormat, LineNumberTextToRender, (float)sender.Size.Width, (float)sender.Size.Height);
             args.DrawingSession.DrawTextLayout(LineNumberLayout, 0, SingleLineHeight, LineNumberColorBrush);
         }
+
+        //Internal events:
+        private void Internal_TextChanged()
+        {
+
+        }
+        private void Internal_CursorChanged()
+        {
+
+        }
+        private void Internal_CharacterAddedOrRemoved()
+        {
+            //if (CursorIsInUnrenderedRegion())
+            //ScrollLineIntoView(CursorPosition.LineNumber);
+        }
+        private void UserControl_FocusEngaged(Control sender, FocusEngagedEventArgs args)
+        {
+            inputPane.TryShow();
+            ChangeCursor(CoreCursorType.IBeam);
+        }
+
+        private void UserControl_FocusDisengaged(Control sender, FocusDisengagedEventArgs args)
+        {
+            inputPane.TryHide();
+            ChangeCursor(CoreCursorType.Arrow);
+        }
+        private void _TextHighlights_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            //Nothing has changed
+            if (e.NewItems.Count == 0 && e.OldItems.Count == 0)
+                return;
+
+            UpdateText();
+        }
+        
+        //Cursor:
+        private void ChangeCursor(CoreCursorType CursorType)
+        {
+            Window.Current.CoreWindow.PointerCursor = new CoreCursor(CursorType, 0);
+        }
+        private void Canvas_LineNumber_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            ChangeCursor(CoreCursorType.Arrow);
+        }
+        private void Canvas_LineNumber_PointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            ChangeCursor(CoreCursorType.IBeam);
+        }
+
 
         //Functions:
         /// <summary>
@@ -1166,7 +1208,9 @@
         }
         public void ScrollOneLineDown()
         {
+            ScrollEventsLocked = true;
             VerticalScrollbar.Value += SingleLineHeight;
+            ScrollEventsLocked = false;
         }
         public void ScrollLineIntoView(int Line)
         {
@@ -1186,7 +1230,7 @@
         {
             get => _TextHighlights;
         }
-        public bool SyntaxHighlighting { get; set; } = true;
+        public bool SyntaxHighlighting { get; set; } = false;
         public CodeLanguage CustomCodeLanguage
         {
             get => _CodeLanguage;
@@ -1214,7 +1258,7 @@
                 _LineEnding = value;
             }
         }
-        public float SpaceBetweenLineNumberAndText = 15;
+        public float SpaceBetweenLineNumberAndText = 20;
         public CursorPosition CursorPosition
         {
             get => _CursorPosition;
@@ -1243,54 +1287,6 @@
         {
             get => _ShowLineHighlighter;
             set { _ShowLineHighlighter = value; UpdateCursor(); }
-        }
-
-        //Internal events:
-        private void Internal_TextChanged()
-        {
-
-        }
-        private void Internal_CursorChanged()
-        {
-
-        }
-        private void Internal_CharacterAddedOrRemoved()
-        {
-            //if (CursorIsInUnrenderedRegion())
-                //ScrollLineIntoView(CursorPosition.LineNumber);
-        }
-        private void UserControl_FocusEngaged(Control sender, FocusEngagedEventArgs args)
-        {
-            inputPane.TryShow();
-            ChangeCursor(CoreCursorType.IBeam);
-        }
-
-        private void UserControl_FocusDisengaged(Control sender, FocusDisengagedEventArgs args)
-        {
-            inputPane.TryHide();
-            ChangeCursor(CoreCursorType.Arrow);
-        }
-        private void _TextHighlights_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-            //Nothing has changed
-            if (e.NewItems.Count == 0 && e.OldItems.Count == 0)
-                return;
-
-            UpdateText();
-        }
-        //Cursor:
-         
-        private void ChangeCursor(CoreCursorType CursorType)
-        {
-            Window.Current.CoreWindow.PointerCursor = new CoreCursor(CursorType, 0);
-        }
-        private void Canvas_LineNumber_PointerEntered(object sender, PointerRoutedEventArgs e)
-        {
-            ChangeCursor(CoreCursorType.Arrow);
-        }
-        private void Canvas_LineNumber_PointerExited(object sender, PointerRoutedEventArgs e)
-        {
-            ChangeCursor(CoreCursorType.IBeam);
         }
     }
 

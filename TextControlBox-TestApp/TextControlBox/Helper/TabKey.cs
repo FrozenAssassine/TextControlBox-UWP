@@ -9,7 +9,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         {
             if (TextSelection == null)
             {
-                Line Line = TotalLines[CursorPosition.LineNumber - 1];
+                Line Line = Utils.GetLineFromList(CursorPosition.LineNumber - 1, TotalLines);
                 Line.SetText(Line.Content.RemoveFirstOccurence(TabCharacter));
                 CursorPosition.SubtractFromCharacterPos(1);
                 return new TextSelection(CursorPosition, null);
@@ -34,7 +34,9 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         {
             if (TextSelection == null)
             {
-                TotalLines[CursorPosition.LineNumber - 1].AddText(TabCharacter, CursorPosition.CharacterPosition);
+                Utils.GetLineFromList(CursorPosition.LineNumber - 1, TotalLines)
+                    .AddText(TabCharacter, CursorPosition.CharacterPosition);
+
                 CursorPosition.AddToCharacterPos(1);
                 return new TextSelection(CursorPosition, null);
             }
