@@ -63,5 +63,12 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             return new string[] { First, Second };
         }
 
+        public static Line GetLineFromList(int Index, List<Line> TotalLines)
+        {
+            if (TotalLines.Count == 0)
+                TotalLines.Add(new Line());
+
+            return TotalLines[Index >= TotalLines.Count ? TotalLines.Count - 1 : Index >= 0 ? Index : 0];
+        }
     }
 }
