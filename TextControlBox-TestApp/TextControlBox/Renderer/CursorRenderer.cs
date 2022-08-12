@@ -12,7 +12,7 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
         public static int GetCursorLineFromPoint(Point Point, float SingleLineHeight, int NumberOfRenderedLines, int NumberOfStartLine, int NumberOfUnderedLines)
         {
             //Calculate the relative linenumber, where the pointer was pressed at
-            int Linenumber = (int)((Point.Y) / SingleLineHeight) + 1;
+            int Linenumber = (int)(Point.Y / SingleLineHeight) + 1;
 
             if (Linenumber > NumberOfStartLine + NumberOfRenderedLines)
                 Linenumber = NumberOfStartLine + NumberOfRenderedLines;
