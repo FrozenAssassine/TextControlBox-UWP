@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Text;
 using TextControlBox_TestApp.TextControlBox;
 using Windows.Storage;
@@ -17,9 +18,9 @@ namespace TextControlBox_TestApp
             //Set the Syntaxhighlighting-language to Csharp
             TextControlBox.CodeLanguage = CodeLanguages.Csharp;
             //Open a test file
+            //OpenFile();
             TextControlBox.SetText(GenerateContent());
             TextControlBox.FontSize = 42;
-            //OpenFile();
         }
 
         private string GenerateContent()

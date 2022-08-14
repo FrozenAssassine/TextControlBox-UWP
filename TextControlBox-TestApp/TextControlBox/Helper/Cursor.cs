@@ -62,11 +62,21 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         public static int CursorPositionToIndex(List<Line> TotalLines, CursorPosition CursorPosition)
         {
             int CursorIndex = 0;
-            for (int i = 0; i < CursorPosition.LineNumber; i++)
+            for (int i = 0; i < CursorPosition.LineNumber - 1; i++)
             {
-                CursorIndex += TotalLines[i].Length + 2;
+                CursorIndex += Utils.GetLineFromList(i, TotalLines).Length + 1;
             }
             return CursorIndex + CursorPosition.CharacterPosition;
+        }
+
+        public static bool Equals(CursorPosition CurPos1, CursorPosition CurPos2)
+        {
+            if (CurPos1 == null || CurPos2 == null)
+                return false;
+
+            if(CurPos1.LineNumber == CurPos2.LineNumber)
+                return CurPos1.CharacterPosition == CurPos2.CharacterPosition;
+            return false;
         }
 
         //Convert the coordinates from Relative to Absolute and the other way around

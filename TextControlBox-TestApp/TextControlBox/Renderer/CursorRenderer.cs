@@ -21,7 +21,7 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
         }
         public static int GetCharacterPositionFromPoint(Line CurrentLine, CanvasTextLayout TextLayout, Point CursorPosition, float MarginLeft)
         {
-            if (CurrentLine == null)
+            if (CurrentLine == null || TextLayout == null)
                 return 0;
 
             TextLayout.HitTest(
@@ -37,7 +37,6 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                 return;
 
             Vector2 vector = TextLayout.GetCaretPosition(CharacterPosition < 0 ? 0 : CharacterPosition, false);
-            Debug.WriteLine("Render Cursor at: " + Y);
             args.DrawingSession.FillRectangle(vector.X + XOffset, Y, 1, FontSize, CursorColorBrush);
         }
         public static double GetCursorOverNewLine(CanvasTextLayout TextLayout, int Cursor_CharacterPosition)
