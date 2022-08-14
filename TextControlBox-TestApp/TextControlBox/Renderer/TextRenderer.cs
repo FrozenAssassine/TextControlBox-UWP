@@ -13,16 +13,16 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                 TextLayout.Dispose();
             return CreateTextLayout(ResourceCreator, TextFormat, Text, targetSize);
         }
-        public static CanvasTextFormat CreateCanvasTextFormat(float FontSize)
+        public static CanvasTextFormat CreateCanvasTextFormat(float ZoomedFontSize)
         {
             CanvasTextFormat textFormat;
             textFormat = new CanvasTextFormat()
             {
-                FontSize = FontSize,
+                FontSize = ZoomedFontSize,
                 HorizontalAlignment = CanvasHorizontalAlignment.Left,
                 VerticalAlignment = CanvasVerticalAlignment.Top,
                 WordWrapping = CanvasWordWrapping.NoWrap,
-                LineSpacing = FontSize + 2,
+                LineSpacing = ZoomedFontSize + 2,
             };
             textFormat.IncrementalTabStop = 137;
             textFormat.FontFamily = "Consolas";

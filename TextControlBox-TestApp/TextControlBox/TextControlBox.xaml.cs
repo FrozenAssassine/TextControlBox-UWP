@@ -37,6 +37,12 @@ namespace TextControlBox_TestApp.TextControlBox
         private LineEnding _LineEnding = LineEnding.CRLF;
         private ObservableCollection<TextHighlight> _TextHighlights = new ObservableCollection<TextHighlight>();
         private bool _ShowLineHighlighter = true;
+        private int _FontSize = 18;
+        private int _ZoomFactor = 100; //%
+        private float ZoomedFontSize = 0;
+        private int MaxFontsize = 125;
+        private int MinFontSize = 3;
+        private int OldZoomFactor = 0;
 
         //Colors:
         CanvasSolidColorBrush TextColorBrush;
@@ -63,10 +69,6 @@ namespace TextControlBox_TestApp.TextControlBox
         //Handle double and triple -clicks:
         int PointerClickCount = 0;
         DispatcherTimer PointerClickTimer = new DispatcherTimer { Interval = new TimeSpan(0, 0, 0, 0, 200) };
-
-        //FontSize and Zoom
-        float MaxFontsize = 100;
-        float MinFontSize = 3;
 
         //Gets updated everytime fontsize changes
         float SingleLineHeight = 0;
@@ -121,12 +123,29 @@ namespace TextControlBox_TestApp.TextControlBox
             ColorResourcesCreated = true;
         }
 
-        private void CheckFontSize()
+        private void UpdateZoom()
         {
-            if (FontSize < MinFontSize)
-                FontSize = MinFontSize;
-            if (FontSize > MaxFontsize)
-                FontSize = MaxFontsize;
+            ZoomedFontSize = (float)_FontSize * (float)_ZoomFactor / 100;
+            if (ZoomedFontSize < MinFontSize)
+                ZoomedFontSize = MinFontSize;
+            if (ZoomedFontSize > MaxFontsize)
+                ZoomedFontSize = MaxFontsize;
+
+            if (_ZoomFactor > 400)
+                _ZoomFactor = 400;
+            if (_ZoomFactor < 4)
+                _ZoomFactor = 4;
+
+            if (_ZoomFactor != OldZoomFactor)
+            {
+                OldZoomFactor = _ZoomFactor;
+                ZoomChanged?.Invoke(this, _ZoomFactor);
+            }
+
+            NeedsTextFormatUpdate = true;
+            UpdateScrollToShowCursor();
+            UpdateText();
+            Canvas_Selection.Invalidate();
         }
         private void UpdateCursor()
         {
@@ -134,7 +153,6 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         private void UpdateText()
         {
-
             ChangeCursor(CoreCursorType.IBeam);
             Canvas_Text.Invalidate();
         }
@@ -885,12 +903,8 @@ namespace TextControlBox_TestApp.TextControlBox
             //Zoom using mousewheel
             if (ctrl)
             {
-                FontSize += delta / 100;
-                CheckFontSize();
-                NeedsTextFormatUpdate = true;
-                ScrollLineIntoView(TotalLines.IndexOf(CurrentLine));
-                UpdateText();
-                Canvas_Selection.Invalidate();
+                _ZoomFactor += delta / 20;
+                UpdateZoom();
                 e.Handled = true;
             }
             //Scroll horizontal using mousewheel
@@ -933,8 +947,8 @@ namespace TextControlBox_TestApp.TextControlBox
             if (NeedsTextFormatUpdate || TextFormat == null)
             {
                 if (_ShowLineNumbers)
-                    LineNumberTextFormat = TextRenderer.CreateLinenumberTextFormat(FontSize);
-                TextFormat = TextRenderer.CreateCanvasTextFormat(FontSize);
+                    LineNumberTextFormat = TextRenderer.CreateLinenumberTextFormat(ZoomedFontSize);
+                TextFormat = TextRenderer.CreateCanvasTextFormat(ZoomedFontSize);
                 UpdateCharSize();
             }
 
@@ -1035,10 +1049,10 @@ namespace TextControlBox_TestApp.TextControlBox
 
             UpdateCurrentLineTextLayout();
             float OffsetX = (float)-HorizontalScrollbar.Value;
-            CursorRenderer.RenderCursor(CurrentLineTextLayout, CursorPosition.CharacterPosition, OffsetX, RenderPosY, FontSize, args, CursorColorBrush);
+            CursorRenderer.RenderCursor(CurrentLineTextLayout, CursorPosition.CharacterPosition, OffsetX, RenderPosY, ZoomedFontSize, args, CursorColorBrush);
             if (_ShowLineHighlighter && SelectionIsNull())
             {
-                LineHighlighter.Render((float)sender.ActualWidth, CurrentLineTextLayout, OffsetX, RenderPosY, FontSize, args, LineHighlighterBrush);
+                LineHighlighter.Render((float)sender.ActualWidth, CurrentLineTextLayout, OffsetX, RenderPosY, ZoomedFontSize, args, LineHighlighterBrush);
             }
 
             if (!Cursor.Equals(CursorPosition, OldCursorPosition))
@@ -1293,7 +1307,7 @@ namespace TextControlBox_TestApp.TextControlBox
             get => _CursorPosition;
             set { _CursorPosition = new CursorPosition(value.CharacterPosition, value.LineNumber + (int)(VerticalScrollbar.Value / SingleLineHeight)); UpdateCursor(); }
         }
-        public new float FontSize = 18;
+        public new int FontSize { get => _FontSize; set { _FontSize = value; UpdateZoom(); } }
         public string Text { get => GetText(); set { SetText(value);} }
         public Color TextColor = Color.FromArgb(255, 255, 255, 255);
         public Color SelectionColor = Color.FromArgb(100, 0, 100, 255);
@@ -1317,6 +1331,7 @@ namespace TextControlBox_TestApp.TextControlBox
             get => _ShowLineHighlighter;
             set { _ShowLineHighlighter = value; UpdateCursor(); }
         }
+        public int ZoomFactor { get => _ZoomFactor; set { _ZoomFactor = value; UpdateZoom(); } } //%
 
         //Events:
         public delegate void TextChangedEvent(TextControlBox sender, string Text);
