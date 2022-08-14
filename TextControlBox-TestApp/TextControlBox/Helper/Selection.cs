@@ -8,7 +8,16 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 {
     public class Selection
     {
-        //Oder the selection so StartPosition is always smaller than EndPosition
+        public static bool Equals(TextSelection Sel1, TextSelection Sel2)
+        {
+            if (Sel1 == null || Sel2 == null)
+                return false;
+
+            return Cursor.Equals(Sel1.StartPosition, Sel2.StartPosition) &&
+                Cursor.Equals(Sel1.EndPosition, Sel2.EndPosition);
+        }
+
+        //Order the selection that StartPosition is always smaller than EndPosition
         public static TextSelection OrderTextSelection(TextSelection Selection)
         {
             int StartLine = Math.Min(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
@@ -305,47 +314,43 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             return new CursorPosition(StartPosition, StartLine + 1);
         }
 
-        public static TextSelectionPosition GetIndexOfSelection(List<Line> TotalLines, CursorPosition StartPos, CursorPosition EndPos)
+        public static TextSelectionPosition GetIndexOfSelection(List<Line> TotalLines, TextSelection Selection)
         {
-            int SelStartIndex = 0;
-            int SelEndIndex = 0;
-            int CharacterPosStart = StartPos.CharacterPosition;
-            int CharacterPosEnd = EndPos.CharacterPosition;
+            var Sel = OrderTextSelection(Selection);
+            int SelStartIndex = Sel.StartPosition.CharacterPosition;
+            int SelEndIndex = Sel.EndPosition.CharacterPosition;
+            int StartLine = Sel.StartPosition.LineNumber;
+            int EndLine = Sel.EndPosition.LineNumber;
 
-            if (StartPos.LineNumber == EndPos.LineNumber)
+            if (StartLine == EndLine)
             {
-                int LenghtToLine = 0;
-                for (int i = 0; i < StartPos.LineNumber; i++)
+                for (int i = 0; i < StartLine; i++)
                 {
-                    LenghtToLine += TotalLines[i].Length + 2;
+                    int val = Utils.GetLineFromList(i, TotalLines).Length + 1;
+                    SelEndIndex += val;
+                    SelStartIndex += val;
                 }
-
-                SelStartIndex = CharacterPosStart + LenghtToLine;
-                SelEndIndex = CharacterPosEnd + LenghtToLine;
             }
             else
             {
-                for (int i = 0; i < StartPos.LineNumber; i++)
+                for (int i = 0; i < StartLine; i++)
                 {
-                    SelStartIndex += TotalLines[i].Length + 2;
+                    SelStartIndex += Utils.GetLineFromList(i, TotalLines).Length + 1;
                 }
-                SelStartIndex += CharacterPosStart;
 
-                for (int i = 0; i < EndPos.LineNumber; i++)
+                for (int i = StartLine; i < EndLine; i++)
                 {
-                    SelEndIndex += TotalLines[i].Length + 2;
+                    SelEndIndex += Utils.GetLineFromList(i, TotalLines).Length + 1;
                 }
-                SelEndIndex += CharacterPosEnd;
             }
 
-            int SelectionStart = Math.Min(SelStartIndex, SelEndIndex);
-            int SelectionLength = 0;
+            int SelectionLength;
             if (SelEndIndex > SelStartIndex)
                 SelectionLength = SelEndIndex - SelStartIndex;
             else
                 SelectionLength = SelStartIndex - SelEndIndex;
 
-            return new TextSelectionPosition(SelectionStart, SelectionLength);
+            return new TextSelectionPosition(Math.Min(SelStartIndex, SelEndIndex), SelectionLength);
         }
 
         //Returns the whole lines, without respecting the characterposition of the selection

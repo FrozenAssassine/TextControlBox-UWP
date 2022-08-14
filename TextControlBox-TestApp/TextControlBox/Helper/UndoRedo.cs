@@ -9,6 +9,12 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         private Stack<UndoRedoClass> UndoStack = new Stack<UndoRedoClass>();
         private Stack<UndoRedoClass> RedoStack = new Stack<UndoRedoClass>();
 
+        public void ClearStacks()
+        {
+            UndoStack.Clear();
+            RedoStack.Clear();
+        }
+
         public void RecordUndoOnPress(Line CurrentLine, CursorPosition CursorPosition)
         {
             if (EnteringText.Length > 0)
