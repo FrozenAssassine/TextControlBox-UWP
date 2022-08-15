@@ -158,16 +158,41 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             int EndPosition = Selection.EndPosition.CharacterPosition;
 
             string[] SplittedText = Text.Split(NewLineCharacter);
+            Line Start_Line = Utils.GetLineFromList(StartLine, TotalLines);
+
+            Debug.WriteLine(Start_Line.Content);
 
             //Selection is singleline and text to paste is also singleline
             if (StartLine == EndLine && SplittedText.Length == 1)
             {
                 if (StartPosition == 0 && EndPosition == TotalLines[EndLine].Length)
-                    TotalLines[StartLine].Content = "";
+                    Start_Line.Content = "";
                 else
-                    TotalLines[StartLine].Remove(StartPosition, EndPosition - StartPosition);
+                    Start_Line.Remove(StartPosition, EndPosition - StartPosition);
 
-                TotalLines[StartLine].AddText(Text, StartPosition);
+                Start_Line.AddText(Text, StartPosition);
+
+                return new CursorPosition(EndPosition + Text.Length, StartLine + 1);
+            }
+            else if(StartLine == EndLine && SplittedText.Length > 1)
+            {
+                if (StartPosition == 0 && EndPosition == Utils.GetLineFromList(EndLine, TotalLines).Length)
+                    Start_Line.Content = "";
+
+                string TextTo = Start_Line.Content == "" ? "" : Start_Line.Content.Substring(0, StartPosition);
+                string TextFrom = Start_Line.Content == "" ? "" : Start_Line.Content.Substring(EndPosition);
+
+                for (int i = 0; i < SplittedText.Length; i++)
+                {
+                    if (i == 0)
+                        Start_Line.SetText(TextTo + SplittedText[i]);
+                    else if (i == SplittedText.Length-1)
+                        TotalLines.Insert(StartLine + i, new Line(SplittedText[i] + TextFrom));
+                    else
+                    {
+                        TotalLines.Insert(StartLine+i, new Line(SplittedText[i]));
+                    }
+                }
 
                 return new CursorPosition(EndPosition + Text.Length, StartLine + 1);
             }
@@ -187,10 +212,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
             else
             {
-                Line Start_Line = TotalLines[StartLine];
-                if (EndLine > TotalLines.Count)
-                    EndLine = TotalLines.Count - 1;
-                Line End_Line = TotalLines[EndLine];
+                Line End_Line = Utils.GetLineFromList(EndLine, TotalLines);
 
                 //all lines are selected from start to finish
                 if (StartPosition == 0 && EndPosition == End_Line.Length)
