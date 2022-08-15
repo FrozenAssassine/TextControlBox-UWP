@@ -6,11 +6,12 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 {
     public class TabKey
     {
-        public static TextSelection MoveTabBack(List<Line> TotalLines, TextSelection TextSelection, CursorPosition CursorPosition, string TabCharacter, string NewLineCharacter)
+        public static TextSelection MoveTabBack(List<Line> TotalLines, TextSelection TextSelection, CursorPosition CursorPosition, string TabCharacter, string NewLineCharacter, UndoRedo UndoRedo)
         {
             if (TextSelection == null)
             {
-                Line Line = TotalLines[CursorPosition.LineNumber - 1];
+                Line Line = Utils.GetLineFromList(CursorPosition.LineNumber - 1, TotalLines);
+                UndoRedo.RecordSingleLineUndo(Line, CursorPosition);
 
                 if (Line.Content.Contains(TabCharacter, System.StringComparison.Ordinal) && CursorPosition.CharacterPosition > 0)
                     CursorPosition.SubtractFromCharacterPos(1);
@@ -22,6 +23,11 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             {
                 TextSelection = Selection.OrderTextSelection(TextSelection);
                 var Lines = Selection.GetPointerToSelectedLines(TotalLines, TextSelection);
+                
+                //Undo
+                var UndoLines = Selection.GetCopyOfSelectedLines(TotalLines, TextSelection, NewLineCharacter);
+                UndoRedo.RecordMultiLineUndo(TextSelection.StartPosition.LineNumber + 1, UndoLines, UndoLines.Count);
+
                 for (int i = 0; i < Lines.Count; i++)
                 {
                     Line Line = Lines[i];
@@ -36,12 +42,14 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
         }
 
-        public static TextSelection MoveTab(List<Line> TotalLines, TextSelection TextSelection, CursorPosition CursorPosition, string TabCharacter, string NewLineCharacter)
+        public static TextSelection MoveTab(List<Line> TotalLines, TextSelection TextSelection, CursorPosition CursorPosition, string TabCharacter, string NewLineCharacter, UndoRedo UndoRedo)
         {
             if (TextSelection == null)
             {
-                Utils.GetLineFromList(CursorPosition.LineNumber - 1, TotalLines)
-                    .AddText(TabCharacter, CursorPosition.CharacterPosition);
+                Line Line = Utils.GetLineFromList(CursorPosition.LineNumber - 1, TotalLines);
+                UndoRedo.RecordSingleLineUndo(Line, CursorPosition);
+
+                Line.AddText(TabCharacter, CursorPosition.CharacterPosition);
 
                 CursorPosition.AddToCharacterPos(1);
                 return new TextSelection(CursorPosition, null);
@@ -49,12 +57,13 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             else
             {
                 var Lines = Selection.GetPointerToSelectedLines(TotalLines, TextSelection);
-
                 TextSelection = Selection.OrderTextSelection(TextSelection);
-                int StartLine = TextSelection.StartPosition.LineNumber;
-                int EndLine = TextSelection.EndPosition.LineNumber;
 
-                if (StartLine == EndLine) //Singleline
+                //Undo
+                var UndoLines = Selection.GetCopyOfSelectedLines(TotalLines, TextSelection, NewLineCharacter);
+                UndoRedo.RecordMultiLineUndo(TextSelection.StartPosition.LineNumber + 1, UndoLines, UndoLines.Count);
+
+                if (TextSelection.StartPosition.LineNumber == TextSelection.EndPosition.LineNumber) //Singleline
                 {
                     TextSelection.StartPosition = Selection.Replace(TextSelection, TotalLines, TabCharacter, NewLineCharacter);
                 }
