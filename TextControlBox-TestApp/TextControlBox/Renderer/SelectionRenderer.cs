@@ -189,8 +189,8 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
         }
         public TextSelection(TextSelection textSelection)
         {
-            StartPosition = textSelection.StartPosition;
-            EndPosition = textSelection.EndPosition;
+            StartPosition = new CursorPosition(textSelection.StartPosition);
+            EndPosition = new CursorPosition(textSelection.EndPosition);
             Index = textSelection.Index;
             Length = textSelection.Length;
         }

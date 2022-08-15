@@ -84,7 +84,8 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 return Replace(Selection, TotalLines, Text, NewLineCharacter);
 
             string[] lines = Text.Split(NewLineCharacter);
-            Line CurrentLine = TotalLines[CursorPosition.LineNumber - 1];
+            Line CurrentLine = Utils.GetLineFromList(CursorPosition.LineNumber - 1, TotalLines);
+
             string TextInFrontOfCursor = CurrentLine.Content.Substring(0, CursorPosition.CharacterPosition);
             string TextBehindCursor =
                 CurrentLine.Length > CursorPosition.CharacterPosition ?
@@ -162,8 +163,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             string[] SplittedText = Text.Split(NewLineCharacter);
             Line Start_Line = Utils.GetLineFromList(StartLine, TotalLines);
 
-            Debug.WriteLine(Start_Line.Content);
-
             //Selection is singleline and text to paste is also singleline
             if (StartLine == EndLine && SplittedText.Length == 1)
             {
@@ -210,6 +209,9 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
                 if (TotalLines.Count == 0)
                     TotalLines.Add(new Line());
+
+                Debug.WriteLine("Return after wholeTextSelected: " + TotalLines.Count);
+
                 return new CursorPosition(TotalLines[TotalLines.Count - 1 > 0 ? TotalLines.Count - 1 : 0].Length, TotalLines.Count);
             }
             else

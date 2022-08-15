@@ -22,11 +22,9 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             else
             {
                 TextSelection = Selection.OrderTextSelection(TextSelection);
-                var Lines = Selection.GetPointerToSelectedLines(TotalLines, TextSelection);
-                
+                var Lines = Selection.GetPointerToSelectedLines(TotalLines, TextSelection);               
                 //Undo
                 var UndoLines = Selection.GetCopyOfSelectedLines(TotalLines, TextSelection, NewLineCharacter);
-                UndoRedo.RecordMultiLineUndo(TextSelection.StartPosition.LineNumber + 1, UndoLines, UndoLines.Count);
 
                 for (int i = 0; i < Lines.Count; i++)
                 {
@@ -38,6 +36,9 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                     
                     Line.SetText(Line.Content.RemoveFirstOccurence(TabCharacter));
                 }
+
+                UndoRedo.RecordMultiLineUndo(TextSelection.StartPosition.LineNumber + 1, UndoLines, UndoLines.Count, TextSelection);
+
                 return new TextSelection(new CursorPosition(TextSelection.StartPosition), new CursorPosition(TextSelection.EndPosition));
             }
         }
@@ -58,10 +59,8 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             {
                 var Lines = Selection.GetPointerToSelectedLines(TotalLines, TextSelection);
                 TextSelection = Selection.OrderTextSelection(TextSelection);
-
                 //Undo
                 var UndoLines = Selection.GetCopyOfSelectedLines(TotalLines, TextSelection, NewLineCharacter);
-                UndoRedo.RecordMultiLineUndo(TextSelection.StartPosition.LineNumber + 1, UndoLines, UndoLines.Count);
 
                 if (TextSelection.StartPosition.LineNumber == TextSelection.EndPosition.LineNumber) //Singleline
                 {
@@ -76,8 +75,10 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                     TextSelection.StartPosition.AddToCharacterPos(1);
                     TextSelection.EndPosition.AddToCharacterPos(1);
                 }
-                return new TextSelection(new CursorPosition(TextSelection.StartPosition), new CursorPosition(TextSelection.EndPosition));
 
+                UndoRedo.RecordMultiLineUndo(TextSelection.StartPosition.LineNumber + 1, UndoLines, UndoLines.Count, TextSelection);
+
+                return new TextSelection(new CursorPosition(TextSelection.StartPosition), new CursorPosition(TextSelection.EndPosition));
             }
         }
     }
