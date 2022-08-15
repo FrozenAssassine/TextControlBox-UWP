@@ -70,10 +70,10 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             {
                 if (this.EnteringText.Length > 0 && UndoStack.Count == 0)
                 {
-                    TotalLines[item.LineNumber - 1].SetText(this.EnteringText);
+                    ListHelper.GetLine(TotalLines, item.LineNumber - 1).SetText(this.EnteringText);
                 }
                 if (item.LineNumber - 1 >= 0 && item.LineNumber - 1 < TotalLines.Count)
-                    TotalLines[item.LineNumber - 1].SetText(item.Text);
+                    ListHelper.GetLine(TotalLines, item.LineNumber - 1).SetText(item.Text);
             }
             else if (item.UndoRedoType == UndoRedoType.NewLineEdit)
             {
@@ -81,8 +81,8 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 if (LineNumber + item.LinesToDelete >= TotalLines.Count)
                     item.LinesToDelete = TotalLines.Count - LineNumber < 0 ? 0 : TotalLines.Count - LineNumber;
 
-                TotalLines.RemoveRange(LineNumber, item.LinesToDelete);
-                TotalLines.InsertRange(LineNumber, item.RemovedLines);
+                ListHelper.InsertRange(TotalLines, item.RemovedLines, LineNumber);
+                ListHelper.RemoveRange(TotalLines, LineNumber, item.LinesToDelete);
             }
             else if (item.UndoRedoType == UndoRedoType.MultilineEdit)
             {
