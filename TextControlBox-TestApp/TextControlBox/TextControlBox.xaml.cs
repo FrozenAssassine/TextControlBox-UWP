@@ -225,7 +225,7 @@ namespace TextControlBox_TestApp.TextControlBox
             }
             else if (TextSelection == null && SplittedText.Length > 1)
             {
-                UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, TotalLines.GetRange(CursorPosition.LineNumber - 1, 1), SplittedText.Length);
+                UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, Utils.GetLinesFromList(TotalLines, CursorPosition.LineNumber - 1, 1), SplittedText.Length);
                 CursorPosition = Selection.InsertText(TextSelection, CursorPosition, TotalLines, text, NewLineCharacter);
             }
             else
@@ -241,7 +241,7 @@ namespace TextControlBox_TestApp.TextControlBox
                     DeleteCount = EndLine.CharacterPosition == TotalLines[EndLine.LineNumber < TotalLines.Count ? EndLine.LineNumber : TotalLines.Count - 1].Length ? 0 : 1;
                 }
 
-                UndoRedo.RecordMultiLineUndo(StartLine.LineNumber + 1, Lines, text.Length == 0 ? DeleteCount : SplittedText.Length);
+                UndoRedo.RecordMultiLineUndo(StartLine.LineNumber + 1, Lines, text.Length == 0 ? DeleteCount : SplittedText.Length, TextSelection);
                 CursorPosition = Selection.Replace(TextSelection, TotalLines, text, NewLineCharacter);
 
                 selectionrenderer.ClearSelection();
@@ -368,7 +368,7 @@ namespace TextControlBox_TestApp.TextControlBox
             if (Selection.WholeTextSelected(TextSelection, TotalLines))
             {
                 Lines = Selection.GetCopyOfSelectedLines(TotalLines, TextSelection, NewLineCharacter);
-                UndoRedo.RecordNewLineUndo(Lines, 2, StartLinePos.LineNumber);
+                UndoRedo.RecordNewLineUndo(Lines, 2, StartLinePos.LineNumber, TextSelection);
 
                 TotalLines.Clear();
                 TotalLines.Add(EndLine);
@@ -402,7 +402,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 UndoDeleteCount = 1;
             }
 
-            UndoRedo.RecordNewLineUndo(Lines, UndoDeleteCount, StartLinePos.LineNumber);
+            UndoRedo.RecordNewLineUndo(Lines, UndoDeleteCount, StartLinePos.LineNumber, TextSelection);
 
             if (TextSelection != null)
             {
@@ -1175,8 +1175,9 @@ namespace TextControlBox_TestApp.TextControlBox
             {
                 string Text = LineEndings.ChangeLineEndings(await dataPackageView.GetTextAsync(), LineEnding);
                 AddCharacter(Text);
-                UpdateText();
                 ClearSelection();
+                UpdateCursor();
+                Debug.WriteLine("Cursorposition:" + CursorPosition.LineNumber);
             }
         }
         public void Copy()
@@ -1230,14 +1231,16 @@ namespace TextControlBox_TestApp.TextControlBox
         {
             var sel = UndoRedo.Undo(TotalLines, this, NewLineCharacter);
             Internal_TextChanged();
-
             if (sel == null)
                 return;
 
+            Debug.WriteLine(sel.ToString());
+            
             selectionrenderer.SelectionStartPosition = sel.StartPosition;
             selectionrenderer.SelectionEndPosition = sel.EndPosition;
             selectionrenderer.HasSelection = true;
             selectionrenderer.IsSelecting = false;
+            UpdateText();
             UpdateSelection();
         }
         public void Redo()
@@ -1341,7 +1344,7 @@ namespace TextControlBox_TestApp.TextControlBox
         public delegate void ZoomChangedEvent(TextControlBox sender, int ZoomFactor);
         public event ZoomChangedEvent ZoomChanged;
     }
-
+     
     public class Line
     {
         private string _Content = "";

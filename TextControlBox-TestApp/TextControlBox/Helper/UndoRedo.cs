@@ -25,14 +25,15 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         }
 
         //Multiline undo is used to undo longer textinserts using paste and stuff like that
-        public void RecordMultiLineUndo(int StartLine, List<Line> RemovedLines, int LinesToDelete)
+        public void RecordMultiLineUndo(int StartLine, List<Line> RemovedLines, int LinesToDelete, TextSelection Selection = null)
         {
             UndoStack.Push(new UndoRedoClass
             {
                 UndoRedoType = UndoRedoType.MultilineEdit,
                 LineNumber = StartLine,
                 RemovedLines = RemovedLines,
-                LinesToDelete = LinesToDelete
+                LinesToDelete = LinesToDelete,
+                TextSelection = Selection
             });
         }
 
@@ -47,14 +48,15 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             });
         }
 
-        public void RecordNewLineUndo(List<Line> RemovedLines, int LinesToDelete, int StartLine)
+        public void RecordNewLineUndo(List<Line> RemovedLines, int LinesToDelete, int StartLine, TextSelection TextSelection)
         {
             UndoStack.Push(new UndoRedoClass
             {
                 UndoRedoType = UndoRedoType.NewLineEdit,
                 RemovedLines = RemovedLines,
                 LineNumber = StartLine,
-                LinesToDelete = LinesToDelete
+                LinesToDelete = LinesToDelete,
+                TextSelection = TextSelection
             });
         }
 

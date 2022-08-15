@@ -70,5 +70,21 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
             return TotalLines[Index >= TotalLines.Count ? TotalLines.Count - 1 : Index >= 0 ? Index : 0];
         }
+
+        public static List<Line> GetLinesFromList(List<Line> TotalLines, int Index, int Count)
+        {
+            if (Index >= TotalLines.Count)
+            {
+                Index = TotalLines.Count - 1;
+                Count = 0;
+            }
+            else if(Index + Count - 1 >= TotalLines.Count)
+            {
+                int difference = TotalLines.Count - Index + Count - 1;
+                if (difference <= 0)
+                    Count += difference;
+            }
+            return TotalLines.GetRange(Index, Count);
+        }
     }
 }
