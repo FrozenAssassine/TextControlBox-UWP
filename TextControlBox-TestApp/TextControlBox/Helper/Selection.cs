@@ -130,6 +130,8 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             if (Count < 0)
                 Count = 0;
 
+            Debug.WriteLine("ReplaceUndo: " + StartLine + "::" + Count);
+
             TotalLines.RemoveRange(StartLine, Count);
 
             //Either add or insert to the List
