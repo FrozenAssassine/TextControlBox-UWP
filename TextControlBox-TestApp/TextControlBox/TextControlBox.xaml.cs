@@ -1041,6 +1041,11 @@ namespace TextControlBox_TestApp.TextControlBox
             if (CurrentLine == null || DrawnTextLayout == null)
                 return;
 
+            if(CursorPosition.LineNumber > TotalLines.Count)
+            {
+                CursorPosition.LineNumber = TotalLines.Count;
+            }
+
             //Calculate the distance to the top for the cursorposition and render the cursor
             float RenderPosY = (float)((CursorPosition.LineNumber - NumberOfUnrenderedLinesToRenderStart - 1) * SingleLineHeight) + SingleLineHeight / 4;
             //Out of display-region:
