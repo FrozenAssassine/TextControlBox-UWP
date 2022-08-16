@@ -16,6 +16,7 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.System;
 using Windows.UI.Core;
+using Windows.UI.Text.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -89,16 +90,26 @@ namespace TextControlBox_TestApp.TextControlBox
         private readonly SelectionRenderer selectionrenderer;
         private readonly UndoRedo UndoRedo = new UndoRedo();
 
+        CoreTextEditContext _editContext;
+
         public TextControlBox()
         {
             this.InitializeComponent();
+            CoreTextServicesManager manager = CoreTextServicesManager.GetForCurrentView();
+            _editContext = manager.CreateEditContext();
+            _editContext.InputPaneDisplayPolicy = CoreTextInputPaneDisplayPolicy.Manual;
+            _editContext.InputScope = CoreTextInputScope.Text;
+            _editContext.TextRequested += delegate { };//Event only needs to be added -> No need to do something
+            _editContext.SelectionRequested += delegate { };
+            _editContext.TextUpdating += _editContext_TextUpdating;
+            _editContext.NotifyFocusEnter();
+
             //Classes & Variables:
             selectionrenderer = new SelectionRenderer(SelectionColor);
             inputPane = InputPane.GetForCurrentView();
 
             //Events:
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
-            Window.Current.CoreWindow.CharacterReceived += CoreWindow_CharacterReceived;
             Window.Current.CoreWindow.PointerMoved += CoreWindow_PointerMoved;
             _TextHighlights.CollectionChanged += _TextHighlights_CollectionChanged;
             InitialiseOnStart();
@@ -574,12 +585,10 @@ namespace TextControlBox_TestApp.TextControlBox
         }
 
         //Draw characters to textbox
-        private void CoreWindow_CharacterReceived(CoreWindow sender, CharacterReceivedEventArgs args)
+        private void _editContext_TextUpdating(CoreTextEditContext sender, CoreTextTextUpdatingEventArgs args)
         {
-            //Don't enter any of these characters as chracter -> 
-            if (args.KeyCode == 13 || //Enter
-                args.KeyCode == 9 || //Tab
-                args.KeyCode == 8)  //Back
+            //Don't allow tab -> is handled different
+            if(args.Text == "\t")
                 return;
 
             //Prevent key-entering if control key is pressed 
@@ -588,15 +597,18 @@ namespace TextControlBox_TestApp.TextControlBox
             if (ctrl && !menu || menu && !ctrl)
                 return;
 
-            char character = (char)args.KeyCode;
-
             if (!GotKeyboardInput)
             {
                 UndoRedo.RecordSingleLineUndo(CurrentLine, CursorPosition);
                 GotKeyboardInput = true;
             }
 
-            AddCharacter(character.ToString());
+            AddCharacter(args.Text);
+        }
+
+        private void CoreWindow_CharacterReceived(CoreWindow sender, CharacterReceivedEventArgs args)
+        {
+            
         }
         //Handle keyinputs
         private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs e)
