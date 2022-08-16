@@ -34,7 +34,27 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
             return TotalLines.GetRange(Index, Count);
         }
-        
+
+        public static string GetLinesAsString(List<Line> TotalLines, int Index, int Count, string NewLineCharacter)
+        {
+            return string.Join(NewLineCharacter, GetLines(TotalLines, Index, Count).Select(a => a.Content));
+        }
+        public static string GetLinesAsString(List<Line> Lines, string NewLineCharacter)
+        {
+            return string.Join(NewLineCharacter, Lines.Select(a => a.Content));
+        }
+
+        public static List<Line> GetLinesFromString(string content, string NewLineCharacter)
+        {
+            var Splitted = content.Split(NewLineCharacter);
+            List<Line> Content = new List<Line>(Splitted.Length);
+            for(int i = 0; i< Splitted.Length; i++)
+            {
+                Content.Add(new Line(Splitted[i]));
+            }
+            return Content;
+        } 
+
         public static void Insert(List<Line> TotalLines, Line Line, int Position)
         {
             if (Position >= TotalLines.Count)
