@@ -90,17 +90,15 @@ namespace TextControlBox_TestApp.TextControlBox
         private readonly SelectionRenderer selectionrenderer;
         private readonly UndoRedo UndoRedo = new UndoRedo();
 
-        CoreTextEditContext _editContext;
-
         public TextControlBox()
         {
             this.InitializeComponent();
             CoreTextServicesManager manager = CoreTextServicesManager.GetForCurrentView();
-            _editContext = manager.CreateEditContext();
+            CoreTextEditContext _editContext = manager.CreateEditContext();
             _editContext.InputPaneDisplayPolicy = CoreTextInputPaneDisplayPolicy.Manual;
             _editContext.InputScope = CoreTextInputScope.Text;
-            _editContext.TextRequested += delegate { };//Event only needs to be added -> No need to do something
-            _editContext.SelectionRequested += delegate { };
+            _editContext.TextRequested += delegate { };//Event only needs to be added -> No need to do something else
+            _editContext.SelectionRequested += delegate { };//Event only needs to be added -> No need to do something else
             _editContext.TextUpdating += _editContext_TextUpdating;
             _editContext.NotifyFocusEnter();
 
@@ -1212,6 +1210,9 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         public string SelectedText()
         {
+            if (TextSelection != null && Selection.WholeTextSelected(TextSelection, TotalLines))
+                return GetText();
+
             return Selection.GetSelectedText(TextSelection, TotalLines, NewLineCharacter);
         }
         public string GetText()

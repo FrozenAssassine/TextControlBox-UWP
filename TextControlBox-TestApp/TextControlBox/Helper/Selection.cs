@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -458,10 +459,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
             else if (WholeTextSelected(TextSelection, TotalLines))
             {
-                for (int i = 0; i < TotalLines.Count; i++)
-                {
-                    StringBuilder.Append(ListHelper.GetLine(TotalLines, i).Content + NewLineCharacter);
-                }
+                return String.Join(NewLineCharacter, TotalLines.Select(x=> x.Content));
             }
             else //Multiline
             {
@@ -470,7 +468,10 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                     if (i == StartLine)
                         StringBuilder.Append(ListHelper.GetLine(TotalLines, StartLine).Content.Substring(StartIndex) + NewLineCharacter);
                     else if (i == EndLine)
-                        StringBuilder.Append(EndIndex == ListHelper.GetLine(TotalLines, EndLine).Length ? ListHelper.GetLine(TotalLines, EndLine).Content : ListHelper.GetLine(TotalLines, EndLine).Content.Remove(EndIndex) + NewLineCharacter);
+                    {
+                        Line CurrentLine = ListHelper.GetLine(TotalLines, EndLine);
+                        StringBuilder.Append(EndIndex == CurrentLine.Length ? CurrentLine.Content : CurrentLine.Content.Remove(EndIndex));
+                    }
                     else
                         StringBuilder.Append(ListHelper.GetLine(TotalLines, i).Content + NewLineCharacter);
                 }
