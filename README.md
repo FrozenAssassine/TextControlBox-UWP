@@ -24,8 +24,7 @@ UWP has a default Textbox and a RichTextBox. Both of them are very slow in rende
 - Linenumbering
 
 ## Problems:
-- Because all the lines are stored in a List the ram usage with a million lines ore more is very high.
-- Performance of deleting a long range of text is slow, because it needs to remove all the lines from the list
+- Because all the lines are stored in a List the ram usage with a million lines ore more is pretty high.
 
 ## Contributors:
 If you want to contribute for this project, feel free to open an <a href="https://github.com/FrozenAssassine/TextControlBox-UWP/issues/new">issue</a> or a <a href="https://github.com/FrozenAssassine/TextControlBox-UWP/pulls">pull request</a>.
