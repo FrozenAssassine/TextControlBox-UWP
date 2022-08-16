@@ -225,13 +225,12 @@ namespace TextControlBox_TestApp.TextControlBox
             }
             else if (TextSelection == null && SplittedText.Length > 1)
             {
-                UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, ListHelper.GetLines(TotalLines, CursorPosition.LineNumber - 1, 1), SplittedText.Length);
+                UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, ListHelper.GetLine(TotalLines, CursorPosition.LineNumber - 1).Content, SplittedText.Length);
                 CursorPosition = Selection.InsertText(TextSelection, CursorPosition, TotalLines, text, NewLineCharacter);
             }
             else
             {
-                List<Line> Lines = Selection.GetCopyOfSelectedLines(TotalLines, TextSelection, NewLineCharacter);
-
+                string SelectedLines = Selection.GetSelectedTextWithoutCharacterPos(TotalLines, TextSelection, NewLineCharacter);
                 //Check whether the startline and endline are completely selected to calculate the number of lines to delete
                 CursorPosition StartLine = Selection.GetMin(TextSelection.StartPosition, TextSelection.EndPosition);
                 int DeleteCount = StartLine.CharacterPosition == 0 ? 0 : 1;
@@ -241,7 +240,7 @@ namespace TextControlBox_TestApp.TextControlBox
                     DeleteCount = EndLine.CharacterPosition == ListHelper.GetLine(TotalLines, EndLine.LineNumber).Length ? 0 : 1;
                 }
 
-                UndoRedo.RecordMultiLineUndo(StartLine.LineNumber + 1, Lines, text.Length == 0 ? DeleteCount : SplittedText.Length, TextSelection);
+                UndoRedo.RecordMultiLineUndo(StartLine.LineNumber + 1, SelectedLines, text.Length == 0 ? DeleteCount : SplittedText.Length, TextSelection);
                 CursorPosition = Selection.Replace(TextSelection, TotalLines, text, NewLineCharacter);
 
                 selectionrenderer.ClearSelection();
@@ -272,9 +271,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 }
                 else if (CursorPosition.LineNumber > 1)
                 {
-                    List<Line> Items = new List<Line>();
-                    Items.Add(new Line(ListHelper.GetLine(TotalLines, CursorPosition.LineNumber - 1).Content));
-                    UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, Items, 0);
+                    UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, ListHelper.GetLine(TotalLines, CursorPosition.LineNumber - 1).Content, 0);
 
                     //Move the cursor one line up, if the beginning of the line is reached
                     Line LineOnTop = ListHelper.GetLine(TotalLines, CursorPosition.LineNumber - 2);
@@ -316,13 +313,7 @@ namespace TextControlBox_TestApp.TextControlBox
                     Line LineToAdd = CursorPosition.LineNumber < TotalLines.Count ? ListHelper.GetLine(TotalLines, CursorPosition.LineNumber) : null;
                     if (LineToAdd != null)
                     {
-                        List<Line> Lines = new List<Line>()
-                            {
-                                new Line(CurrentLine.Content),
-                                new Line(LineToAdd.Content),
-                            };
-
-                        UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, Lines, 1);
+                        UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, CurrentLine.Content + LineToAdd.Content, 1);
                         CurrentLine.Content += LineToAdd.Content;
                         TotalLines.Remove(LineToAdd);
                     }
@@ -353,8 +344,6 @@ namespace TextControlBox_TestApp.TextControlBox
             CursorPosition StartLinePos = new CursorPosition(TextSelection == null ? NormalCurPos : Selection.GetMin(TextSelection));
             CursorPosition EndLinePos = new CursorPosition(TextSelection == null ? NormalCurPos : Selection.GetMax(TextSelection));
 
-            List<Line> Lines;
-
             int Index = StartLinePos.LineNumber;
             if (Index >= TotalLines.Count)
                 Index = TotalLines.Count - 1;
@@ -367,8 +356,7 @@ namespace TextControlBox_TestApp.TextControlBox
             //If the whole text is selected
             if (Selection.WholeTextSelected(TextSelection, TotalLines))
             {
-                Lines = Selection.GetCopyOfSelectedLines(TotalLines, TextSelection, NewLineCharacter);
-                UndoRedo.RecordNewLineUndo(Lines, 2, StartLinePos.LineNumber, TextSelection);
+                UndoRedo.RecordNewLineUndo(GetText(), 2, StartLinePos.LineNumber, TextSelection);
 
                 TotalLines.Clear();
                 TotalLines.Add(EndLine);
@@ -383,17 +371,11 @@ namespace TextControlBox_TestApp.TextControlBox
             }
 
             //Undo
+            string Lines;
             if (TextSelection == null)
-            {
-                Lines = new List<Line>
-                    {
-                        new Line(StartLine.Content)
-                    };
-            }
+                Lines = StartLine.Content;
             else
-            {
-                Lines = Selection.GetCopyOfSelectedLines(TotalLines, TextSelection, NewLineCharacter);
-            }
+                Lines = Selection.GetSelectedTextWithoutCharacterPos(TotalLines, TextSelection, NewLineCharacter);
 
             int UndoDeleteCount = 2;
             //Whole lines are selected
@@ -1179,7 +1161,6 @@ namespace TextControlBox_TestApp.TextControlBox
                 AddCharacter(Text);
                 ClearSelection();
                 UpdateCursor();
-                Debug.WriteLine("Cursorposition:" + CursorPosition.LineNumber);
             }
         }
         public void Copy()

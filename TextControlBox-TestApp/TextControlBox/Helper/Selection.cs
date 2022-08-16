@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using TextControlBox_TestApp.TextControlBox.Renderer;
 
@@ -86,7 +87,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             string[] lines = Text.Split(NewLineCharacter);
             Line CurrentLine = ListHelper.GetLine(TotalLines, CursorPosition.LineNumber - 1);
 
-            string TextInFrontOfCursor = CurrentLine.Content.Substring(0, CursorPosition.CharacterPosition);
+            string TextInFrontOfCursor = CurrentLine.Content.Substring(0, CursorPosition.CharacterPosition < 0 ? 0 : CursorPosition.CharacterPosition);
             string TextBehindCursor =
                 CurrentLine.Length > CursorPosition.CharacterPosition ?
                 CurrentLine.Content.Remove(0, CursorPosition.CharacterPosition) : "";
@@ -123,19 +124,26 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         {
             StartLine -= 1;
 
-            int Count = LinesToDelete;
-            if (StartLine + Count >= TotalLines.Count)
-                Count = TotalLines.Count - StartLine;
-            if (Count < 0)
-                Count = 0;
-
-            Debug.WriteLine("ReplaceUndo: " + StartLine + "::" + Count);
-
-            ListHelper.RemoveRange(TotalLines, StartLine, Count);
+            //ListHelper.RemoveRange(TotalLines, StartLine, Count);
 
             //Either add or insert to the List
-            ListHelper.InsertRange(TotalLines, Replace, StartLine);
-            ListHelper.GetLine(Replace, - 1); //Get the last item from the List
+            //ListHelper.InsertRange(TotalLines, Replace, StartLine);
+
+            int Count = LinesToDelete;
+            if(StartLine >= TotalLines.Count)
+            {
+                StartLine = TotalLines.Count - 1 - Count;
+            }
+            if(StartLine + Count >= TotalLines.Count)
+            {
+                int val = TotalLines.Count - StartLine;
+                if (val < 0)
+                    val = 0;
+                Count = val;
+            }
+
+            TotalLines.RemoveRange(StartLine, Count);
+            TotalLines.InsertRange(StartLine, Replace);
 
             return new CursorPosition(Replace[Replace.Count - 1].Length - 1, StartLine);
         }
@@ -428,6 +436,29 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
             CurrentItems.Clear();
             return NewItems;
+        }
+
+        public static string GetSelectedTextWithoutCharacterPos(List<Line> TotalLines, TextSelection TextSelection, string NewLineCharacter)
+        {
+            if (TextSelection == null)
+                return null;
+
+            int StartLine = Math.Min(TextSelection.StartPosition.LineNumber, TextSelection.EndPosition.LineNumber);
+            int EndLine = Math.Max(TextSelection.StartPosition.LineNumber, TextSelection.EndPosition.LineNumber);
+
+            //Get the items into the list CurrentItems
+            if (EndLine == StartLine)
+            {
+                return ListHelper.GetLine(TotalLines, StartLine).Content;
+            }
+            else
+            {
+                int Count = EndLine - StartLine + 1;
+                if (StartLine + Count >= TotalLines.Count)
+                    Count = TotalLines.Count - StartLine;
+
+                return string.Join(NewLineCharacter, ListHelper.GetLines(TotalLines, StartLine, Count).Select(x => x.Content));
+            }
         }
 
         public static string GetSelectedText(TextSelection TextSelection, List<Line> TotalLines, string NewLineCharacter)
