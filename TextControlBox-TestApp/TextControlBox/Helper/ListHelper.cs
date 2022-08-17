@@ -68,7 +68,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             if (Position >= TotalLines.Count)
                 TotalLines.AddRange(Lines);
             else
-                TotalLines.InsertRange(Position, Lines);
+                TotalLines.InsertRange(Position < 0 ? 0 : Position, Lines);
         }
     
         public static void RemoveRange(List<Line> TotalLines, int Index, int Count)

@@ -2,6 +2,8 @@
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Numerics;
 using TextControlBox_TestApp.TextControlBox.Helper;
 using Windows.Foundation;
 using Windows.UI;
@@ -122,7 +124,10 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                     int LenghtToLine = 0;
                     for (int i = 0; i < SelectionStartPosition.LineNumber - UnrenderedLinesToRenderStart; i++)
                     {
-                        LenghtToLine += RenderedLines[i].Length + 2;
+                        if (i < RenderedLines.Count)
+                        {
+                            LenghtToLine += RenderedLines[i].Length + 2;
+                        }
                     }
 
 
@@ -158,11 +163,26 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                 CanvasTextLayoutRegion[] descriptions = TextLayout.GetCharacterRegions(SelectionStart, SelectionLength);
                 for (int i = 0; i < descriptions.Length; i++)
                 {
-                    args.DrawingSession.FillRectangle(CreateRect(descriptions[i].LayoutBounds, MarginLeft, MarginTop), SelectionColor);
+                   args.DrawingSession.FillRectangle(CreateRect(descriptions[i].LayoutBounds, MarginLeft, MarginTop), SelectionColor);
                 }
                 return new TextSelection(SelectionStart, SelectionLength, new CursorPosition(SelectionStartPosition), new CursorPosition(SelectionEndPosition));
             }
             return null;
+        }
+
+        //returns whether the pointer is over a selection
+        public bool PointerIsOverSelection(Point PointerPosition, TextSelection Selection,  CanvasTextLayout TextLayout)
+        {
+            if (TextLayout == null || Selection == null)
+                return false;
+
+            CanvasTextLayoutRegion[] regions = TextLayout.GetCharacterRegions(Selection.Index, Selection.Length);
+            for(int i = 0; i < regions.Length; i++)
+            {
+                if (regions[i].LayoutBounds.Contains(PointerPosition))
+                    return true;
+            }
+            return false;
         }
 
         //Clear the selection

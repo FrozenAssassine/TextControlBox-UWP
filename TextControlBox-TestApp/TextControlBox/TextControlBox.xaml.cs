@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
 using TextControlBox_TestApp.TextControlBox.Helper;
@@ -22,6 +23,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
+using static System.Net.Mime.MediaTypeNames;
 using Color = Windows.UI.Color;
 using Size = Windows.Foundation.Size;
 
@@ -55,6 +57,7 @@ namespace TextControlBox_TestApp.TextControlBox
         bool NeedsTextFormatUpdate = false;
         bool GotKeyboardInput = false;
         bool ScrollEventsLocked = false;
+        bool DragDropSelection = false;
 
         CanvasTextFormat TextFormat = null;
         CanvasTextLayout DrawnTextLayout = null;
@@ -208,7 +211,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 ScrollTopIntoView();
         }
 
-        private void AddCharacter(string text)
+        private void AddCharacter(string text, bool ExcecuteNextUndoToo = false)
         {
             if (CurrentLine == null)
                 return;
@@ -249,7 +252,7 @@ namespace TextControlBox_TestApp.TextControlBox
                     DeleteCount = EndLine.CharacterPosition == ListHelper.GetLine(TotalLines, EndLine.LineNumber).Length ? 0 : 1;
                 }
 
-                UndoRedo.RecordMultiLineUndo(StartLine.LineNumber + 1, SelectedLines, text.Length == 0 ? DeleteCount : SplittedText.Length, TextSelection);
+                UndoRedo.RecordMultiLineUndo(StartLine.LineNumber + 1, SelectedLines, text.Length == 0 ? DeleteCount : SplittedText.Length, TextSelection, ExcecuteNextUndoToo);
                 CursorPosition = Selection.Replace(TextSelection, TotalLines, text, NewLineCharacter);
 
                 selectionrenderer.ClearSelection();
@@ -467,7 +470,6 @@ namespace TextControlBox_TestApp.TextControlBox
                 return TextRenderer.CreateTextLayout(sender, TextFormat, ListHelper.GetLine(TotalLines, LineIndex).Content + "|", sender.Size);
             return null;
         }
-
         private void SelectDoubleClick(Point Point)
         {
             //Calculate the Characterposition from the current pointerposition:
@@ -485,6 +487,45 @@ namespace TextControlBox_TestApp.TextControlBox
             //Render it
             UpdateSelection();
             UpdateCursor();
+        }
+        private void DoDragDropSelection()
+        {
+            string TextToInsert = SelectedText();
+            
+            CursorPosition StartLine = Selection.GetMin(TextSelection.StartPosition, TextSelection.EndPosition);
+            int DeleteCount = StartLine.CharacterPosition == 0 ? 0 : 1;
+            if (DeleteCount == 0)
+            {
+                CursorPosition EndLine = Selection.GetMax(TextSelection.StartPosition, TextSelection.EndPosition);
+                DeleteCount = EndLine.CharacterPosition == ListHelper.GetLine(TotalLines, EndLine.LineNumber).Length ? 0 : 1;
+            }
+            
+            UndoRedo.RecordMultiLineUndo(
+                StartLine.LineNumber + 1, 
+                Selection.GetSelectedTextWithoutCharacterPos(TotalLines, TextSelection, 
+                NewLineCharacter), 
+                DeleteCount, 
+                TextSelection
+                );
+            Selection.Remove(TextSelection, TotalLines, NewLineCharacter);
+
+            ClearSelection();
+
+            CursorPosition.ChangeLineNumber(CursorPosition.LineNumber - TextToInsert.Split(NewLineCharacter).Length);
+
+            UndoRedo.RecordMultiLineUndo(
+                CursorPosition.LineNumber, 
+                ListHelper.GetLine(TotalLines, CursorPosition.LineNumber - 1).Content, 
+                TextToInsert.Split(NewLineCharacter).Length,
+                null, true);
+
+            CursorPosition = Selection.InsertText(TextSelection, CursorPosition, TotalLines, TextToInsert, NewLineCharacter);
+
+            ChangeCursor(CoreCursorType.IBeam);
+            DragDropSelection = false;
+            UpdateText();
+            UpdateCursor();
+            UpdateSelection();
         }
 
         private CodeLanguage GetCodeLanguage(CodeLanguages Languages)
@@ -586,10 +627,6 @@ namespace TextControlBox_TestApp.TextControlBox
             AddCharacter(args.Text);
         }
 
-        private void CoreWindow_CharacterReceived(CoreWindow sender, CharacterReceivedEventArgs args)
-        {
-            
-        }
         //Handle keyinputs
         private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs e)
         {
@@ -806,6 +843,12 @@ namespace TextControlBox_TestApp.TextControlBox
 
         private void Canvas_Selection_PointerReleased(object sender, PointerRoutedEventArgs e)
         {
+            //End text drag/drop -> insert text at cursorposition
+            if (DragDropSelection && Window.Current.CoreWindow.PointerCursor.Type != CoreCursorType.UniversalNo)
+            {
+                DoDragDropSelection();
+            }
+
             if (selectionrenderer.IsSelecting)
                 selectionrenderer.HasSelection = true;
 
@@ -813,6 +856,21 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         private void Canvas_Selection_PointerMoved(object sender, PointerRoutedEventArgs e)
         {
+            //Drag drop text -> move the cursor to get the insertion point
+            if (DragDropSelection)
+            {
+                if (selectionrenderer.PointerIsOverSelection(e.GetCurrentPoint(sender as UIElement).Position, TextSelection, DrawnTextLayout))
+                {
+                    ChangeCursor(CoreCursorType.UniversalNo);
+                }
+                else
+                {
+                    ChangeCursor(CoreCursorType.Arrow);
+                    UpdateCursorVariable(e.GetCurrentPoint(Canvas_Selection).Position);
+                    UpdateCursor();
+                }
+            }
+
             if (selectionrenderer.IsSelecting)
             {
                 UpdateCursorVariable(e.GetCurrentPoint(Canvas_Selection).Position);
@@ -840,11 +898,11 @@ namespace TextControlBox_TestApp.TextControlBox
             else
             {
                 bool IsShiftPressed = Window.Current.CoreWindow.GetKeyState(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down);
+                bool LeftButtonPressed = e.GetCurrentPoint(sender as UIElement).Properties.IsLeftButtonPressed;
 
                 //Show the onscreenkeyboard if no physical keyboard is attached
                 inputPane.TryShow();
 
-                bool LeftButtonPressed = e.GetCurrentPoint(sender as UIElement).Properties.IsLeftButtonPressed;
                 //Shift + click = set selection
                 if (IsShiftPressed && LeftButtonPressed)
                 {
@@ -860,6 +918,19 @@ namespace TextControlBox_TestApp.TextControlBox
                 if (LeftButtonPressed)
                 {
                     UpdateCursorVariable(PointerPosition);
+                    
+                    //Text dragging/dropping
+                    if(TextSelection != null)
+                    {
+                        if(selectionrenderer.PointerIsOverSelection(PointerPosition, TextSelection, DrawnTextLayout))
+                        {
+                            ChangeCursor(CoreCursorType.Arrow);
+                            DragDropSelection = true;
+                            Debug.WriteLine("Drag drop over selection");
+                            return;
+                        }
+                    }
+                    
                     selectionrenderer.SelectionStartPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber - 1);
                     if (selectionrenderer.HasSelection)
                     {
@@ -1042,11 +1113,18 @@ namespace TextControlBox_TestApp.TextControlBox
                 return;
 
             UpdateCurrentLineTextLayout();
-            float OffsetX = (float)-HorizontalScrollbar.Value;
-            CursorRenderer.RenderCursor(CurrentLineTextLayout, CursorPosition.CharacterPosition, OffsetX, RenderPosY, ZoomedFontSize, args, CursorColorBrush);
+
+            CursorRenderer.RenderCursor(
+                CurrentLineTextLayout, 
+                CursorPosition.CharacterPosition, 
+                (float)-HorizontalScrollbar.Value, 
+                RenderPosY, ZoomedFontSize, 
+                args, 
+                CursorColorBrush);
+            
             if (_ShowLineHighlighter && SelectionIsNull())
             {
-                LineHighlighter.Render((float)sender.ActualWidth, CurrentLineTextLayout, OffsetX, RenderPosY, ZoomedFontSize, args, LineHighlighterBrush);
+                LineHighlighter.Render((float)sender.ActualWidth, CurrentLineTextLayout, (float)-HorizontalScrollbar.Value, RenderPosY, ZoomedFontSize, args, LineHighlighterBrush);
             }
 
             if (!Cursor.Equals(CursorPosition, OldCursorPosition))
@@ -1194,7 +1272,7 @@ namespace TextControlBox_TestApp.TextControlBox
             if (TextSelection != null && Selection.WholeTextSelected(TextSelection, TotalLines))
                 return GetText();
 
-            return Selection.GetSelectedText(TextSelection, TotalLines, NewLineCharacter);
+            return Selection.GetSelectedText(TotalLines, TextSelection, CursorPosition.LineNumber - 1, NewLineCharacter);
         }
         public string GetText()
         {
