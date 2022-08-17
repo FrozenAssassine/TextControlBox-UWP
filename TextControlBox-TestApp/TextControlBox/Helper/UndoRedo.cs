@@ -57,15 +57,16 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         }
 
         //Multiline undo is used to undo longer textinserts using paste and stuff like that
-        public void RecordMultiLineUndo(int StartLine, string RemovedLines, int LinesToDelete, TextSelection Selection = null)
+        public void RecordMultiLineUndo(int StartLine, string RemovedLines, int LinesToDelete, TextSelection Selection = null, bool ExcecuteNextUndoToo = false)
         {
             UndoStack.Push(new UndoRedoClass
             {
                 UndoRedoType = UndoRedoType.MultilineEdit,
                 LineNumber = StartLine,
-                RemovedLines = RemovedLines,
+                Text = RemovedLines,
                 LinesToDelete = LinesToDelete,
-                TextSelection = Selection
+                TextSelection = Selection,
+                ExcecuteNextUndoToo = ExcecuteNextUndoToo
             });
         }
 
@@ -85,7 +86,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             UndoStack.Push(new UndoRedoClass
             {
                 UndoRedoType = UndoRedoType.NewLineEdit,
-                RemovedLines = RemovedLines,
+                Text = RemovedLines,
                 LineNumber = StartLine,
                 LinesToDelete = LinesToDelete,
                 TextSelection = TextSelection
@@ -113,12 +114,15 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 if (LineNumber + item.LinesToDelete >= TotalLines.Count)
                     item.LinesToDelete = TotalLines.Count - LineNumber < 0 ? 0 : TotalLines.Count - LineNumber;
 
-                ListHelper.InsertRange(TotalLines, ListHelper.GetLinesFromString(item.RemovedLines, NewLineCharacter), LineNumber);
+                ListHelper.InsertRange(TotalLines, ListHelper.GetLinesFromString(item.Text, NewLineCharacter), LineNumber);
                 ListHelper.RemoveRange(TotalLines, LineNumber, item.LinesToDelete);
             }
             else if (item.UndoRedoType == UndoRedoType.MultilineEdit)
             {
-                Selection.ReplaceUndo(item.LineNumber, TotalLines, ListHelper.GetLinesFromString(item.RemovedLines, NewLineCharacter), item.LinesToDelete);
+                Selection.ReplaceUndo(item.LineNumber, TotalLines, ListHelper.GetLinesFromString(item.Text, NewLineCharacter), item.LinesToDelete);
+
+                if (item.ExcecuteNextUndoToo)
+                    return Undo(TotalLines, Textbox, NewLineCharacter); 
                 return item.TextSelection;
             }
             return null;
@@ -139,10 +143,9 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
     {
         public UndoRedoType UndoRedoType { get; set; } = UndoRedoType.SingleLineEdit;
         public int LineNumber { get; set; } = 0;
-        public string Text { get; set; } = "";
-
-        public int LinesToDelete { get; set; } = 0; //Mutliline
-        public TextSelection TextSelection { get; set; } = null; //Multiline
-        public string RemovedLines { get; set; } = null; //Multiline
+        public bool ExcecuteNextUndoToo { get; set; } = false;
+        public int LinesToDelete { get; set; } = 0;
+        public TextSelection TextSelection { get; set; } = null;
+        public string Text { get; set; } = null;
     }
 }

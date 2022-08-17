@@ -39,17 +39,5 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
             Vector2 vector = TextLayout.GetCaretPosition(CharacterPosition < 0 ? 0 : CharacterPosition, false);
             args.DrawingSession.FillRectangle(vector.X + XOffset, Y, 1, FontSize, CursorColorBrush);
         }
-        public static double GetCursorOverNewLine(CanvasTextLayout TextLayout, int Cursor_CharacterPosition)
-        {
-            if (TextLayout == null)
-                return -1;
-
-            CanvasTextLayoutRegion[] descriptions = TextLayout.GetCharacterRegions(Cursor_CharacterPosition, 1);
-            if (descriptions.Length > 0)
-            {
-                return descriptions[0].LayoutBounds.Width;
-            }
-            return -1;
-        }
     }
 }

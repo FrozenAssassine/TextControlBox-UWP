@@ -142,6 +142,8 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                     val = 0;
                 Count = val;
             }
+            if (StartLine < 0)
+                StartLine = 0;
 
             TotalLines.RemoveRange(StartLine, Count);
             TotalLines.InsertRange(StartLine, Replace);
@@ -462,12 +464,12 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
         }
 
-        public static string GetSelectedText(TextSelection TextSelection, List<Line> TotalLines, string NewLineCharacter)
+        public static string GetSelectedText(List<Line> TotalLines, TextSelection TextSelection, int CurrentLineIndex, string NewLineCharacter)
         {
             //return the current line, if no text is selected:
             if (TextSelection == null)
             {
-                return ListHelper.GetLine(TotalLines, TextSelection.StartPosition.LineNumber - 1).Content + NewLineCharacter;
+                return ListHelper.GetLine(TotalLines, CurrentLineIndex).Content;
             }
 
             int StartLine = Math.Min(TextSelection.StartPosition.LineNumber, TextSelection.EndPosition.LineNumber);
