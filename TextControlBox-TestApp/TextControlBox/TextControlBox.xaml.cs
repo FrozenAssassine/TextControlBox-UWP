@@ -84,7 +84,7 @@ namespace TextControlBox_TestApp.TextControlBox
         CanvasTextLayout CurrentLineTextLayout = null;
         TextSelection TextSelection = null;
         TextSelection OldTextSelection = null;
-
+        CoreTextEditContext _editContext;
         //Store the lines in Lists
         private List<Line> TotalLines = new List<Line>();
         private List<Line> RenderedLines = new List<Line>();
@@ -97,7 +97,7 @@ namespace TextControlBox_TestApp.TextControlBox
         {
             this.InitializeComponent();
             CoreTextServicesManager manager = CoreTextServicesManager.GetForCurrentView();
-            CoreTextEditContext _editContext = manager.CreateEditContext();
+            _editContext = manager.CreateEditContext();
             _editContext.InputPaneDisplayPolicy = CoreTextInputPaneDisplayPolicy.Manual;
             _editContext.InputScope = CoreTextInputScope.Text;
             _editContext.TextRequested += delegate { };//Event only needs to be added -> No need to do something else
@@ -451,12 +451,18 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         private bool CursorIsInUnrenderedRegion()
         {
-            return CursorPosition.LineNumber < NumberOfUnrenderedLinesToRenderStart + 1 || CursorPosition.LineNumber > NumberOfUnrenderedLinesToRenderStart + RenderedLines.Count - 1;
+            return CursorPosition.LineNumber < NumberOfUnrenderedLinesToRenderStart + 1 || CursorPosition.LineNumber > NumberOfUnrenderedLinesToRenderStart + RenderedLines.Count;
         }
         private void StartSelectionIfNeeded()
         {
-            if (!selectionrenderer.HasSelection)
+            if (SelectionIsNull())
+            {
                 selectionrenderer.SelectionStartPosition = selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber - 1);
+                TextSelection = new TextSelection(selectionrenderer.SelectionStartPosition, selectionrenderer.SelectionEndPosition);
+                Debug.WriteLine(selectionrenderer.SelectionStartPosition.LineNumber + ";;" + selectionrenderer.SelectionEndPosition.LineNumber);
+            }
+            Debug.WriteLine(selectionrenderer.HasSelection);
+
         }
         private bool SelectionIsNull()
         {
@@ -491,7 +497,8 @@ namespace TextControlBox_TestApp.TextControlBox
         private void DoDragDropSelection()
         {
             string TextToInsert = SelectedText();
-            
+            if (TextSelection == null)
+                return;
             CursorPosition StartLine = Selection.GetMin(TextSelection.StartPosition, TextSelection.EndPosition);
             int DeleteCount = StartLine.CharacterPosition == 0 ? 0 : 1;
             if (DeleteCount == 0)
@@ -609,7 +616,7 @@ namespace TextControlBox_TestApp.TextControlBox
         private void _editContext_TextUpdating(CoreTextEditContext sender, CoreTextTextUpdatingEventArgs args)
         {
             //Don't allow tab -> is handled different
-            if(args.Text == "\t")
+            if (args.Text == "\t")
                 return;
 
             //Prevent key-entering if control key is pressed 
@@ -623,6 +630,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 UndoRedo.RecordSingleLineUndo(CurrentLine, CursorPosition);
                 GotKeyboardInput = true;
             }
+
 
             AddCharacter(args.Text);
         }
@@ -685,12 +693,10 @@ namespace TextControlBox_TestApp.TextControlBox
                         if (shift)
                         {
                             StartSelectionIfNeeded();
-                            if (SelectionIsNull())
-                                return;
                             selectionrenderer.HasSelection = true;
                             selectionrenderer.IsSelecting = true;
                             CursorPosition = selectionrenderer.SelectionEndPosition = Cursor.MoveSelectionLeft(selectionrenderer.SelectionEndPosition, TotalLines);
-                            CursorPosition.Change(CursorPosition.CharacterPosition, CursorPosition.LineNumber + 1);
+                            CursorPosition.ChangeLineNumber(CursorPosition.LineNumber + 1);
                             UpdateSelection();
                             selectionrenderer.IsSelecting = false;
                         }
@@ -709,12 +715,9 @@ namespace TextControlBox_TestApp.TextControlBox
                         if (shift)
                         {
                             StartSelectionIfNeeded();
-                            if (SelectionIsNull())
-                                return;
-
                             selectionrenderer.IsSelecting = true;
                             CursorPosition = selectionrenderer.SelectionEndPosition = Cursor.MoveSelectionRight(selectionrenderer.SelectionEndPosition, TotalLines, CurrentLine);
-                            CursorPosition = CursorPosition.ChangeLineNumber(CursorPosition, CursorPosition.LineNumber + 1);
+                            CursorPosition.ChangeLineNumber(CursorPosition.LineNumber + 1);
                             UpdateSelection();
                             selectionrenderer.IsSelecting = false;
                         }
@@ -733,11 +736,8 @@ namespace TextControlBox_TestApp.TextControlBox
                         if (shift)
                         {
                             StartSelectionIfNeeded();
-                            if (SelectionIsNull())
-                                return;
-
                             selectionrenderer.IsSelecting = true;
-                            var NewCurPos = selectionrenderer.SelectionEndPosition = Cursor.MoveSelectionDown(selectionrenderer.SelectionEndPosition, TotalLines);
+                            var NewCurPos = selectionrenderer.SelectionEndPosition = Cursor.MoveDown(selectionrenderer.SelectionEndPosition, TotalLines.Count);
                             CursorPosition.Change(NewCurPos.CharacterPosition, NewCurPos.LineNumber + 1);
                             UpdateSelection();
                             selectionrenderer.IsSelecting = false;
@@ -750,7 +750,7 @@ namespace TextControlBox_TestApp.TextControlBox
                                 CursorPosition = Cursor.RelativeToAbsolute(Selection.GetMax(TextSelection.EndPosition, TextSelection.StartPosition), NumberOfUnrenderedLinesToRenderStart);
                             }
                             ClearSelectionIfNeeded();
-                            CursorPosition = Cursor.RelativeToAbsolute(Cursor.MoveDown(CursorPosition, TotalLines), NumberOfUnrenderedLinesToRenderStart);
+                            CursorPosition = Cursor.RelativeToAbsolute(Cursor.MoveDown(CursorPosition, TotalLines.Count ), NumberOfUnrenderedLinesToRenderStart);
                         }
                         if (CursorIsInUnrenderedRegion())
                             ScrollBottomIntoView();
@@ -762,11 +762,9 @@ namespace TextControlBox_TestApp.TextControlBox
                         if (shift)
                         {
                             StartSelectionIfNeeded();
-                            if (SelectionIsNull())
-                                return;
-
+                            Debug.WriteLine("StartingSelection");
                             selectionrenderer.IsSelecting = true;
-                            var NewCurPos = CursorPosition = selectionrenderer.SelectionEndPosition = Cursor.MoveSelectionUp(selectionrenderer.SelectionEndPosition, TotalLines);
+                            var NewCurPos = CursorPosition = selectionrenderer.SelectionEndPosition = Cursor.MoveUp(selectionrenderer.SelectionEndPosition);
                             CursorPosition.Change(NewCurPos.CharacterPosition, NewCurPos.LineNumber + 1);
                             UpdateSelection();
                             selectionrenderer.IsSelecting = false;
@@ -774,7 +772,7 @@ namespace TextControlBox_TestApp.TextControlBox
                         else
                         {
                             ClearSelectionIfNeeded();
-                            CursorPosition = CursorPosition = Cursor.RelativeToAbsolute(Cursor.MoveUp(CursorPosition, TotalLines), NumberOfUnrenderedLinesToRenderStart);
+                            CursorPosition = CursorPosition = Cursor.RelativeToAbsolute(Cursor.MoveUp(CursorPosition), NumberOfUnrenderedLinesToRenderStart);
                         }
 
                         if (CursorIsInUnrenderedRegion())
@@ -848,6 +846,15 @@ namespace TextControlBox_TestApp.TextControlBox
             {
                 DoDragDropSelection();
             }
+            else if(DragDropSelection)
+            {
+                ClearSelection();
+                UpdateSelection();
+                DragDropSelection = false;
+                ChangeCursor(CoreCursorType.IBeam);
+                selectionrenderer.IsSelecting = false;
+                UpdateCursor();
+            }
 
             if (selectionrenderer.IsSelecting)
                 selectionrenderer.HasSelection = true;
@@ -859,16 +866,16 @@ namespace TextControlBox_TestApp.TextControlBox
             //Drag drop text -> move the cursor to get the insertion point
             if (DragDropSelection)
             {
-                if (selectionrenderer.PointerIsOverSelection(e.GetCurrentPoint(sender as UIElement).Position, TextSelection, DrawnTextLayout))
+                if (selectionrenderer.CursorIsInSelection(CursorPosition, TextSelection) || 
+                    selectionrenderer.PointerIsOverSelection(e.GetCurrentPoint(sender as UIElement).Position, TextSelection, DrawnTextLayout))
                 {
                     ChangeCursor(CoreCursorType.UniversalNo);
                 }
                 else
-                {
                     ChangeCursor(CoreCursorType.Arrow);
-                    UpdateCursorVariable(e.GetCurrentPoint(Canvas_Selection).Position);
-                    UpdateCursor();
-                }
+
+                UpdateCursorVariable(e.GetCurrentPoint(Canvas_Selection).Position);
+                UpdateCursor();
             }
 
             if (selectionrenderer.IsSelecting)
@@ -922,12 +929,20 @@ namespace TextControlBox_TestApp.TextControlBox
                     //Text dragging/dropping
                     if(TextSelection != null)
                     {
-                        if(selectionrenderer.PointerIsOverSelection(PointerPosition, TextSelection, DrawnTextLayout))
+                        if (selectionrenderer.PointerIsOverSelection(PointerPosition, TextSelection, DrawnTextLayout) && !DragDropSelection)
                         {
-                            ChangeCursor(CoreCursorType.Arrow);
+                            PointerClickCount = 0;
+                            ChangeCursor(CoreCursorType.UniversalNo);
                             DragDropSelection = true;
-                            Debug.WriteLine("Drag drop over selection");
                             return;
+                        }
+                        if (DragDropSelection)
+                        {
+                            ClearSelection();
+                            UpdateSelection();
+                            PointerClickCount = 0;
+                            ChangeCursor(CoreCursorType.IBeam);
+                            DragDropSelection = false;
                         }
                     }
                     
@@ -1001,6 +1016,10 @@ namespace TextControlBox_TestApp.TextControlBox
 
         private void Canvas_Text_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
+            //TEMPORARY:
+            _editContext.NotifyFocusEnter();
+
+
             //Clear the rendered lines, to fill them with new lines
             RenderedLines.Clear();
             //Create resources and layouts:
@@ -1114,9 +1133,13 @@ namespace TextControlBox_TestApp.TextControlBox
 
             UpdateCurrentLineTextLayout();
 
+            int CharacterPos = CursorPosition.CharacterPosition;
+            if (CharacterPos > CurrentLine.Length)
+                CharacterPos = CurrentLine.Length;
+
             CursorRenderer.RenderCursor(
-                CurrentLineTextLayout, 
-                CursorPosition.CharacterPosition, 
+                CurrentLineTextLayout,
+                CharacterPos, 
                 (float)-HorizontalScrollbar.Value, 
                 RenderPosY, ZoomedFontSize, 
                 args, 

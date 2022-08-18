@@ -185,6 +185,42 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
             return false;
         }
 
+        public bool CursorIsInSelection(CursorPosition CursorPosition, TextSelection TextSelection)
+        {
+            if (TextSelection == null)
+                return false;
+            TextSelection = Selection.OrderTextSelection(TextSelection);
+            CursorPosition = CursorPosition.ChangeLineNumber(CursorPosition.LineNumber - 1);
+
+            //Cursorposition is smaller than the start of selection
+            if(TextSelection.StartPosition.LineNumber > CursorPosition.LineNumber)
+            {
+                return false;
+            }
+            else
+            {
+                //Selectionend is smaller than Cursorposition -> not in selection
+                if(TextSelection.EndPosition.LineNumber < CursorPosition.LineNumber)
+                {
+                    return false;
+                }
+                else
+                {
+                    //Selection-start line equals Cursor line:
+                    if(CursorPosition.LineNumber == TextSelection.StartPosition.LineNumber)
+                    {
+                        return CursorPosition.CharacterPosition > TextSelection.StartPosition.CharacterPosition;
+                    }
+                    //Selection-end line equals Cursor line
+                    else if(CursorPosition.LineNumber == TextSelection.EndPosition.LineNumber)
+                    {
+                        return CursorPosition.CharacterPosition < TextSelection.EndPosition.CharacterPosition;
+                    }
+                    return true;
+                }
+            }
+        }
+
         //Clear the selection
         public void ClearSelection()
         {
@@ -214,7 +250,6 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
             Index = textSelection.Index;
             Length = textSelection.Length;
         }
-
 
         public int Index { get; set; }
         public int Length { get; set; }

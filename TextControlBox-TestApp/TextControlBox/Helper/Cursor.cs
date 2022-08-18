@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 
@@ -313,37 +314,19 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 ReturnValue.CharacterPosition = LineLength;
             return ReturnValue;
         }
-        public static CursorPosition MoveDown(CursorPosition CurrentCursorPosition, List<Line> TotalLines)
+        public static CursorPosition MoveDown(CursorPosition CurrentCursorPosition, int TotalLinesLength)
         {
             CursorPosition ReturnValue = new CursorPosition(CurrentCursorPosition);
-            if (TotalLines.Count > CurrentCursorPosition.LineNumber && CurrentCursorPosition.LineNumber > 0)
-            {
-                int NextLineLenght = ListHelper.GetLine(TotalLines, CurrentCursorPosition.LineNumber).Length;
-                ReturnValue.LineNumber++;
-                if (NextLineLenght > CurrentCursorPosition.CharacterPosition)
-                    ReturnValue.CharacterPosition = CurrentCursorPosition.CharacterPosition;
-                else
-                    ReturnValue.CharacterPosition = NextLineLenght;
-            }
-
+            if (CurrentCursorPosition.LineNumber < TotalLinesLength - 1)
+                ReturnValue = CursorPosition.ChangeLineNumber(CurrentCursorPosition, CurrentCursorPosition.LineNumber + 1);
             return ReturnValue;
         }
-        public static CursorPosition MoveUp(CursorPosition CurrentCursorPosition, List<Line> TotalLines)
+        public static CursorPosition MoveUp(CursorPosition CurrentCursorPosition)
         {
-            if (CurrentCursorPosition.LineNumber > 1)
-            {
-                CurrentCursorPosition = CursorPosition.ChangeLineNumber(CurrentCursorPosition, CurrentCursorPosition.LineNumber - 1);
-                Line PreviousLine = ListHelper.GetLine(TotalLines, CurrentCursorPosition.LineNumber - 1);
-                if (PreviousLine == null)
-                    return CurrentCursorPosition;
-
-                int PreviousLineLenght = PreviousLine.Length;
-                if (PreviousLineLenght > CurrentCursorPosition.CharacterPosition)
-                    CurrentCursorPosition.CharacterPosition = CurrentCursorPosition.CharacterPosition;
-                else
-                    CurrentCursorPosition.CharacterPosition = PreviousLineLenght;
-            }
-            return CurrentCursorPosition;
+            CursorPosition ReturnValue = new CursorPosition(CurrentCursorPosition);
+            if (CurrentCursorPosition.LineNumber > 0)
+                ReturnValue = CursorPosition.ChangeLineNumber(CurrentCursorPosition, CurrentCursorPosition.LineNumber - 1);
+            return ReturnValue;
         }
     }
 }
