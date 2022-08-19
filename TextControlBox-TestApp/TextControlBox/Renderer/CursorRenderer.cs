@@ -1,6 +1,7 @@
 ﻿using Microsoft.Graphics.Canvas.Brushes;
 using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
+using System;
 using System.Diagnostics;
 using System.Numerics;
 using Windows.Foundation;
@@ -12,7 +13,7 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
         public static int GetCursorLineFromPoint(Point Point, float SingleLineHeight, int NumberOfRenderedLines, int NumberOfStartLine, int NumberOfUnderedLines)
         {
             //Calculate the relative linenumber, where the pointer was pressed at
-            int Linenumber = (int)(Point.Y / SingleLineHeight) + 1;
+            int Linenumber = (int)(Point.Y / SingleLineHeight);
 
             if (Linenumber > NumberOfStartLine + NumberOfRenderedLines)
                 Linenumber = NumberOfStartLine + NumberOfRenderedLines;

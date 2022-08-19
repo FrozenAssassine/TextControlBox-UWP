@@ -83,7 +83,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         //Convert the coordinates from Relative to Absolute and the other way around
         public static CursorPosition RelativeToAbsolute(CursorPosition curpos, int nmbOfUnrenderdLines)
         {
-            return CursorPosition.ChangeLineNumber(curpos, curpos.LineNumber - nmbOfUnrenderdLines);
+            return curpos.ChangeLineNumber(curpos.LineNumber - nmbOfUnrenderdLines);
         }
         public static CursorPosition AbsoluteToRelative(CursorPosition curpos, int nmbOfUnrenderdLines)
         {
@@ -265,52 +265,56 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         }
 
         //Move cursor:
-        public static CursorPosition MoveLeft(CursorPosition CurrentCursorPosition, List<Line> TotalLines)
+        public static CursorPosition MoveLeft(CursorPosition CurrentCursorPosition, List<Line> TotalLines, Line CurrentLine)
         {
             CursorPosition ReturnValue = new CursorPosition(CurrentCursorPosition);
-            int Line = CurrentCursorPosition.LineNumber;
-            int StepsToMoveLeft = CalculateStepsToMoveLeft(ListHelper.GetLine(TotalLines, Line - 1), CurrentCursorPosition.CharacterPosition);
+            int LineLength = ListHelper.GetLine(TotalLines, ReturnValue.LineNumber).Length;
 
-            if (CurrentCursorPosition.CharacterPosition == 0)
+            if (ReturnValue.LineNumber < 0)
             {
-                ReturnValue.LineNumber = Line > 1 ? Line-- : Line;
-                if (Line < ReturnValue.LineNumber)
-                {
-                    ReturnValue.LineNumber -= StepsToMoveLeft;
-                    ReturnValue.CharacterPosition = ListHelper.GetLine(TotalLines, ReturnValue.LineNumber - 1).Length;
-                }
-                else
-                    ReturnValue.CharacterPosition -= StepsToMoveLeft;
+                return ReturnValue;
             }
             else
             {
-                ReturnValue.LineNumber = Line;
-                ReturnValue.CharacterPosition -= StepsToMoveLeft;
+                if (ReturnValue.CharacterPosition == 0 && ReturnValue.LineNumber > 0)
+                {
+                    ReturnValue.CharacterPosition = ListHelper.GetLine(TotalLines, ReturnValue.LineNumber - 1).Length;
+                    ReturnValue.LineNumber -= 1;
+                }
+                else if(ReturnValue.CharacterPosition > 0)
+                {
+                    ReturnValue.CharacterPosition -= CalculateStepsToMoveLeft(CurrentLine, CurrentCursorPosition.CharacterPosition);
+                }
             }
-            if (ReturnValue.CharacterPosition < 0)
-                ReturnValue.CharacterPosition = 0;
+
+            if (ReturnValue.CharacterPosition > LineLength)
+                ReturnValue.CharacterPosition = LineLength;
 
             return ReturnValue;
         }
         public static CursorPosition MoveRight(CursorPosition CurrentCursorPosition, List<Line> TotalLines, Line CurrentLine)
         {
             CursorPosition ReturnValue = new CursorPosition(CurrentCursorPosition);
-            int StepsToMoveRight = CalculateStepsToMoveRight(CurrentLine, CurrentCursorPosition.CharacterPosition);
-            if (CurrentCursorPosition.CharacterPosition == CurrentLine.Length)
+            int LineLength = ListHelper.GetLine(TotalLines, ReturnValue.LineNumber).Length;
+
+            if (ReturnValue.LineNumber > TotalLines.Count - 1) 
             {
-                ReturnValue.LineNumber += CurrentCursorPosition.LineNumber < TotalLines.Count ? 1 : 0;
-                if (CurrentCursorPosition.LineNumber < ReturnValue.LineNumber)
-                    ReturnValue.CharacterPosition = 0;
-                else
-                    ReturnValue.CharacterPosition += StepsToMoveRight;
+                return ReturnValue;
             }
             else
             {
-                ReturnValue.LineNumber = CurrentCursorPosition.LineNumber;
-                ReturnValue.CharacterPosition += StepsToMoveRight;
+                if (ReturnValue.CharacterPosition == LineLength && ReturnValue.LineNumber < TotalLines.Count - 1)
+                {
+                    ReturnValue.CharacterPosition = 0;
+                    ReturnValue.LineNumber += 1;
+                }
+                else if (ReturnValue.CharacterPosition < LineLength)
+                {
+                    ReturnValue.CharacterPosition += CalculateStepsToMoveRight(CurrentLine, CurrentCursorPosition.CharacterPosition);
+                }
             }
-            var LineLength = ListHelper.GetLine(TotalLines, ReturnValue.LineNumber - 1).Length;
-            if (ReturnValue.CharacterPosition >= LineLength)
+
+            if (ReturnValue.CharacterPosition > LineLength)
                 ReturnValue.CharacterPosition = LineLength;
             return ReturnValue;
         }
@@ -325,7 +329,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         {
             CursorPosition ReturnValue = new CursorPosition(CurrentCursorPosition);
             if (CurrentCursorPosition.LineNumber > 0)
-                ReturnValue = CursorPosition.ChangeLineNumber(CurrentCursorPosition, CurrentCursorPosition.LineNumber - 1);
+                ReturnValue = CursorPosition.ChangeLineNumber(ReturnValue, CurrentCursorPosition.LineNumber - 1);
             return ReturnValue;
         }
     }
