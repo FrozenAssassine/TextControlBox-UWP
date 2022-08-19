@@ -78,7 +78,7 @@ namespace TextControlBox_TestApp.TextControlBox
         float SingleLineHeight = 0;
 
         //CursorPosition
-        CursorPosition _CursorPosition = new CursorPosition(0, 1);
+        CursorPosition _CursorPosition = new CursorPosition(0, 0);
         CursorPosition OldCursorPosition = null;
         Line CurrentLine = null;
         CanvasTextLayout CurrentLineTextLayout = null;
@@ -178,7 +178,7 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         private void UpdateCurrentLineTextLayout()
         {
-            CurrentLineTextLayout = CreateTextLayoutForLine(Canvas_Text, CursorPosition.LineNumber - 1);
+            CurrentLineTextLayout = CreateTextLayoutForLine(Canvas_Text, CursorPosition.LineNumber);
         }
         private void SetSelection(TextSelection Selection)
         {
@@ -200,12 +200,12 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         private Line GetCurrentLine()
         {
-            return ListHelper.GetLine(TotalLines, CursorPosition.LineNumber - 1);
+            return ListHelper.GetLine(TotalLines, CursorPosition.LineNumber);
         }
 
         private void UpdateScrollToShowCursor()
         {
-            if (NumberOfStartLine + RenderedLines.Count <= CursorPosition.LineNumber - 1)
+            if (NumberOfStartLine + RenderedLines.Count <= CursorPosition.LineNumber)
                 ScrollBottomIntoView();
             else if(NumberOfStartLine > CursorPosition.LineNumber)
                 ScrollTopIntoView();
@@ -237,7 +237,7 @@ namespace TextControlBox_TestApp.TextControlBox
             }
             else if (TextSelection == null && SplittedText.Length > 1)
             {
-                UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, ListHelper.GetLine(TotalLines, CursorPosition.LineNumber - 1).Content, SplittedText.Length);
+                UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, ListHelper.GetLine(TotalLines, CursorPosition.LineNumber).Content, SplittedText.Length);
                 CursorPosition = Selection.InsertText(TextSelection, CursorPosition, TotalLines, text, NewLineCharacter);
             }
             else
@@ -281,12 +281,12 @@ namespace TextControlBox_TestApp.TextControlBox
                     CurrentLine.Remove(CursorPosition.CharacterPosition - StepsToMove, StepsToMove);
                     CursorPosition.CharacterPosition -= StepsToMove;
                 }
-                else if (CursorPosition.LineNumber > 1)
+                else if (CursorPosition.LineNumber > 0)
                 {
-                    UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, ListHelper.GetLine(TotalLines, CursorPosition.LineNumber - 1).Content, 0);
+                    UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, ListHelper.GetLine(TotalLines, CursorPosition.LineNumber).Content, 0);
 
                     //Move the cursor one line up, if the beginning of the line is reached
-                    Line LineOnTop = ListHelper.GetLine(TotalLines, CursorPosition.LineNumber - 2);
+                    Line LineOnTop = ListHelper.GetLine(TotalLines, CursorPosition.LineNumber - 1);
                     LineOnTop.AddToEnd(CurrentLine.Content);
                     TotalLines.Remove(CurrentLine);
                     CursorPosition.LineNumber -= 1;
@@ -322,7 +322,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 }
                 else if (TotalLines.Count > CursorPosition.LineNumber)
                 {
-                    Line LineToAdd = CursorPosition.LineNumber < TotalLines.Count ? ListHelper.GetLine(TotalLines, CursorPosition.LineNumber) : null;
+                    Line LineToAdd = CursorPosition.LineNumber + 1< TotalLines.Count ? ListHelper.GetLine(TotalLines, CursorPosition.LineNumber + 1) : null;
                     if (LineToAdd != null)
                     {
                         UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, CurrentLine.Content + LineToAdd.Content, 1);
@@ -352,7 +352,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 return;
             }
 
-            CursorPosition NormalCurPos = CursorPosition.ChangeLineNumber(CursorPosition, CursorPosition.LineNumber - 1);
+            CursorPosition NormalCurPos = CursorPosition.ChangeLineNumber(CursorPosition, CursorPosition.LineNumber);
             CursorPosition StartLinePos = new CursorPosition(TextSelection == null ? NormalCurPos : Selection.GetMin(TextSelection));
             CursorPosition EndLinePos = new CursorPosition(TextSelection == null ? NormalCurPos : Selection.GetMax(TextSelection));
 
@@ -419,7 +419,7 @@ namespace TextControlBox_TestApp.TextControlBox
             CursorPosition.LineNumber += 1;
             CursorPosition.CharacterPosition = 0;
 
-            if (TextSelection == null && CursorPosition.LineNumber - 1 == RenderedLines.Count + NumberOfUnrenderedLinesToRenderStart)
+            if (TextSelection == null && CursorPosition.LineNumber == RenderedLines.Count + NumberOfUnrenderedLinesToRenderStart)
                 ScrollOneLineDown();
             else
                 UpdateScrollToShowCursor();
@@ -451,18 +451,15 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         private bool CursorIsInUnrenderedRegion()
         {
-            return CursorPosition.LineNumber < NumberOfUnrenderedLinesToRenderStart + 1 || CursorPosition.LineNumber > NumberOfUnrenderedLinesToRenderStart + RenderedLines.Count;
+            return CursorPosition.LineNumber < NumberOfUnrenderedLinesToRenderStart + 1 || CursorPosition.LineNumber > NumberOfUnrenderedLinesToRenderStart + RenderedLines.Count + 1;
         }
         private void StartSelectionIfNeeded()
         {
             if (SelectionIsNull())
             {
-                selectionrenderer.SelectionStartPosition = selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber - 1);
+                selectionrenderer.SelectionStartPosition = selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
                 TextSelection = new TextSelection(selectionrenderer.SelectionStartPosition, selectionrenderer.SelectionEndPosition);
-                Debug.WriteLine(selectionrenderer.SelectionStartPosition.LineNumber + ";;" + selectionrenderer.SelectionEndPosition.LineNumber);
             }
-            Debug.WriteLine(selectionrenderer.HasSelection);
-
         }
         private bool SelectionIsNull()
         {
@@ -473,7 +470,9 @@ namespace TextControlBox_TestApp.TextControlBox
         private CanvasTextLayout CreateTextLayoutForLine(CanvasControl sender, int LineIndex)
         {
             if (LineIndex < TotalLines.Count)
+            {
                 return TextRenderer.CreateTextLayout(sender, TextFormat, ListHelper.GetLine(TotalLines, LineIndex).Content + "|", sender.Size);
+            }
             return null;
         }
         private void SelectDoubleClick(Point Point)
@@ -485,8 +484,8 @@ namespace TextControlBox_TestApp.TextControlBox
             int StepsRight = Cursor.CalculateStepsToMoveRight2(CurrentLine, Characterpos);
 
             //Update variables
-            selectionrenderer.SelectionStartPosition = new CursorPosition(Characterpos - StepsLeft, CursorPosition.LineNumber - 1);
-            selectionrenderer.SelectionEndPosition = new CursorPosition(Characterpos + StepsRight, CursorPosition.LineNumber - 1);
+            selectionrenderer.SelectionStartPosition = new CursorPosition(Characterpos - StepsLeft, CursorPosition.LineNumber);
+            selectionrenderer.SelectionEndPosition = new CursorPosition(Characterpos + StepsRight, CursorPosition.LineNumber);
             CursorPosition.CharacterPosition = selectionrenderer.SelectionEndPosition.CharacterPosition;
             selectionrenderer.HasSelection = true;
 
@@ -522,7 +521,7 @@ namespace TextControlBox_TestApp.TextControlBox
 
             UndoRedo.RecordMultiLineUndo(
                 CursorPosition.LineNumber, 
-                ListHelper.GetLine(TotalLines, CursorPosition.LineNumber - 1).Content, 
+                ListHelper.GetLine(TotalLines, CursorPosition.LineNumber).Content, 
                 TextToInsert.Split(NewLineCharacter).Length,
                 null, true);
 
@@ -693,21 +692,20 @@ namespace TextControlBox_TestApp.TextControlBox
                         if (shift)
                         {
                             StartSelectionIfNeeded();
-                            selectionrenderer.HasSelection = true;
                             selectionrenderer.IsSelecting = true;
-                            CursorPosition = selectionrenderer.SelectionEndPosition = Cursor.MoveSelectionLeft(selectionrenderer.SelectionEndPosition, TotalLines);
-                            CursorPosition.ChangeLineNumber(CursorPosition.LineNumber + 1);
-                            UpdateSelection();
+                            CursorPosition = selectionrenderer.SelectionEndPosition = Cursor.MoveLeft(selectionrenderer.SelectionEndPosition, TotalLines, CurrentLine);
                             selectionrenderer.IsSelecting = false;
                         }
                         else
                         {
                             ClearSelectionIfNeeded();
-                            CursorPosition = Cursor.RelativeToAbsolute(Cursor.MoveLeft(CursorPosition, TotalLines), NumberOfUnrenderedLinesToRenderStart);
+                            CursorPosition = Cursor.MoveLeft(CursorPosition, TotalLines, CurrentLine);
                         }
+                        Cursor.RelativeToAbsolute(CursorPosition, NumberOfUnrenderedLinesToRenderStart);
+                        UpdateScrollToShowCursor();
+                        UpdateText();
                         UpdateCursor();
-                        if (CursorIsInUnrenderedRegion())
-                            ScrollOneLineUp();
+                        UpdateSelection();
                         break;
                     }
                 case VirtualKey.Right:
@@ -716,19 +714,20 @@ namespace TextControlBox_TestApp.TextControlBox
                         {
                             StartSelectionIfNeeded();
                             selectionrenderer.IsSelecting = true;
-                            CursorPosition = selectionrenderer.SelectionEndPosition = Cursor.MoveSelectionRight(selectionrenderer.SelectionEndPosition, TotalLines, CurrentLine);
-                            CursorPosition.ChangeLineNumber(CursorPosition.LineNumber + 1);
-                            UpdateSelection();
+                            CursorPosition = selectionrenderer.SelectionEndPosition = Cursor.MoveRight(selectionrenderer.SelectionEndPosition, TotalLines, CurrentLine);
                             selectionrenderer.IsSelecting = false;
                         }
                         else
                         {
                             ClearSelectionIfNeeded();
-                            CursorPosition = Cursor.RelativeToAbsolute(Cursor.MoveRight(CursorPosition, TotalLines, GetCurrentLine()), NumberOfUnrenderedLinesToRenderStart);
+                            CursorPosition = Cursor.MoveRight(CursorPosition, TotalLines, GetCurrentLine());
                         }
+                        Cursor.RelativeToAbsolute(CursorPosition, NumberOfUnrenderedLinesToRenderStart);
+
+                        UpdateScrollToShowCursor();
+                        UpdateText();
                         UpdateCursor();
-                        if (CursorIsInUnrenderedRegion())
-                            ScrollOneLineDown();
+                        UpdateSelection();
                         break;
                     }
                 case VirtualKey.Down:
@@ -737,24 +736,20 @@ namespace TextControlBox_TestApp.TextControlBox
                         {
                             StartSelectionIfNeeded();
                             selectionrenderer.IsSelecting = true;
-                            var NewCurPos = selectionrenderer.SelectionEndPosition = Cursor.MoveDown(selectionrenderer.SelectionEndPosition, TotalLines.Count);
-                            CursorPosition.Change(NewCurPos.CharacterPosition, NewCurPos.LineNumber + 1);
-                            UpdateSelection();
+                            CursorPosition = selectionrenderer.SelectionEndPosition = Cursor.MoveDown(selectionrenderer.SelectionEndPosition, TotalLines.Count);
                             selectionrenderer.IsSelecting = false;
                         }
                         else
                         {
-                            //Move the cursor to the bottom of the selection, if Down is pressed and text is selected
-                            if (!SelectionIsNull())
-                            {
-                                CursorPosition = Cursor.RelativeToAbsolute(Selection.GetMax(TextSelection.EndPosition, TextSelection.StartPosition), NumberOfUnrenderedLinesToRenderStart);
-                            }
                             ClearSelectionIfNeeded();
-                            CursorPosition = Cursor.RelativeToAbsolute(Cursor.MoveDown(CursorPosition, TotalLines.Count ), NumberOfUnrenderedLinesToRenderStart);
+                            CursorPosition = Cursor.MoveDown(CursorPosition, TotalLines.Count);
                         }
-                        if (CursorIsInUnrenderedRegion())
-                            ScrollBottomIntoView();
+                        Cursor.RelativeToAbsolute(CursorPosition, NumberOfUnrenderedLinesToRenderStart);
+
+                        UpdateScrollToShowCursor();
+                        UpdateText();
                         UpdateCursor();
+                        UpdateSelection();
                         break;
                     }
                 case VirtualKey.Up:
@@ -762,24 +757,21 @@ namespace TextControlBox_TestApp.TextControlBox
                         if (shift)
                         {
                             StartSelectionIfNeeded();
-                            Debug.WriteLine("StartingSelection");
                             selectionrenderer.IsSelecting = true;
-                            var NewCurPos = CursorPosition = selectionrenderer.SelectionEndPosition = Cursor.MoveUp(selectionrenderer.SelectionEndPosition);
-                            CursorPosition.Change(NewCurPos.CharacterPosition, NewCurPos.LineNumber + 1);
-                            UpdateSelection();
+                            CursorPosition = selectionrenderer.SelectionEndPosition = Cursor.MoveUp(selectionrenderer.SelectionEndPosition);
                             selectionrenderer.IsSelecting = false;
                         }
                         else
                         {
                             ClearSelectionIfNeeded();
-                            CursorPosition = CursorPosition = Cursor.RelativeToAbsolute(Cursor.MoveUp(CursorPosition), NumberOfUnrenderedLinesToRenderStart);
+                            CursorPosition = Cursor.MoveUp(CursorPosition);
                         }
+                        Cursor.RelativeToAbsolute(CursorPosition, NumberOfUnrenderedLinesToRenderStart);
 
-                        if (CursorIsInUnrenderedRegion())
-                        {
-                            ScrollTopIntoView();
-                        }
+                        UpdateScrollToShowCursor();
+                        UpdateText();
                         UpdateCursor();
+                        UpdateSelection();
                         break;
                     }
                 case VirtualKey.Escape:
@@ -883,7 +875,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 UpdateCursorVariable(e.GetCurrentPoint(Canvas_Selection).Position);
                 UpdateCursor();
 
-                selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber - 1);
+                selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
                 UpdateSelection();
             }
         }
@@ -915,7 +907,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 {
                     UpdateCursorVariable(PointerPosition);
 
-                    selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber - 1);
+                    selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
                     selectionrenderer.HasSelection = true;
                     selectionrenderer.IsSelecting = false;
                     UpdateSelection();
@@ -946,7 +938,7 @@ namespace TextControlBox_TestApp.TextControlBox
                         }
                     }
                     
-                    selectionrenderer.SelectionStartPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber - 1);
+                    selectionrenderer.SelectionStartPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
                     if (selectionrenderer.HasSelection)
                     {
                         selectionrenderer.ClearSelection();
@@ -1018,7 +1010,6 @@ namespace TextControlBox_TestApp.TextControlBox
         {
             //TEMPORARY:
             _editContext.NotifyFocusEnter();
-
 
             //Clear the rendered lines, to fill them with new lines
             RenderedLines.Clear();
@@ -1121,12 +1112,11 @@ namespace TextControlBox_TestApp.TextControlBox
                 return;
 
             if(CursorPosition.LineNumber > TotalLines.Count)
-            {
                 CursorPosition.LineNumber = TotalLines.Count;
-            }
 
             //Calculate the distance to the top for the cursorposition and render the cursor
-            float RenderPosY = (float)((CursorPosition.LineNumber - NumberOfUnrenderedLinesToRenderStart - 1) * SingleLineHeight) + SingleLineHeight / 4;
+            float RenderPosY = (float)((CursorPosition.LineNumber - NumberOfUnrenderedLinesToRenderStart) * SingleLineHeight) + SingleLineHeight / 4;
+            
             //Out of display-region:
             if (RenderPosY > RenderedLines.Count * SingleLineHeight || RenderPosY < 0)
                 return;
@@ -1233,7 +1223,7 @@ namespace TextControlBox_TestApp.TextControlBox
         /// <param name="CursorAtStart">Select whether the cursor moves to start or end of the line</param>
         public void SelectLine(int index, bool CursorAtStart = false)
         {
-            selectionrenderer.SelectionStartPosition = new CursorPosition(0, index - 1);
+            selectionrenderer.SelectionStartPosition = new CursorPosition(0, index);
             CursorPosition pos = selectionrenderer.SelectionEndPosition = new CursorPosition(ListHelper.GetLine(TotalLines, index - 1).Length, index - 1);
             CursorPosition.LineNumber = index;
             CursorPosition.CharacterPosition = CursorAtStart ? 0 : pos.CharacterPosition;
@@ -1295,7 +1285,7 @@ namespace TextControlBox_TestApp.TextControlBox
             if (TextSelection != null && Selection.WholeTextSelected(TextSelection, TotalLines))
                 return GetText();
 
-            return Selection.GetSelectedText(TotalLines, TextSelection, CursorPosition.LineNumber - 1, NewLineCharacter);
+            return Selection.GetSelectedText(TotalLines, TextSelection, CursorPosition.LineNumber, NewLineCharacter);
         }
         public string GetText()
         {
@@ -1330,8 +1320,6 @@ namespace TextControlBox_TestApp.TextControlBox
             Internal_TextChanged();
             if (sel == null)
                 return;
-
-            Debug.WriteLine(sel.ToString());
             
             selectionrenderer.SelectionStartPosition = sel.StartPosition;
             selectionrenderer.SelectionEndPosition = sel.EndPosition;
@@ -1349,11 +1337,13 @@ namespace TextControlBox_TestApp.TextControlBox
         {
             VerticalScrollbar.Value -= SingleLineHeight;
         }
-        public void ScrollOneLineDown()
+        public void ScrollOneLineDown(bool CallUpdateText = false)
         {
             ScrollEventsLocked = true;
             VerticalScrollbar.Value += SingleLineHeight;
             ScrollEventsLocked = false;
+            if (CallUpdateText)
+                UpdateText();
         }
         public void ScrollLineIntoView(int Line)
         {
@@ -1361,7 +1351,7 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         public void ScrollTopIntoView()
         {
-            VerticalScrollbar.Value = (CursorPosition.LineNumber - 1) * SingleLineHeight;
+            VerticalScrollbar.Value = (CursorPosition.LineNumber-1) * SingleLineHeight;
         }
         public void ScrollBottomIntoView()
         {
