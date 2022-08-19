@@ -533,6 +533,15 @@ namespace TextControlBox_TestApp.TextControlBox
             UpdateCursor();
             UpdateSelection();
         }
+        private void EndDragDropSelection()
+        {
+            ClearSelection();
+            UpdateSelection();
+            DragDropSelection = false;
+            ChangeCursor(CoreCursorType.IBeam);
+            selectionrenderer.IsSelecting = false;
+            UpdateCursor();
+        }
 
         private CodeLanguage GetCodeLanguage(CodeLanguages Languages)
         {
@@ -776,6 +785,7 @@ namespace TextControlBox_TestApp.TextControlBox
                     }
                 case VirtualKey.Escape:
                     {
+                        EndDragDropSelection();
                         ClearSelection();
                         break;
                     }
@@ -840,12 +850,7 @@ namespace TextControlBox_TestApp.TextControlBox
             }
             else if(DragDropSelection)
             {
-                ClearSelection();
-                UpdateSelection();
-                DragDropSelection = false;
-                ChangeCursor(CoreCursorType.IBeam);
-                selectionrenderer.IsSelecting = false;
-                UpdateCursor();
+                EndDragDropSelection();
             }
 
             if (selectionrenderer.IsSelecting)
@@ -930,11 +935,7 @@ namespace TextControlBox_TestApp.TextControlBox
                         }
                         if (DragDropSelection)
                         {
-                            ClearSelection();
-                            UpdateSelection();
-                            PointerClickCount = 0;
-                            ChangeCursor(CoreCursorType.IBeam);
-                            DragDropSelection = false;
+                            EndDragDropSelection();
                         }
                     }
                     
