@@ -40,4 +40,8 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             return sb.ToString();
         }
     }
+    public enum LineEnding
+    {
+        LF, CRLF, CR
+    }
 }

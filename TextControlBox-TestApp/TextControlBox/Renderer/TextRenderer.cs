@@ -1,6 +1,5 @@
 ﻿using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
-using System.Diagnostics;
 using Windows.Foundation;
 
 namespace TextControlBox_TestApp.TextControlBox.Renderer

@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Text;
-using TextControlBox_TestApp.TextControlBox;
+using TextControlBox_TestApp.TextControlBox.Helper;
 using Windows.Storage;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;

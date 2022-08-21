@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using TextControlBox_TestApp.TextControlBox.Languages;
 
 namespace TextControlBox_TestApp.TextControlBox.Helper
@@ -32,5 +28,14 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 return CodeLanguages.Html;
             else return CodeLanguages.None;
         }
+    }
+    public enum CodeLanguages
+    {
+        Csharp, Gcode, Html, None
+    }
+    public class CodeLanguage
+    {
+        public string Name { get; set; }
+        public List<SyntaxHighlights> Highlights = new List<SyntaxHighlights>();
     }
 }

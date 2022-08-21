@@ -2,8 +2,6 @@
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Numerics;
 using TextControlBox_TestApp.TextControlBox.Helper;
 using Windows.Foundation;
 using Windows.UI;
@@ -73,21 +71,8 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                     Math.Ceiling(r.Bottom + MarginTop))); //Height
         }
 
-        //Get the index, where pointer overlaps the text
-        private int GetHitIndex(CanvasTextLayout TextLayout, Point mouseOverPt, float MarginLeft = 0)
-        {
-            if (TextLayout == null)
-                return -1;
-
-            HasSelection = TextLayout.HitTest(
-                (float)mouseOverPt.X - MarginLeft,
-                (float)mouseOverPt.Y,
-                out var textLayoutRegion);
-            return textLayoutRegion.CharacterIndex;
-        }
-
         //Draw the actual selection and return the cursorposition. Return -1 if no selection was drawn
-        public TextSelection DrawSelection(CanvasTextLayout TextLayout, List<Line> RenderedLines, CanvasDrawEventArgs args, float MarginLeft, float MarginTop, int UnrenderedLinesToRenderStart, int NumberOfRenderedLines, ScrollBarPosition ScrollBarPosition)
+        public TextSelection DrawSelection(CanvasTextLayout TextLayout, List<Line> RenderedLines, CanvasDrawEventArgs args, float MarginLeft, float MarginTop, int UnrenderedLinesToRenderStart, int NumberOfRenderedLines)
         {
             if (HasSelection && SelectionEndPosition != null && SelectionStartPosition != null)
             {
@@ -163,7 +148,7 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                 CanvasTextLayoutRegion[] descriptions = TextLayout.GetCharacterRegions(SelectionStart, SelectionLength);
                 for (int i = 0; i < descriptions.Length; i++)
                 {
-                   args.DrawingSession.FillRectangle(CreateRect(descriptions[i].LayoutBounds, MarginLeft, MarginTop), SelectionColor);
+                    args.DrawingSession.FillRectangle(CreateRect(descriptions[i].LayoutBounds, MarginLeft, MarginTop), SelectionColor);
                 }
                 return new TextSelection(SelectionStart, SelectionLength, new CursorPosition(SelectionStartPosition), new CursorPosition(SelectionEndPosition));
             }
@@ -171,13 +156,13 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
         }
 
         //returns whether the pointer is over a selection
-        public bool PointerIsOverSelection(Point PointerPosition, TextSelection Selection,  CanvasTextLayout TextLayout)
+        public bool PointerIsOverSelection(Point PointerPosition, TextSelection Selection, CanvasTextLayout TextLayout)
         {
             if (TextLayout == null || Selection == null)
                 return false;
 
             CanvasTextLayoutRegion[] regions = TextLayout.GetCharacterRegions(Selection.Index, Selection.Length);
-            for(int i = 0; i < regions.Length; i++)
+            for (int i = 0; i < regions.Length; i++)
             {
                 if (regions[i].LayoutBounds.Contains(PointerPosition))
                     return true;
@@ -192,26 +177,26 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
             TextSelection = Selection.OrderTextSelection(TextSelection);
 
             //Cursorposition is smaller than the start of selection
-            if(TextSelection.StartPosition.LineNumber > CursorPosition.LineNumber)
+            if (TextSelection.StartPosition.LineNumber > CursorPosition.LineNumber)
             {
                 return false;
             }
             else
             {
                 //Selectionend is smaller than Cursorposition -> not in selection
-                if(TextSelection.EndPosition.LineNumber < CursorPosition.LineNumber)
+                if (TextSelection.EndPosition.LineNumber < CursorPosition.LineNumber)
                 {
                     return false;
                 }
                 else
                 {
                     //Selection-start line equals Cursor line:
-                    if(CursorPosition.LineNumber == TextSelection.StartPosition.LineNumber)
+                    if (CursorPosition.LineNumber == TextSelection.StartPosition.LineNumber)
                     {
                         return CursorPosition.CharacterPosition > TextSelection.StartPosition.CharacterPosition;
                     }
                     //Selection-end line equals Cursor line
-                    else if(CursorPosition.LineNumber == TextSelection.EndPosition.LineNumber)
+                    else if (CursorPosition.LineNumber == TextSelection.EndPosition.LineNumber)
                     {
                         return CursorPosition.CharacterPosition < TextSelection.EndPosition.CharacterPosition;
                     }
@@ -227,49 +212,5 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
             IsSelecting = false;
             SelectionEndPosition = null;
         }
-    }
-    public class TextSelection
-    {
-        public TextSelection(int index = 0, int length = 0, CursorPosition startPosition = null, CursorPosition endPosition = null)
-        {
-            Index = index;
-            Length = length;
-            StartPosition = startPosition;
-            EndPosition = endPosition;
-        }
-        public TextSelection(CursorPosition startPosition = null, CursorPosition endPosition = null)
-        {
-            StartPosition = startPosition;
-            EndPosition = endPosition;
-        }
-        public TextSelection(TextSelection textSelection)
-        {
-            StartPosition = new CursorPosition(textSelection.StartPosition);
-            EndPosition = new CursorPosition(textSelection.EndPosition);
-            Index = textSelection.Index;
-            Length = textSelection.Length;
-        }
-
-        public int Index { get; set; }
-        public int Length { get; set; }
-
-        public CursorPosition StartPosition { get; set; }
-        public CursorPosition EndPosition { get; set; }
-
-        public new string ToString()
-        {
-            return StartPosition.LineNumber + ":" + StartPosition.CharacterPosition + " | " + EndPosition.LineNumber + ":" + EndPosition.CharacterPosition;
-        }
-    }
-
-    public class TextSelectionPosition
-    {
-        public TextSelectionPosition(int Index = 0, int Length = 0)
-        {
-            this.Index = Index;
-            this.Length = Length;
-        }
-        public int Index { get; set; }
-        public int Length { get; set; }
     }
 }

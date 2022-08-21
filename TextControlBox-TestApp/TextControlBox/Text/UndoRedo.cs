@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
-using TextControlBox_TestApp.TextControlBox.Renderer;
 
 namespace TextControlBox_TestApp.TextControlBox.Helper
 {
@@ -14,7 +12,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             if (Items.Count == 0)
                 return default;
 
-            T Item =  Items[Items.Count - 1];
+            T Item = Items[Items.Count - 1];
             Items.RemoveAt(Items.Count - 1);
             return Item;
         }
@@ -41,7 +39,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
     {
         public string EnteringText { get; set; } = "";
         private Stack<UndoRedoClass> UndoStack = new Stack<UndoRedoClass>();
-        
+
         public void ClearStacks()
         {
             UndoStack.Clear();
@@ -122,7 +120,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 Selection.ReplaceUndo(item.LineNumber, TotalLines, ListHelper.GetLinesFromString(item.Text, NewLineCharacter), item.LinesToDelete);
 
                 if (item.ExcecuteNextUndoToo)
-                    return Undo(TotalLines, Textbox, NewLineCharacter); 
+                    return Undo(TotalLines, Textbox, NewLineCharacter);
                 return item.TextSelection;
             }
             return null;

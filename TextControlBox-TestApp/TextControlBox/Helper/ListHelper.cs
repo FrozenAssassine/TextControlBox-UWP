@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TextControlBox_TestApp.TextControlBox.Helper
 {
@@ -48,12 +45,12 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         {
             var Splitted = content.Split(NewLineCharacter);
             List<Line> Content = new List<Line>(Splitted.Length);
-            for(int i = 0; i< Splitted.Length; i++)
+            for (int i = 0; i < Splitted.Length; i++)
             {
                 Content.Add(new Line(Splitted[i]));
             }
             return Content;
-        } 
+        }
 
         public static void Insert(List<Line> TotalLines, Line Line, int Position)
         {
@@ -62,7 +59,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             else
                 TotalLines.Insert(Position, Line);
         }
-        
+
         public static void InsertRange(List<Line> TotalLines, List<Line> Lines, int Position)
         {
             if (Position >= TotalLines.Count)
@@ -70,7 +67,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             else
                 TotalLines.InsertRange(Position < 0 ? 0 : Position, Lines);
         }
-    
+
         public static void RemoveRange(List<Line> TotalLines, int Index, int Count)
         {
             if (Index >= TotalLines.Count)

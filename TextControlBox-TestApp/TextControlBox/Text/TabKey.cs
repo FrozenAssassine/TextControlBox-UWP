@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
-using TextControlBox_TestApp.TextControlBox.Renderer;
 
 namespace TextControlBox_TestApp.TextControlBox.Helper
 {
@@ -31,9 +29,9 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                     Line Line = Lines[i];
                     if (i == 0 && Line.Content.Contains(TabCharacter, System.StringComparison.Ordinal) && CursorPosition.CharacterPosition > 0)
                         TextSelection.StartPosition.SubtractFromCharacterPos(1);
-                    else if(i == Lines.Count - 1 && Line.Content.Contains(TabCharacter, System.StringComparison.Ordinal))
+                    else if (i == Lines.Count - 1 && Line.Content.Contains(TabCharacter, System.StringComparison.Ordinal))
                         TextSelection.EndPosition.SubtractFromCharacterPos(1);
-                    
+
                     Line.SetText(Line.Content.RemoveFirstOccurence(TabCharacter));
                 }
 

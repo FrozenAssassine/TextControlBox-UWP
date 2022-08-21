@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using TextControlBox_TestApp.TextControlBox.Renderer;
 
 namespace TextControlBox_TestApp.TextControlBox.Helper
 {
@@ -131,11 +129,11 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             //ListHelper.InsertRange(TotalLines, Replace, StartLine);
 
             int Count = LinesToDelete;
-            if(StartLine >= TotalLines.Count)
+            if (StartLine >= TotalLines.Count)
             {
                 StartLine = TotalLines.Count - 1 - Count;
             }
-            if(StartLine + Count >= TotalLines.Count)
+            if (StartLine + Count >= TotalLines.Count)
             {
                 int val = TotalLines.Count - StartLine;
                 if (val < 0)
@@ -158,7 +156,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             //Just delete the text if the string is emty
             if (Text == "")
             {
-                return Remove(Selection, TotalLines, NewLineCharacter);
+                return Remove(Selection, TotalLines);
             }
 
             Selection = OrderTextSelection(Selection);
@@ -182,7 +180,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
                 return new CursorPosition(EndPosition + Text.Length, StartLine + 1);
             }
-            else if(StartLine == EndLine && SplittedText.Length > 1)
+            else if (StartLine == EndLine && SplittedText.Length > 1)
             {
                 if (StartPosition == 0 && EndPosition == ListHelper.GetLine(TotalLines, EndLine).Length)
                     Start_Line.Content = "";
@@ -218,7 +216,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 if (TotalLines.Count == 0)
                     TotalLines.Add(new Line());
 
-                return new CursorPosition(ListHelper.GetLine(TotalLines, - 1).Length, TotalLines.Count);
+                return new CursorPosition(ListHelper.GetLine(TotalLines, -1).Length, TotalLines.Count);
             }
             else
             {
@@ -290,7 +288,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
         }
 
-        public static CursorPosition Remove(TextSelection Selection, List<Line> TotalLines, string NewLineCharacter)
+        public static CursorPosition Remove(TextSelection Selection, List<Line> TotalLines)
         {
             Debug.WriteLine("--Remove text--");
             Selection = OrderTextSelection(Selection);
@@ -408,7 +406,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
         }
         //Get the selected lines as a new Line without respecting the characterposition
-        public static List<Line> GetCopyOfSelectedLines(List<Line> TotalLines, TextSelection Selection, string NewLineCharacter)
+        public static List<Line> GetCopyOfSelectedLines(List<Line> TotalLines, TextSelection Selection)
         {
             if (Selection == null)
                 return null;
@@ -492,7 +490,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
             else if (WholeTextSelected(TextSelection, TotalLines))
             {
-                return String.Join(NewLineCharacter, TotalLines.Select(x=> x.Content));
+                return String.Join(NewLineCharacter, TotalLines.Select(x => x.Content));
             }
             else //Multiline
             {

@@ -1,61 +1,9 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 
 namespace TextControlBox_TestApp.TextControlBox.Helper
 {
-    public class CursorPosition
-    {
-        public CursorPosition(int CharacterPosition = 0, int LineNumber = 0)
-        {
-            this.CharacterPosition = CharacterPosition;
-            this.LineNumber = LineNumber;
-        }
-        public CursorPosition(CursorPosition CurrentCursorPosition)
-        {
-            if (CurrentCursorPosition == null)
-                return;
-            this.CharacterPosition = CurrentCursorPosition.CharacterPosition;
-            this.LineNumber = CurrentCursorPosition.LineNumber;
-        }
-        public int CharacterPosition { get; set; } = 0;
-        public int LineNumber { get; set; } = 0;
-        public CursorPosition Change(int CharacterPosition, int LineNumber)
-        {
-            this.CharacterPosition = CharacterPosition;
-            this.LineNumber = LineNumber;
-            return this;
-        }
-        public void AddToCharacterPos(int Add)
-        {
-            CharacterPosition += Add;
-        }
-        public void SubtractFromCharacterPos(int Value)
-        {
-            CharacterPosition -= Value;
-        }
-        public new string ToString()
-        {
-            return LineNumber + ":" + CharacterPosition;
-        }
-
-        public CursorPosition ChangeLineNumber(int LineNumber)
-        {
-            this.LineNumber = LineNumber;
-            return this;
-        }
-
-        public static CursorPosition ChangeCharacterPosition(CursorPosition CurrentCursorPosition, int CharacterPosition)
-        {
-            return new CursorPosition(CharacterPosition, CurrentCursorPosition.LineNumber);
-        }
-        public static CursorPosition ChangeLineNumber(CursorPosition CurrentCursorPosition, int LineNumber)
-        {
-            return new CursorPosition(CurrentCursorPosition.CharacterPosition, LineNumber);
-        }
-    }
-
     public class Cursor
     {
         private static bool ControlIsPressed { get => Window.Current.CoreWindow.GetKeyState(Windows.System.VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down); }
@@ -75,7 +23,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             if (CurPos1 == null || CurPos2 == null)
                 return false;
 
-            if(CurPos1.LineNumber == CurPos2.LineNumber)
+            if (CurPos1.LineNumber == CurPos2.LineNumber)
                 return CurPos1.CharacterPosition == CurPos2.CharacterPosition;
             return false;
         }
@@ -84,111 +32,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         public static CursorPosition RelativeToAbsolute(CursorPosition curpos, int nmbOfUnrenderdLines)
         {
             return curpos.ChangeLineNumber(curpos.LineNumber - nmbOfUnrenderdLines);
-        }
-        public static CursorPosition AbsoluteToRelative(CursorPosition curpos, int nmbOfUnrenderdLines)
-        {
-            return CursorPosition.ChangeLineNumber(curpos, curpos.LineNumber + nmbOfUnrenderdLines);
-        }
-
-        //Move selectionend:
-        public static CursorPosition MoveSelectionLeft(CursorPosition SelectionEndPosition, List<Line> TotalLines)
-        {
-            CursorPosition ReturnValue = new CursorPosition(SelectionEndPosition);
-            if (SelectionEndPosition == null)
-                return ReturnValue;
-
-
-            //If a selection has been started, continue the selection
-            int Line = ReturnValue.LineNumber;
-            int StepsToMoveLeft = CalculateStepsToMoveLeft(ListHelper.GetLine(TotalLines, Line), SelectionEndPosition.CharacterPosition);
-
-            if (SelectionEndPosition.CharacterPosition == 0)
-            {
-                ReturnValue.LineNumber = Line > 0 ? Line-- : Line;
-                if (Line < ReturnValue.LineNumber)
-                {
-                    ReturnValue.LineNumber--;
-                    ReturnValue.CharacterPosition = ListHelper.GetLine(TotalLines, ReturnValue.LineNumber).Length;
-                }
-                else
-                    ReturnValue.CharacterPosition -= StepsToMoveLeft;
-            }
-            else
-            {
-                ReturnValue.CharacterPosition -= StepsToMoveLeft;
-            }
-            if (ReturnValue.CharacterPosition < 0)
-                ReturnValue.CharacterPosition = 0;
-            return ReturnValue;
-        }
-        public static CursorPosition MoveSelectionRight(CursorPosition SelectionEndPosition, List<Line> TotalLines, Line CurrentLine)
-        {
-            CursorPosition ReturnValue = new CursorPosition(SelectionEndPosition);
-
-            if (SelectionEndPosition == null || CurrentLine == null)
-                return ReturnValue;
-
-            int StepsToMoveRight = CalculateStepsToMoveRight(ListHelper.GetLine(TotalLines, SelectionEndPosition.LineNumber), SelectionEndPosition.CharacterPosition);
-
-            if (SelectionEndPosition.CharacterPosition == CurrentLine.Length)
-            {
-                ReturnValue.LineNumber += SelectionEndPosition.LineNumber < TotalLines.Count ? 1 : 0;
-                if (SelectionEndPosition.LineNumber < ReturnValue.LineNumber)
-                    ReturnValue.CharacterPosition = 0;
-                else
-                    ReturnValue.CharacterPosition += StepsToMoveRight;
-            }
-            else
-            {
-                ReturnValue.LineNumber = SelectionEndPosition.LineNumber;
-                ReturnValue.CharacterPosition += StepsToMoveRight;
-            }
-            return ReturnValue;
-        }
-        public static CursorPosition MoveSelectionUp(CursorPosition SelectionEndPosition, List<Line> TotalLines)
-        {
-            CursorPosition ReturnValue = new CursorPosition(SelectionEndPosition);
-
-            if (SelectionEndPosition == null)
-                return ReturnValue;
-
-            if (1 < SelectionEndPosition.LineNumber + 1)
-            {
-                Line PreviousLine = ListHelper.GetLine(TotalLines, SelectionEndPosition.LineNumber + 1);
-                if (PreviousLine == null)
-                    return ReturnValue;
-
-                int PreviousLineLenght = PreviousLine.Length;
-                ReturnValue.LineNumber--;
-                if (PreviousLineLenght > SelectionEndPosition.CharacterPosition)
-                    ReturnValue.CharacterPosition = SelectionEndPosition.CharacterPosition;
-                else
-                    ReturnValue.CharacterPosition = PreviousLineLenght;
-            }
-            if (ReturnValue.LineNumber < 0)
-                ReturnValue.LineNumber = 0;
-
-            return ReturnValue;
-        }
-        public static CursorPosition MoveSelectionDown(CursorPosition SelectionEndPosition, List<Line> TotalLines)
-        {
-
-            CursorPosition ReturnValue = new CursorPosition(SelectionEndPosition);
-
-            if (SelectionEndPosition == null)
-                return ReturnValue;
-
-            if (TotalLines.Count > SelectionEndPosition.LineNumber)
-            {
-                int NextLineLenght = ListHelper.GetLine(TotalLines, SelectionEndPosition.LineNumber).Length;
-                ReturnValue.LineNumber++;
-                if (NextLineLenght > SelectionEndPosition.CharacterPosition)
-                    ReturnValue.CharacterPosition = SelectionEndPosition.CharacterPosition;
-                else
-                    ReturnValue.CharacterPosition = NextLineLenght;
-            }
-
-            return ReturnValue;
         }
 
         //Calculate the number of characters from the cursorposition to the next character or digit to the left and to the right
@@ -219,8 +62,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 else
                     break;
             }
-            //If it ignores the ControlKey return the real value of Count otherwise
-            //return 1 if Count is 0
             return Count;
         }
 
@@ -281,7 +122,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                     ReturnValue.CharacterPosition = ListHelper.GetLine(TotalLines, ReturnValue.LineNumber - 1).Length;
                     ReturnValue.LineNumber -= 1;
                 }
-                else if(ReturnValue.CharacterPosition > 0)
+                else if (ReturnValue.CharacterPosition > 0)
                 {
                     ReturnValue.CharacterPosition -= CalculateStepsToMoveLeft(CurrentLine, CurrentCursorPosition.CharacterPosition);
                 }
@@ -297,7 +138,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             CursorPosition ReturnValue = new CursorPosition(CurrentCursorPosition);
             int LineLength = ListHelper.GetLine(TotalLines, ReturnValue.LineNumber).Length;
 
-            if (ReturnValue.LineNumber > TotalLines.Count - 1) 
+            if (ReturnValue.LineNumber > TotalLines.Count - 1)
             {
                 return ReturnValue;
             }

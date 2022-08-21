@@ -1,4 +1,5 @@
-﻿using Windows.UI;
+﻿using TextControlBox_TestApp.TextControlBox.Helper;
+using Windows.UI;
 
 namespace TextControlBox_TestApp.TextControlBox.Languages
 {

@@ -4,20 +4,14 @@ using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Numerics;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using TextControlBox_TestApp.TextControlBox.Helper;
-using TextControlBox_TestApp.TextControlBox.Languages;
 using TextControlBox_TestApp.TextControlBox.Renderer;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
-using Windows.Graphics.Imaging;
 using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Text.Core;
@@ -26,8 +20,6 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media.Imaging;
-using static System.Net.Mime.MediaTypeNames;
 using Color = Windows.UI.Color;
 using Size = Windows.Foundation.Size;
 
@@ -42,12 +34,11 @@ namespace TextControlBox_TestApp.TextControlBox
         private CodeLanguage _CodeLanguage = null;
         private CodeLanguages _CodeLanguages = CodeLanguages.None;
         private LineEnding _LineEnding = LineEnding.CRLF;
-        private ObservableCollection<TextHighlight> _TextHighlights = new ObservableCollection<TextHighlight>();
         private bool _ShowLineHighlighter = true;
         private int _FontSize = 18;
         private int _ZoomFactor = 100; //%
 
-        float SingleLineHeight { get => TextFormat.LineSpacing; }
+        float SingleLineHeight { get => TextFormat == null ? 0 : TextFormat.LineSpacing; }
         float ZoomedFontSize = 0;
         int MaxFontsize = 125;
         int MinFontSize = 3;
@@ -114,7 +105,6 @@ namespace TextControlBox_TestApp.TextControlBox
             //Events:
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             Window.Current.CoreWindow.PointerMoved += CoreWindow_PointerMoved;
-            _TextHighlights.CollectionChanged += _TextHighlights_CollectionChanged;
             InitialiseOnStart();
         }
 
@@ -301,7 +291,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 }
                 else if (TotalLines.Count > CursorPosition.LineNumber)
                 {
-                    Line LineToAdd = CursorPosition.LineNumber + 1< TotalLines.Count ? ListHelper.GetLine(TotalLines, CursorPosition.LineNumber + 1) : null;
+                    Line LineToAdd = CursorPosition.LineNumber + 1 < TotalLines.Count ? ListHelper.GetLine(TotalLines, CursorPosition.LineNumber + 1) : null;
                     if (LineToAdd != null)
                     {
                         UndoRedo.RecordMultiLineUndo(CursorPosition.LineNumber, CurrentLine.Content + LineToAdd.Content, 1);
@@ -382,7 +372,7 @@ namespace TextControlBox_TestApp.TextControlBox
 
             if (TextSelection != null)
             {
-                CursorPosition = Selection.Remove(TextSelection, TotalLines, NewLineCharacter);
+                CursorPosition = Selection.Remove(TextSelection, TotalLines);
                 ClearSelection();
                 //Inline selection
                 if (StartLinePos.LineNumber == EndLinePos.LineNumber)
@@ -459,12 +449,12 @@ namespace TextControlBox_TestApp.TextControlBox
         {
             int Characterpos = CursorPosition.CharacterPosition;
             //Update variables
-            selectionrenderer.SelectionStartPosition = 
+            selectionrenderer.SelectionStartPosition =
                 new CursorPosition(Characterpos - Cursor.CalculateStepsToMoveLeft2(CurrentLine, Characterpos), CursorPosition.LineNumber);
-            
-            selectionrenderer.SelectionEndPosition = 
+
+            selectionrenderer.SelectionEndPosition =
                 new CursorPosition(Characterpos + Cursor.CalculateStepsToMoveRight2(CurrentLine, Characterpos), CursorPosition.LineNumber);
-            
+
             CursorPosition.CharacterPosition = selectionrenderer.SelectionEndPosition.CharacterPosition;
             selectionrenderer.HasSelection = true;
 
@@ -486,23 +476,23 @@ namespace TextControlBox_TestApp.TextControlBox
                 CursorPosition EndLine = Selection.GetMax(TextSelection.StartPosition, TextSelection.EndPosition);
                 DeleteCount = EndLine.CharacterPosition == ListHelper.GetLine(TotalLines, EndLine.LineNumber).Length ? 0 : 1;
             }
-            
+
             UndoRedo.RecordMultiLineUndo(
-                StartLine.LineNumber + 1, 
-                Selection.GetSelectedTextWithoutCharacterPos(TotalLines, TextSelection, 
-                NewLineCharacter), 
-                DeleteCount, 
+                StartLine.LineNumber + 1,
+                Selection.GetSelectedTextWithoutCharacterPos(TotalLines, TextSelection,
+                NewLineCharacter),
+                DeleteCount,
                 TextSelection
                 );
-            Selection.Remove(TextSelection, TotalLines, NewLineCharacter);
+            Selection.Remove(TextSelection, TotalLines);
 
             ClearSelection();
 
             CursorPosition.ChangeLineNumber(CursorPosition.LineNumber - TextToInsert.Split(NewLineCharacter).Length);
 
             UndoRedo.RecordMultiLineUndo(
-                CursorPosition.LineNumber, 
-                ListHelper.GetLine(TotalLines, CursorPosition.LineNumber).Content, 
+                CursorPosition.LineNumber,
+                ListHelper.GetLine(TotalLines, CursorPosition.LineNumber).Content,
                 TextToInsert.Split(NewLineCharacter).Length,
                 null, true);
 
@@ -546,33 +536,6 @@ namespace TextControlBox_TestApp.TextControlBox
                     DrawnTextLayout.SetColor(matches[j].Index, matches[j].Length, Highlights[i].Color);
                 }
             }
-        }
-        private void UpdateTextHighlights(CanvasDrawingSession DrawingSession)
-        {
-            /*for (int i = 0; i < _TextHighlights.Count; i++)
-            {
-                TextHighlight th = _TextHighlights[i];
-                int Start = 0;
-                int End = 0;
-                if (th.StartIndex < RenderStartIndex && th.EndIndex > RenderStartIndex)
-                {
-                    End = th.EndIndex;
-                    Start = 0;
-                }
-                if(th.StartIndex > RenderStartIndex && th.StartIndex > RenderStartIndex)
-
-                var regions = DrawnTextLayout.GetCharacterRegions(th.StartIndex - RenderStartIndex, th.EndIndex - th.StartIndex - RenderStartIndex);
-                for(int j = 0; j< regions.Length; j++)
-                {
-                    DrawingSession.FillRectangle(new Windows.Foundation.Rect
-                    {
-                        Height = regions[j].LayoutBounds.Height,
-                        Width = regions[j].LayoutBounds.Width,
-                        X = regions[j].LayoutBounds.X,
-                        Y = regions[j].LayoutBounds.Y
-                    }, th.HighlightColor);
-                }
-            }*/
         }
 
         //Handle keyinputs
@@ -811,7 +774,7 @@ namespace TextControlBox_TestApp.TextControlBox
             {
                 DoDragDropSelection();
             }
-            else if(DragDropSelection)
+            else if (DragDropSelection)
             {
                 EndDragDropSelection();
             }
@@ -826,7 +789,7 @@ namespace TextControlBox_TestApp.TextControlBox
             //Drag drop text -> move the cursor to get the insertion point
             if (DragDropSelection)
             {
-                if (selectionrenderer.CursorIsInSelection(CursorPosition, TextSelection) || 
+                if (selectionrenderer.CursorIsInSelection(CursorPosition, TextSelection) ||
                     selectionrenderer.PointerIsOverSelection(e.GetCurrentPoint(sender as UIElement).Position, TextSelection, DrawnTextLayout))
                 {
                     ChangeCursor(CoreCursorType.UniversalNo);
@@ -886,9 +849,9 @@ namespace TextControlBox_TestApp.TextControlBox
                 if (LeftButtonPressed)
                 {
                     UpdateCursorVariable(PointerPosition);
-                    
+
                     //Text dragging/dropping
-                    if(TextSelection != null)
+                    if (TextSelection != null)
                     {
                         if (selectionrenderer.PointerIsOverSelection(PointerPosition, TextSelection, DrawnTextLayout) && !DragDropSelection)
                         {
@@ -902,7 +865,7 @@ namespace TextControlBox_TestApp.TextControlBox
                             EndDragDropSelection();
                         }
                     }
-                    
+
                     selectionrenderer.SelectionStartPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
                     if (selectionrenderer.HasSelection)
                     {
@@ -1026,7 +989,6 @@ namespace TextControlBox_TestApp.TextControlBox
             UpdateSyntaxHighlighting();
             args.DrawingSession.DrawTextLayout(DrawnTextLayout, (float)-HorizontalScrollbar.Value, SingleLineHeight, TextColorBrush);
 
-            //UpdateTextHighlights(args.DrawingSession);
             Canvas_LineNumber.Invalidate();
         }
         private void Canvas_Selection_Draw(CanvasControl sender, CanvasDrawEventArgs args)
@@ -1042,7 +1004,7 @@ namespace TextControlBox_TestApp.TextControlBox
 
             if (selectionrenderer.HasSelection)
             {
-                TextSelection = selectionrenderer.DrawSelection(DrawnTextLayout, RenderedLines, args, (float)-HorizontalScrollbar.Value, SingleLineHeight / 4, NumberOfUnrenderedLinesToRenderStart, RenderedLines.Count, new ScrollBarPosition(HorizontalScrollbar.Value, VerticalScrollbar.Value));
+                TextSelection = selectionrenderer.DrawSelection(DrawnTextLayout, RenderedLines, args, (float)-HorizontalScrollbar.Value, SingleLineHeight / 4, NumberOfUnrenderedLinesToRenderStart, RenderedLines.Count);
             }
 
             if (TextSelection != null && !Selection.Equals(OldTextSelection, TextSelection))
@@ -1057,12 +1019,12 @@ namespace TextControlBox_TestApp.TextControlBox
             if (CurrentLine == null || DrawnTextLayout == null)
                 return;
 
-            if(CursorPosition.LineNumber > TotalLines.Count)
+            if (CursorPosition.LineNumber > TotalLines.Count)
                 CursorPosition.LineNumber = TotalLines.Count;
 
             //Calculate the distance to the top for the cursorposition and render the cursor
             float RenderPosY = (float)((CursorPosition.LineNumber - NumberOfUnrenderedLinesToRenderStart) * SingleLineHeight) + SingleLineHeight / 4;
-            
+
             //Out of display-region:
             if (RenderPosY > RenderedLines.Count * SingleLineHeight || RenderPosY < 0)
                 return;
@@ -1075,12 +1037,12 @@ namespace TextControlBox_TestApp.TextControlBox
 
             CursorRenderer.RenderCursor(
                 CurrentLineTextLayout,
-                CharacterPos, 
-                (float)-HorizontalScrollbar.Value, 
-                RenderPosY, ZoomedFontSize, 
-                args, 
+                CharacterPos,
+                (float)-HorizontalScrollbar.Value,
+                RenderPosY, ZoomedFontSize,
+                args,
                 CursorColorBrush);
-            
+
             if (_ShowLineHighlighter && SelectionIsNull())
             {
                 LineHighlighter.Render((float)sender.ActualWidth, CurrentLineTextLayout, (float)-HorizontalScrollbar.Value, RenderPosY, ZoomedFontSize, args, LineHighlighterBrush);
@@ -1116,7 +1078,7 @@ namespace TextControlBox_TestApp.TextControlBox
         //Internal events:
         private void Internal_TextChanged(string text = null)
         {
-            TextChanged?.Invoke(this, text == null ? GetText() : text);
+            TextChanged?.Invoke(this, text ?? GetText());
         }
         private void Internal_CursorChanged()
         {
@@ -1138,7 +1100,7 @@ namespace TextControlBox_TestApp.TextControlBox
             }
             SelectionChanged?.Invoke(this, args);
         }
-        
+
         private void UserControl_FocusEngaged(Control sender, FocusEngagedEventArgs args)
         {
             inputPane.TryShow();
@@ -1149,15 +1111,7 @@ namespace TextControlBox_TestApp.TextControlBox
             inputPane.TryHide();
             ChangeCursor(CoreCursorType.Arrow);
         }
-        private void _TextHighlights_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-        {
-            //Nothing has changed
-            if (e.NewItems.Count == 0 && e.OldItems.Count == 0)
-                return;
 
-            UpdateText();
-        }
-        
         //Cursor:
         private void ChangeCursor(CoreCursorType CursorType)
         {
@@ -1318,7 +1272,7 @@ namespace TextControlBox_TestApp.TextControlBox
             Internal_TextChanged();
             if (sel == null)
                 return;
-            
+
             selectionrenderer.SelectionStartPosition = sel.StartPosition;
             selectionrenderer.SelectionEndPosition = sel.EndPosition;
             selectionrenderer.HasSelection = true;
@@ -1349,7 +1303,7 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         public void ScrollTopIntoView()
         {
-            VerticalScrollbar.Value = (CursorPosition.LineNumber-1) * SingleLineHeight;
+            VerticalScrollbar.Value = (CursorPosition.LineNumber - 1) * SingleLineHeight;
         }
         public void ScrollBottomIntoView()
         {
@@ -1372,10 +1326,6 @@ namespace TextControlBox_TestApp.TextControlBox
         }
 
         //Properties:
-        public ObservableCollection<TextHighlight> TextHighlights
-        {
-            get => _TextHighlights;
-        }
         public bool SyntaxHighlighting { get; set; } = true;
         public CodeLanguage CustomCodeLanguage
         {
@@ -1411,7 +1361,7 @@ namespace TextControlBox_TestApp.TextControlBox
             set { _CursorPosition = new CursorPosition(value.CharacterPosition, value.LineNumber + (int)(VerticalScrollbar.Value / SingleLineHeight)); UpdateCursor(); }
         }
         public new int FontSize { get => _FontSize; set { _FontSize = value; UpdateZoom(); } }
-        public string Text { get => GetText(); set { SetText(value);} }
+        public string Text { get => GetText(); set { SetText(value); } }
         public Color TextColor = Color.FromArgb(255, 255, 255, 255);
         public Color SelectionColor = Color.FromArgb(100, 0, 100, 255);
         public Color CursorColor = Color.FromArgb(255, 255, 255, 255);
@@ -1435,7 +1385,7 @@ namespace TextControlBox_TestApp.TextControlBox
             set { _ShowLineHighlighter = value; UpdateCursor(); }
         }
         public int ZoomFactor { get => _ZoomFactor; set { _ZoomFactor = value; UpdateZoom(); } } //%
-        public bool IsReadonly { get; set; } = false; 
+        public bool IsReadonly { get; set; } = false;
 
         //Events:
         public delegate void TextChangedEvent(TextControlBox sender, string Text);
@@ -1446,113 +1396,6 @@ namespace TextControlBox_TestApp.TextControlBox
         public event ZoomChangedEvent ZoomChanged;
     }
 
-    public class Line
-    {
-        private string _Content = "";
-        public string Content { get => _Content; set { _Content = value; this.Length = value.Length; } }
-        public int Length { get; private set; }
-
-        public Line(string Content = "")
-        {
-            this.Content = Content;
-        }
-        public void SetText(string Value)
-        {
-            Content = Value;
-        }
-        public void AddText(string Value, int Position)
-        {
-            if (Position < 0)
-                Position = 0;
-
-            if (Position >= Content.Length)
-                Content += Value;
-            else if (Length <= 0)
-                AddToEnd(Value);
-            else
-                Content = Content.Insert(Position, Value);
-        }
-        public void AddToEnd(string Value)
-        {
-            Content += Value;
-        }
-        public void AddToStart(string Value)
-        {
-            Content = Content.Insert(0, Value);
-        }
-        public string Remove(int Index, int Count = -1)
-        {
-            if (Index >= Length || Index < 0)
-                return Content;
-
-            try
-            {
-                if (Count == -1)
-                    Content = Content.Remove(Index);
-                else
-                    Content = Content.Remove(Index, Count);
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-            }
-            return Content;
-        }
-        public string Substring(int Index, int Count = -1)
-        {
-            if (Index >= Length)
-                Content = "";
-            else if (Count == -1)
-                Content = Content.Substring(Index);
-            else
-                Content = Content.Substring(Index, Count);
-            return Content;
-        }
-        public void ReplaceText(int Start, int End, string Text)
-        {
-            int end = Math.Max(Start, End);
-            int start = Math.Min(Start, End);
-
-            if (start == 0 && end >= Length)
-                Content = "";
-            else
-            {
-                Content = Content.Remove(End) + Text + Content.Remove(0, start);
-            }
-        }
-    }
-    public enum CodeLanguages
-    {
-        Csharp, Gcode, Html, None
-    }
-    public class TextHighlight
-    {
-        public int StartIndex { get; }
-        public int EndIndex { get; }
-        public Color HighlightColor { get; }
-
-        public TextHighlight(int StartIndex, int EndIndex, Color HighlightColor)
-        {
-            this.StartIndex = StartIndex;
-            this.EndIndex = EndIndex;
-            this.HighlightColor = HighlightColor;
-        }
-    }
-    public class CodeLanguage
-    {
-        public string Name { get; set; }
-        public List<SyntaxHighlights> Highlights = new List<SyntaxHighlights>();
-    }
-    public class SyntaxHighlights
-    {
-        public SyntaxHighlights(string Pattern, Windows.UI.Color Color)
-        {
-            this.Pattern = Pattern;
-            this.Color = Color;
-        }
-
-        public string Pattern { get; set; }
-        public Color Color { get; set; }
-    }
     public class ScrollBarPosition
     {
         public ScrollBarPosition(ScrollBarPosition ScrollBarPosition)
@@ -1569,28 +1412,25 @@ namespace TextControlBox_TestApp.TextControlBox
         public double ValueX { get; set; }
         public double ValueY { get; set; }
     }
-    public enum LineEnding
+    public class SyntaxHighlights
     {
-        LF, CRLF, CR
+        public SyntaxHighlights(string Pattern, Windows.UI.Color Color)
+        {
+            this.Pattern = Pattern;
+            this.Color = Color;
+        }
+
+        public string Pattern { get; set; }
+        public Color Color { get; set; }
     }
 
-    public class SelectionChangedEventHandler
+    public static class Extensions
     {
-        public int CharacterPositionInLine;
-        public int LineNumber;
-        public int SelectionStartIndex;
-        public int SelectionLength;
+        public static string RemoveFirstOccurence(this string value, string removeString)
+        {
+            int index = value.IndexOf(removeString, StringComparison.Ordinal);
+            return index < 0 ? value : value.Remove(index, removeString.Length);
+        }
     }
-}
-public static class Extensions
-{
-    public static string RemoveFirstOccurence(this string value, string removeString)
-    {
-        int index = value.IndexOf(removeString, StringComparison.Ordinal);
-        return index < 0 ? value : value.Remove(index, removeString.Length);
-    }
-    public static string ToDelimitedString<T>(this IEnumerable<T> source, string delimiter, Func<T, string> func)
-    {
-        return String.Join(delimiter, source.Select(func).ToArray());
-    }
+
 }
