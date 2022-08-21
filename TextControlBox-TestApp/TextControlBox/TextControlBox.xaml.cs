@@ -59,7 +59,6 @@ namespace TextControlBox_TestApp.TextControlBox
         bool ColorResourcesCreated = false;
         bool NeedsTextFormatUpdate = false;
         bool GotKeyboardInput = false;
-        bool ScrollEventsLocked = false;
         bool DragDropSelection = false;
 
         CanvasTextFormat TextFormat = null;
@@ -673,7 +672,6 @@ namespace TextControlBox_TestApp.TextControlBox
                         break;
                     case VirtualKey.Z:
                         Undo();
-                        UpdateText();
                         break;
                     case VirtualKey.V:
                         Paste();
@@ -1007,18 +1005,12 @@ namespace TextControlBox_TestApp.TextControlBox
         //Scrolling and Zooming
         private void VerticalScrollbar_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            if (ScrollEventsLocked)
-                return;
-
             Canvas_Text.Invalidate();
             Canvas_Selection.Invalidate();
             Canvas_Cursor.Invalidate();
         }
         private void HorizontalScrollbar_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
-            if (ScrollEventsLocked)
-                return;
-            
             Canvas_Text.Invalidate();
             Canvas_Selection.Invalidate();
             Canvas_Cursor.Invalidate();
@@ -1398,13 +1390,10 @@ namespace TextControlBox_TestApp.TextControlBox
         {
             VerticalScrollbar.Value -= SingleLineHeight;
         }
-        public void ScrollOneLineDown(bool CallUpdateText = false)
+        public void ScrollOneLineDown()
         {
-            ScrollEventsLocked = true;
             VerticalScrollbar.Value += SingleLineHeight;
-            ScrollEventsLocked = false;
-            if (CallUpdateText)
-                UpdateText();
+            //UpdateText();
         }
         public void ScrollLineIntoView(int Line)
         {
@@ -1483,7 +1472,7 @@ namespace TextControlBox_TestApp.TextControlBox
             set { _ShowLineHighlighter = value; UpdateCursor(); }
         }
         public int ZoomFactor { get => _ZoomFactor; set { _ZoomFactor = value; UpdateZoom(); } } //%
-        public bool IsReadonly { get; set; } = true; 
+        public bool IsReadonly { get; set; } = false; 
 
         //Events:
         public delegate void TextChangedEvent(TextControlBox sender, string Text);
