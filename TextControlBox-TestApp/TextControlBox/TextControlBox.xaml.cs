@@ -8,18 +8,21 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using TextControlBox_TestApp.TextControlBox.Helper;
 using TextControlBox_TestApp.TextControlBox.Renderer;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.System;
 using Windows.UI.Core;
+using Windows.UI.Popups;
 using Windows.UI.Text.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
+using static System.Net.Mime.MediaTypeNames;
 using Color = Windows.UI.Color;
 using Size = Windows.Foundation.Size;
 
@@ -519,6 +522,15 @@ namespace TextControlBox_TestApp.TextControlBox
                 ScrollBottomIntoView();
             else if (NumberOfStartLine > CursorPosition.LineNumber)
                 ScrollTopIntoView();
+        }
+        private async Task<bool> IsOverTextLimit(int TextLength)
+        {
+            if (TextLength > 100000000)
+            {
+                await new MessageDialog("Current textlimit is 100 million characters, but your file has " + TextLength + " characters").ShowAsync();
+                return true;
+            }
+            return false;
         }
 
         //Syntaxhighlighting
@@ -1180,8 +1192,11 @@ namespace TextControlBox_TestApp.TextControlBox
             UpdateSelection();
             UpdateCursor();
         }
-        public void SetText(string text)
+        public async void SetText(string text)
         {
+            if (await IsOverTextLimit(text.Length))
+                return;
+
             TotalLines.Clear();
             RenderedLines.Clear();
             UndoRedo.ClearStacks();
@@ -1208,6 +1223,9 @@ namespace TextControlBox_TestApp.TextControlBox
             if (dataPackageView.Contains(StandardDataFormats.Text))
             {
                 string Text = LineEndings.ChangeLineEndings(await dataPackageView.GetTextAsync(), LineEnding);
+                if (await IsOverTextLimit(Text.Length))
+                    return;
+
                 AddCharacter(Text);
                 ClearSelection();
                 UpdateCursor();
