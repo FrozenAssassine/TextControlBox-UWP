@@ -103,10 +103,10 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             {
                 if (this.EnteringText.Length > 0 && UndoStack.Count == 0)
                 {
-                    ListHelper.GetLine(TotalLines, item.LineNumber - 1).SetText(this.EnteringText);
+                    ListHelper.GetLine(TotalLines, item.LineNumber).SetText(this.EnteringText);
                 }
-                if (item.LineNumber - 1 >= 0 && item.LineNumber - 1 < TotalLines.Count)
-                    ListHelper.GetLine(TotalLines, item.LineNumber - 1).SetText(item.Text);
+                if (item.LineNumber >= 0 && item.LineNumber < TotalLines.Count)
+                    ListHelper.GetLine(TotalLines, item.LineNumber).SetText(item.Text);
             }
             else if (item.UndoRedoType == UndoRedoType.NewLineEdit)
             {

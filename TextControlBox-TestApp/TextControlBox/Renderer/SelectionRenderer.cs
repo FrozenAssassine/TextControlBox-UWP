@@ -190,7 +190,6 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
             if (TextSelection == null)
                 return false;
             TextSelection = Selection.OrderTextSelection(TextSelection);
-            CursorPosition = CursorPosition.ChangeLineNumber(CursorPosition.LineNumber - 1);
 
             //Cursorposition is smaller than the start of selection
             if(TextSelection.StartPosition.LineNumber > CursorPosition.LineNumber)

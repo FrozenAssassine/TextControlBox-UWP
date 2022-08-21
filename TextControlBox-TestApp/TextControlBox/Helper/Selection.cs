@@ -86,7 +86,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 return Replace(Selection, TotalLines, Text, NewLineCharacter);
 
             string[] lines = Text.Split(NewLineCharacter);
-            Line CurrentLine = ListHelper.GetLine(TotalLines, CursorPosition.LineNumber - 1);
+            Line CurrentLine = ListHelper.GetLine(TotalLines, CursorPosition.LineNumber);
 
             string TextInFrontOfCursor = CurrentLine.Content.Substring(0, CursorPosition.CharacterPosition < 0 ? 0 : CursorPosition.CharacterPosition);
             string TextBehindCursor =
@@ -103,7 +103,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
 
             //Multiline
-            ListHelper.DeleteAt(TotalLines, CursorPosition.LineNumber - 1);
+            ListHelper.DeleteAt(TotalLines, CursorPosition.LineNumber);
 
             List<Line> LinesToInsert = new List<Line>(lines.Length);
             //Paste the text
@@ -116,7 +116,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 else
                     LinesToInsert.Add(new Line(lines[i]));
             }
-            ListHelper.InsertRange(TotalLines, LinesToInsert, CursorPosition.LineNumber - 1);
+            ListHelper.InsertRange(TotalLines, LinesToInsert, CursorPosition.LineNumber);
             LinesToInsert.Clear();
             return new CursorPosition(CursorPosition.CharacterPosition + lines.Length > 0 ? lines[lines.Length - 1].Length : 0, CursorPosition.LineNumber + lines.Length - 1);
         }

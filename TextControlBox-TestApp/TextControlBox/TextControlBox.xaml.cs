@@ -10,11 +10,13 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using TextControlBox_TestApp.TextControlBox.Helper;
 using TextControlBox_TestApp.TextControlBox.Languages;
 using TextControlBox_TestApp.TextControlBox.Renderer;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
+using Windows.Graphics.Imaging;
 using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Text.Core;
@@ -23,6 +25,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Media.Imaging;
 using static System.Net.Mime.MediaTypeNames;
 using Color = Windows.UI.Color;
 using Size = Windows.Foundation.Size;
@@ -211,12 +214,15 @@ namespace TextControlBox_TestApp.TextControlBox
                 ScrollTopIntoView();
         }
 
-        private void AddCharacter(string text, bool ExcecuteNextUndoToo = false)
+        private void AddCharacter(string text, bool ExcecuteNextUndoToo = false, bool IgnoreSelection = false)
         {
             if (CurrentLine == null)
                 return;
 
             var SplittedText = text.Split(NewLineCharacter);
+
+            if (IgnoreSelection)
+                ClearSelection();
 
             //Nothing is selected
             if (TextSelection == null && SplittedText.Length == 1)
@@ -1215,6 +1221,31 @@ namespace TextControlBox_TestApp.TextControlBox
             ChangeCursor(CoreCursorType.IBeam);
         }
 
+        //Drag Drop text
+        private async void UserControl_Drop(object sender, DragEventArgs e)
+        {
+            if (e.DataView.Contains(StandardDataFormats.Text))
+            {
+                string text = await e.DataView.GetTextAsync();
+                text = LineEndings.ChangeLineEndings(text, _LineEnding);
+                AddCharacter(text, false, true);
+                UpdateText();
+            }
+        }
+        private void UserControl_DragOver(object sender, DragEventArgs e)
+        {
+            if (selectionrenderer.IsSelecting)
+                return;
+            var deferral = e.GetDeferral();
+            e.AcceptedOperation = DataPackageOperation.Copy;
+            e.DragUIOverride.IsGlyphVisible = false;
+            e.DragUIOverride.IsContentVisible = false;
+            deferral.Complete();
+
+            UpdateCursorVariable(e.GetPosition(Canvas_Text));
+            UpdateCursor();
+        }
+
 
         //Functions:
         /// <summary>
@@ -1432,7 +1463,7 @@ namespace TextControlBox_TestApp.TextControlBox
         public delegate void ZoomChangedEvent(TextControlBox sender, int ZoomFactor);
         public event ZoomChangedEvent ZoomChanged;
     }
-     
+
     public class Line
     {
         private string _Content = "";
