@@ -540,18 +540,19 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <xaml:CanvasControl
-            Grid.Column="0"
-                        x:Name="Canvas_LineNumber"
-                        Draw="Canvas_LineNumber_Draw"
-                        HorizontalAlignment="Left"
-                        Width="100"
-                        PointerEntered="Canvas_LineNumber_PointerEntered"
-                        PointerExited="Canvas_LineNumber_PointerExited"
-            PointerPressed="Canvas_Selection_PointerPressed"
-            PointerReleased="Canvas_Selection_PointerReleased"
-            PointerMoved="Canvas_Selection_PointerMoved"
-            PointerWheelChanged="Canvas_Selection_PointerWheelChanged"
-                        VerticalAlignment="Stretch"/>
+                    Grid.Column="0"
+                    x:Name="Canvas_LineNumber"
+                    Draw="Canvas_LineNumber_Draw"
+                    HorizontalAlignment="Left"
+                    Width="100"
+                    PointerEntered="Canvas_LineNumber_PointerEntered"
+                    PointerExited="Canvas_LineNumber_PointerExited"
+                    PointerPressed="Canvas_Selection_PointerPressed"
+                    PointerReleased="Canvas_Selection_PointerReleased"
+                    PointerMoved="Canvas_Selection_PointerMoved"
+                    PointerWheelChanged="Canvas_Selection_PointerWheelChanged"
+                    VerticalAlignment="Stretch"/>
+        
         <Grid Grid.Column="1" x:Name="Scroll">
             <xaml:CanvasControl x:Name="Canvas_Cursor"
                         Draw="Canvas_Cursor_Draw"

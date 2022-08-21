@@ -1042,17 +1042,6 @@ namespace TextControlBox_TestApp.TextControlBox
             VerticalScrollbar.ViewportSize = sender.ActualHeight;
 
             StringBuilder LineNumberContent = new StringBuilder();
-
-            if (_ShowLineNumbers)
-            {
-                //Calculate the linenumbers             
-                float LineNumberWidth = (float)Utils.MeasureTextSize(CanvasDevice.GetSharedDevice(), (TotalLines.Count).ToString(), LineNumberTextFormat).Width;
-                Canvas_LineNumber.Width = LineNumberWidth + 10;
-                Scroll.Margin = new Thickness(SpaceBetweenLineNumberAndText, 0, 0, 0);
-            }
-            else
-                Canvas_LineNumber.Width = SpaceBetweenLineNumberAndText;
-
             //Get all the lines, which needs to be rendered, from the array with all lines
             StringBuilder TextToRender = new StringBuilder();
             for (int i = NumberOfStartLine; i < NumberOfStartLine + NumberOfLinesToBeRendered; i++)
@@ -1084,11 +1073,10 @@ namespace TextControlBox_TestApp.TextControlBox
             //Create the textlayout --> apply the Syntaxhighlighting --> render it
             DrawnTextLayout = TextRenderer.CreateTextResource(sender, DrawnTextLayout, TextFormat, RenderedText, new Size { Height = sender.Size.Height, Width = this.ActualWidth });
             UpdateSyntaxHighlighting();
-            args.DrawingSession.DrawTextLayout(DrawnTextLayout, (float)(-HorizontalScrollbar.Value), SingleLineHeight, TextColorBrush);
+            args.DrawingSession.DrawTextLayout(DrawnTextLayout, (float)-HorizontalScrollbar.Value, SingleLineHeight, TextColorBrush);
 
             //UpdateTextHighlights(args.DrawingSession);
-            if (_ShowLineNumbers)
-                Canvas_LineNumber.Invalidate();
+            Canvas_LineNumber.Invalidate();
         }
         private void Canvas_Selection_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
@@ -1158,7 +1146,19 @@ namespace TextControlBox_TestApp.TextControlBox
             if (LineNumberTextToRender.Length == 0 || !_ShowLineNumbers)
                 return;
 
-            CanvasTextLayout LineNumberLayout = TextRenderer.CreateTextLayout(sender, LineNumberTextFormat, LineNumberTextToRender, (float)sender.Size.Width, (float)sender.Size.Height);
+            if (_ShowLineNumbers)
+            {
+                //Calculate the linenumbers             
+                float LineNumberWidth = (float)Utils.MeasureTextSize(CanvasDevice.GetSharedDevice(), (TotalLines.Count).ToString(), LineNumberTextFormat).Width;
+                Canvas_LineNumber.Width = LineNumberWidth + 10 + SpaceBetweenLineNumberAndText;
+            }
+            else
+            {
+                Canvas_LineNumber.Width = SpaceBetweenLineNumberAndText;
+                return;
+            }
+
+            CanvasTextLayout LineNumberLayout = TextRenderer.CreateTextLayout(sender, LineNumberTextFormat, LineNumberTextToRender, (float)sender.Size.Width - SpaceBetweenLineNumberAndText, (float)sender.Size.Height);
             args.DrawingSession.DrawTextLayout(LineNumberLayout, 0, SingleLineHeight, LineNumberColorBrush);
         }
 
@@ -1423,7 +1423,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 _LineEnding = value;
             }
         }
-        public float SpaceBetweenLineNumberAndText = 20;
+        public float SpaceBetweenLineNumberAndText = 30;
         public CursorPosition CursorPosition
         {
             get => _CursorPosition;
