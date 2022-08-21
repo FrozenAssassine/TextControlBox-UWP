@@ -481,17 +481,16 @@ namespace TextControlBox_TestApp.TextControlBox
             }
             return null;
         }
-        private void SelectDoubleClick(Point Point)
+        public void SelectSingleWord(CursorPosition CursorPosition)
         {
-            //Calculate the Characterposition from the current pointerposition:
-            int Characterpos = CursorRenderer.GetCharacterPositionFromPoint(GetCurrentLine(), CurrentLineTextLayout, Point, 0);
-            //Use a function to calculate the steps from one the current position to the next letter or digit
-            int StepsLeft = Cursor.CalculateStepsToMoveLeft2(CurrentLine, Characterpos);
-            int StepsRight = Cursor.CalculateStepsToMoveRight2(CurrentLine, Characterpos);
-
+            int Characterpos = CursorPosition.CharacterPosition;
             //Update variables
-            selectionrenderer.SelectionStartPosition = new CursorPosition(Characterpos - StepsLeft, CursorPosition.LineNumber);
-            selectionrenderer.SelectionEndPosition = new CursorPosition(Characterpos + StepsRight, CursorPosition.LineNumber);
+            selectionrenderer.SelectionStartPosition = 
+                new CursorPosition(Characterpos - Cursor.CalculateStepsToMoveLeft2(CurrentLine, Characterpos), CursorPosition.LineNumber);
+            
+            selectionrenderer.SelectionEndPosition = 
+                new CursorPosition(Characterpos + Cursor.CalculateStepsToMoveRight2(CurrentLine, Characterpos), CursorPosition.LineNumber);
+            
             CursorPosition.CharacterPosition = selectionrenderer.SelectionEndPosition.CharacterPosition;
             selectionrenderer.HasSelection = true;
 
@@ -679,6 +678,9 @@ namespace TextControlBox_TestApp.TextControlBox
                         break;
                     case VirtualKey.A:
                         SelectAll();
+                        break;
+                    case VirtualKey.W:
+                        SelectSingleWord(CursorPosition);
                         break;
                 }
 
@@ -903,7 +905,8 @@ namespace TextControlBox_TestApp.TextControlBox
             }
             else if (PointerClickCount == 2)
             {
-                SelectDoubleClick(PointerPosition);
+                UpdateCursorVariable(PointerPosition);
+                SelectSingleWord(CursorPosition);
             }
             else
             {
