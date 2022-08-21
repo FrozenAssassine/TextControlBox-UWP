@@ -123,6 +123,7 @@
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TextControlBox\Helper\CodeLanguageHelper.cs" />
     <Compile Include="TextControlBox\Helper\Cursor.cs" />
     <Compile Include="TextControlBox\Helper\DebugHelper.cs" />
     <Compile Include="TextControlBox\Helper\LineEndings.cs" />
