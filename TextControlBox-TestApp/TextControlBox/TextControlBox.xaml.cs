@@ -216,7 +216,7 @@ namespace TextControlBox_TestApp.TextControlBox
 
         private void AddCharacter(string text, bool ExcecuteNextUndoToo = false, bool IgnoreSelection = false)
         {
-            if (CurrentLine == null)
+            if (CurrentLine == null || IsReadonly)
                 return;
 
             var SplittedText = text.Split(NewLineCharacter);
@@ -275,7 +275,7 @@ namespace TextControlBox_TestApp.TextControlBox
         {
             CurrentLine = GetCurrentLine();
 
-            if (CurrentLine == null)
+            if (CurrentLine == null || IsReadonly)
                 return;
 
             if (TextSelection == null)
@@ -314,7 +314,7 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         private void DeleteText(bool ControlIsPressed = false)
         {
-            if (CurrentLine == null)
+            if (CurrentLine == null || IsReadonly)
                 return;
 
             if (TextSelection == null)
@@ -352,6 +352,9 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         private void AddNewLine()
         {
+            if (IsReadonly)
+                return;
+
             if (TotalLines.Count == 0)
             {
                 TotalLines.Add(new Line());
@@ -500,9 +503,11 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         private void DoDragDropSelection()
         {
-            string TextToInsert = SelectedText();
-            if (TextSelection == null)
+            if (TextSelection == null || IsReadonly)
                 return;
+
+            string TextToInsert = SelectedText();
+
             CursorPosition StartLine = Selection.GetMin(TextSelection.StartPosition, TextSelection.EndPosition);
             int DeleteCount = StartLine.CharacterPosition == 0 ? 0 : 1;
             if (DeleteCount == 0)
@@ -628,6 +633,9 @@ namespace TextControlBox_TestApp.TextControlBox
         //Draw characters to textbox
         private void _editContext_TextUpdating(CoreTextEditContext sender, CoreTextTextUpdatingEventArgs args)
         {
+            if (IsReadonly)
+                return;
+
             //Don't allow tab -> is handled different
             if (args.Text == "\t")
                 return;
@@ -1235,6 +1243,9 @@ namespace TextControlBox_TestApp.TextControlBox
         //Drag Drop text
         private async void UserControl_Drop(object sender, DragEventArgs e)
         {
+            if (IsReadonly)
+                return;
+
             if (e.DataView.Contains(StandardDataFormats.Text))
             {
                 string text = await e.DataView.GetTextAsync();
@@ -1245,9 +1256,10 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         private void UserControl_DragOver(object sender, DragEventArgs e)
         {
-            if (selectionrenderer.IsSelecting)
+            if (selectionrenderer.IsSelecting || IsReadonly)
                 return;
             var deferral = e.GetDeferral();
+
             e.AcceptedOperation = DataPackageOperation.Copy;
             e.DragUIOverride.IsGlyphVisible = false;
             e.DragUIOverride.IsContentVisible = false;
@@ -1359,6 +1371,9 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         public void Undo()
         {
+            if (IsReadonly)
+                return;
+
             var sel = UndoRedo.Undo(TotalLines, this, NewLineCharacter);
             Internal_TextChanged();
             if (sel == null)
@@ -1373,6 +1388,9 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         public void Redo()
         {
+            if (IsReadonly)
+                return;
+
             UndoRedo.Redo(TotalLines, this);
             Internal_TextChanged();
         }
@@ -1465,6 +1483,7 @@ namespace TextControlBox_TestApp.TextControlBox
             set { _ShowLineHighlighter = value; UpdateCursor(); }
         }
         public int ZoomFactor { get => _ZoomFactor; set { _ZoomFactor = value; UpdateZoom(); } } //%
+        public bool IsReadonly { get; set; } = true; 
 
         //Events:
         public delegate void TextChangedEvent(TextControlBox sender, string Text);
