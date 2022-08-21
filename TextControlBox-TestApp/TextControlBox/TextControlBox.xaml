@@ -10,7 +10,7 @@
     d:DesignWidth="400"
     AllowFocusOnInteraction="True" 
     IsFocusEngagementEnabled="True"
-    PointerWheelChanged="Canvas_Selection_PointerWheelChanged" FocusEngaged="UserControl_FocusEngaged" FocusDisengaged="UserControl_FocusDisengaged">
+    PointerWheelChanged="Canvas_Selection_PointerWheelChanged" AllowDrop="True" Drop="UserControl_Drop" DragOver="UserControl_DragOver" FocusEngaged="UserControl_FocusEngaged" FocusDisengaged="UserControl_FocusDisengaged">
     <UserControl.Resources>
         <Style x:Key="ScrollBarStyle1" TargetType="ScrollBar">
             <Setter Property="MinWidth" Value="{ThemeResource ScrollBarSize}"/>
