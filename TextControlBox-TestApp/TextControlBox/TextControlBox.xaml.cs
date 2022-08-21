@@ -194,25 +194,6 @@ namespace TextControlBox_TestApp.TextControlBox
             UpdateSelection();
         }
 
-        private int GetLineContentWidth(Line line)
-        {
-            if (line == null || line.Content == null)
-                return -1;
-            return line.Length;
-        }
-        private Line GetCurrentLine()
-        {
-            return ListHelper.GetLine(TotalLines, CursorPosition.LineNumber);
-        }
-
-        private void UpdateScrollToShowCursor()
-        {
-            if (NumberOfStartLine + RenderedLines.Count <= CursorPosition.LineNumber)
-                ScrollBottomIntoView();
-            else if(NumberOfStartLine > CursorPosition.LineNumber)
-                ScrollTopIntoView();
-        }
-
         private void AddCharacter(string text, bool ExcecuteNextUndoToo = false, bool IgnoreSelection = false)
         {
             if (CurrentLine == null || IsReadonly)
@@ -438,6 +419,16 @@ namespace TextControlBox_TestApp.TextControlBox
             Internal_TextChanged();
         }
 
+        private int GetLineContentWidth(Line line)
+        {
+            if (line == null || line.Content == null)
+                return -1;
+            return line.Length;
+        }
+        private Line GetCurrentLine()
+        {
+            return ListHelper.GetLine(TotalLines, CursorPosition.LineNumber);
+        }
         private void ClearSelectionIfNeeded()
         {
             //If the selection is visible, but is not getting set, clear the selection
@@ -551,6 +542,28 @@ namespace TextControlBox_TestApp.TextControlBox
             selectionrenderer.IsSelecting = false;
             UpdateCursor();
         }
+        private void UpdateScrollToShowCursor()
+        {
+            if (NumberOfStartLine + RenderedLines.Count <= CursorPosition.LineNumber)
+                ScrollBottomIntoView();
+            else if (NumberOfStartLine > CursorPosition.LineNumber)
+                ScrollTopIntoView();
+        }
+        private void ScrollPageUp()
+        {
+            CursorPosition.LineNumber -= RenderedLines.Count;
+            if (CursorPosition.LineNumber < 0)
+                CursorPosition.LineNumber = 0;
+
+            VerticalScrollbar.Value -= RenderedLines.Count * SingleLineHeight;
+        }
+        private void ScrollPageDown()
+        {
+            CursorPosition.LineNumber += RenderedLines.Count;
+            if (CursorPosition.LineNumber > TotalLines.Count - 1)
+                CursorPosition.LineNumber = TotalLines.Count - 1;
+            VerticalScrollbar.Value += RenderedLines.Count * SingleLineHeight;
+        }
 
         private CodeLanguage GetCodeLanguage(CodeLanguages Languages)
         {
@@ -627,32 +640,6 @@ namespace TextControlBox_TestApp.TextControlBox
                     }, th.HighlightColor);
                 }
             }*/
-        }
-
-        //Draw characters to textbox
-        private void _editContext_TextUpdating(CoreTextEditContext sender, CoreTextTextUpdatingEventArgs args)
-        {
-            if (IsReadonly)
-                return;
-
-            //Don't allow tab -> is handled different
-            if (args.Text == "\t")
-                return;
-
-            //Prevent key-entering if control key is pressed 
-            var ctrl = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
-            var menu = Window.Current.CoreWindow.GetKeyState(VirtualKey.Menu).HasFlag(CoreVirtualKeyStates.Down);
-            if (ctrl && !menu || menu && !ctrl)
-                return;
-
-            if (!GotKeyboardInput)
-            {
-                UndoRedo.RecordSingleLineUndo(CurrentLine, CursorPosition);
-                GotKeyboardInput = true;
-            }
-
-
-            AddCharacter(args.Text);
         }
 
         //Handle keyinputs
@@ -803,6 +790,12 @@ namespace TextControlBox_TestApp.TextControlBox
                         ClearSelection();
                         break;
                     }
+                case VirtualKey.PageUp:
+                    ScrollPageUp();
+                    break;
+                case VirtualKey.PageDown:
+                    ScrollPageDown();
+                    break;
             }
 
             //Tab-key
@@ -834,8 +827,32 @@ namespace TextControlBox_TestApp.TextControlBox
                 UpdateCursor();
             }
         }
+        private void _editContext_TextUpdating(CoreTextEditContext sender, CoreTextTextUpdatingEventArgs args)
+        {
+            if (IsReadonly)
+                return;
 
-        //Draw the selection
+            //Don't allow tab -> is handled different
+            if (args.Text == "\t")
+                return;
+
+            //Prevent key-entering if control key is pressed 
+            var ctrl = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
+            var menu = Window.Current.CoreWindow.GetKeyState(VirtualKey.Menu).HasFlag(CoreVirtualKeyStates.Down);
+            if (ctrl && !menu || menu && !ctrl)
+                return;
+
+            if (!GotKeyboardInput)
+            {
+                UndoRedo.RecordSingleLineUndo(CurrentLine, CursorPosition);
+                GotKeyboardInput = true;
+            }
+
+
+            AddCharacter(args.Text);
+        }
+
+        //Pointer-events:
         private void CoreWindow_PointerMoved(CoreWindow sender, PointerEventArgs args)
         {
             Point PointerPosition = args.CurrentPoint.Position;
@@ -854,7 +871,6 @@ namespace TextControlBox_TestApp.TextControlBox
                 }
             }
         }
-
         private void Canvas_Selection_PointerReleased(object sender, PointerRoutedEventArgs e)
         {
             //End text drag/drop -> insert text at cursorposition
