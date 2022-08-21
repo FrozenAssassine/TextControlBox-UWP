@@ -571,8 +571,8 @@
                         PointerReleased="Canvas_Selection_PointerReleased"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch" />
-            <ScrollBar Style="{StaticResource ScrollBarStyle1}" SmallChange="10" LargeChange="100" Minimum="0" ValueChanged="VerticalScrollbar_ValueChanged" x:Name="VerticalScrollbar" Value="0" IndicatorMode="MouseIndicator" Background="Transparent" HorizontalAlignment="Right" Orientation="Vertical" VerticalAlignment="Stretch"/>
-            <ScrollBar Style="{StaticResource ScrollBarStyle1}" SmallChange="10" LargeChange="100" Minimum="0"  ValueChanged="HorizontalScrollbar_ValueChanged" x:Name="HorizontalScrollbar" Value="0" IndicatorMode="MouseIndicator" Background="Transparent" HorizontalAlignment="Stretch" Orientation="Horizontal" VerticalAlignment="Bottom"/>
+            <ScrollBar PointerEntered="Scrollbar_PointerEntered" PointerExited="ScrollbarPointerExited" Style="{StaticResource ScrollBarStyle1}" SmallChange="10" LargeChange="100" Minimum="0" ValueChanged="VerticalScrollbar_ValueChanged" x:Name="VerticalScrollbar" Value="0" IndicatorMode="MouseIndicator" Background="Transparent" HorizontalAlignment="Right" Orientation="Vertical" VerticalAlignment="Stretch"/>
+            <ScrollBar PointerEntered="Scrollbar_PointerEntered" PointerExited="ScrollbarPointerExited" Style="{StaticResource ScrollBarStyle1}" SmallChange="10" LargeChange="100" Minimum="0"  ValueChanged="HorizontalScrollbar_ValueChanged" x:Name="HorizontalScrollbar" Value="0" IndicatorMode="MouseIndicator" Background="Transparent" HorizontalAlignment="Stretch" Orientation="Horizontal" VerticalAlignment="Bottom"/>
         </Grid>
     </Grid>
 </UserControl>

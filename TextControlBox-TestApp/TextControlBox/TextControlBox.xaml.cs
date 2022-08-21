@@ -1223,6 +1223,14 @@ namespace TextControlBox_TestApp.TextControlBox
         {
             ChangeCursor(CoreCursorType.IBeam);
         }
+        private void ScrollbarPointerExited(object sender, PointerRoutedEventArgs e)
+        {
+            ChangeCursor(CoreCursorType.IBeam);
+        }
+        private void Scrollbar_PointerEntered(object sender, PointerRoutedEventArgs e)
+        {
+            ChangeCursor(CoreCursorType.Arrow);
+        }
 
         //Drag Drop text
         private async void UserControl_Drop(object sender, DragEventArgs e)
