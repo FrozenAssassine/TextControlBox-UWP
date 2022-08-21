@@ -8,6 +8,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -45,10 +46,15 @@ namespace TextControlBox_TestApp.TextControlBox
         private bool _ShowLineHighlighter = true;
         private int _FontSize = 18;
         private int _ZoomFactor = 100; //%
-        private float ZoomedFontSize = 0;
-        private int MaxFontsize = 125;
-        private int MinFontSize = 3;
-        private int OldZoomFactor = 0;
+
+        float SingleLineHeight { get => TextFormat.LineSpacing; }
+        float ZoomedFontSize = 0;
+        int MaxFontsize = 125;
+        int MinFontSize = 3;
+        int OldZoomFactor = 0;
+
+        int NumberOfStartLine = 0;
+        int NumberOfUnrenderedLinesToRenderStart = 0;
 
         //Colors:
         CanvasSolidColorBrush TextColorBrush;
@@ -68,16 +74,9 @@ namespace TextControlBox_TestApp.TextControlBox
         string RenderedText = "";
         string LineNumberTextToRender = "";
 
-        //The line, which will be rendered first
-        int NumberOfStartLine = 0;
-        int NumberOfUnrenderedLinesToRenderStart = 0;
-
         //Handle double and triple -clicks:
         int PointerClickCount = 0;
         DispatcherTimer PointerClickTimer = new DispatcherTimer { Interval = new TimeSpan(0, 0, 0, 0, 200) };
-
-        //Gets updated everytime fontsize changes
-        float SingleLineHeight = 0;
 
         //CursorPosition
         CursorPosition _CursorPosition = new CursorPosition(0, 0);
@@ -86,7 +85,8 @@ namespace TextControlBox_TestApp.TextControlBox
         CanvasTextLayout CurrentLineTextLayout = null;
         TextSelection TextSelection = null;
         TextSelection OldTextSelection = null;
-        CoreTextEditContext _editContext;
+        CoreTextEditContext EditContext;
+
         //Store the lines in Lists
         private List<Line> TotalLines = new List<Line>();
         private List<Line> RenderedLines = new List<Line>();
@@ -99,13 +99,13 @@ namespace TextControlBox_TestApp.TextControlBox
         {
             this.InitializeComponent();
             CoreTextServicesManager manager = CoreTextServicesManager.GetForCurrentView();
-            _editContext = manager.CreateEditContext();
-            _editContext.InputPaneDisplayPolicy = CoreTextInputPaneDisplayPolicy.Manual;
-            _editContext.InputScope = CoreTextInputScope.Text;
-            _editContext.TextRequested += delegate { };//Event only needs to be added -> No need to do something else
-            _editContext.SelectionRequested += delegate { };//Event only needs to be added -> No need to do something else
-            _editContext.TextUpdating += _editContext_TextUpdating;
-            _editContext.NotifyFocusEnter();
+            EditContext = manager.CreateEditContext();
+            EditContext.InputPaneDisplayPolicy = CoreTextInputPaneDisplayPolicy.Manual;
+            EditContext.InputScope = CoreTextInputScope.Text;
+            EditContext.TextRequested += delegate { };//Event only needs to be added -> No need to do something else
+            EditContext.SelectionRequested += delegate { };//Event only needs to be added -> No need to do something else
+            EditContext.TextUpdating += EditContext_TextUpdating;
+            EditContext.NotifyFocusEnter();
 
             //Classes & Variables:
             selectionrenderer = new SelectionRenderer(SelectionColor);
@@ -123,8 +123,6 @@ namespace TextControlBox_TestApp.TextControlBox
             if (TotalLines.Count == 0)
                 TotalLines.Add(new Line());
         }
-
-        //Assing the colors to the CanvasSolidColorBrush
         private void CreateColorResources(ICanvasResourceCreatorWithDpi resourceCreator)
         {
             if (ColorResourcesCreated)
@@ -174,24 +172,19 @@ namespace TextControlBox_TestApp.TextControlBox
         {
             Canvas_Selection.Invalidate();
         }
-        private void UpdateCharSize()
-        {
-            SingleLineHeight = TextFormat.LineSpacing;
-        }
         private void UpdateCurrentLineTextLayout()
         {
-            CurrentLineTextLayout = CreateTextLayoutForLine(Canvas_Text, CursorPosition.LineNumber);
+            if (CursorPosition.LineNumber < TotalLines.Count)
+                CurrentLineTextLayout = TextRenderer.CreateTextLayout(Canvas_Text, TextFormat, ListHelper.GetLine(TotalLines, CursorPosition.LineNumber).Content + "|", Canvas_Text.Size);
+            else
+                CurrentLineTextLayout = null;
         }
-        private void SetSelection(TextSelection Selection)
+        private void UpdateCursorVariable(Point Point)
         {
-            if (Selection == null)
-                return;
+            CursorPosition.LineNumber = CursorRenderer.GetCursorLineFromPoint(Point, SingleLineHeight, RenderedLines.Count, NumberOfStartLine, NumberOfUnrenderedLinesToRenderStart);
 
-            selectionrenderer.SelectionStartPosition = Selection.StartPosition;
-            selectionrenderer.SelectionEndPosition = Selection.EndPosition;
-            selectionrenderer.HasSelection = true;
-            selectionrenderer.IsSelecting = false;
-            UpdateSelection();
+            UpdateCurrentLineTextLayout();
+            CursorPosition.CharacterPosition = CursorRenderer.GetCharacterPositionFromPoint(GetCurrentLine(), CurrentLineTextLayout, Point, (float)-HorizontalScrollbar.Value);
         }
 
         private void AddCharacter(string text, bool ExcecuteNextUndoToo = false, bool IgnoreSelection = false)
@@ -448,10 +441,6 @@ namespace TextControlBox_TestApp.TextControlBox
                 UpdateSelection();
             }
         }
-        private bool CursorIsInUnrenderedRegion()
-        {
-            return CursorPosition.LineNumber < NumberOfUnrenderedLinesToRenderStart + 1 || CursorPosition.LineNumber > NumberOfUnrenderedLinesToRenderStart + RenderedLines.Count + 1;
-        }
         private void StartSelectionIfNeeded()
         {
             if (SelectionIsNull())
@@ -465,14 +454,6 @@ namespace TextControlBox_TestApp.TextControlBox
             if (TextSelection == null)
                 return true;
             return selectionrenderer.SelectionStartPosition == null || selectionrenderer.SelectionEndPosition == null;
-        }
-        private CanvasTextLayout CreateTextLayoutForLine(CanvasControl sender, int LineIndex)
-        {
-            if (LineIndex < TotalLines.Count)
-            {
-                return TextRenderer.CreateTextLayout(sender, TextFormat, ListHelper.GetLine(TotalLines, LineIndex).Content + "|", sender.Size);
-            }
-            return null;
         }
         public void SelectSingleWord(CursorPosition CursorPosition)
         {
@@ -548,54 +529,6 @@ namespace TextControlBox_TestApp.TextControlBox
                 ScrollBottomIntoView();
             else if (NumberOfStartLine > CursorPosition.LineNumber)
                 ScrollTopIntoView();
-        }
-        private void ScrollPageUp()
-        {
-            CursorPosition.LineNumber -= RenderedLines.Count;
-            if (CursorPosition.LineNumber < 0)
-                CursorPosition.LineNumber = 0;
-
-            VerticalScrollbar.Value -= RenderedLines.Count * SingleLineHeight;
-        }
-        private void ScrollPageDown()
-        {
-            CursorPosition.LineNumber += RenderedLines.Count;
-            if (CursorPosition.LineNumber > TotalLines.Count - 1)
-                CursorPosition.LineNumber = TotalLines.Count - 1;
-            VerticalScrollbar.Value += RenderedLines.Count * SingleLineHeight;
-        }
-
-        private CodeLanguage GetCodeLanguage(CodeLanguages Languages)
-        {
-            switch (Languages)
-            {
-                case CodeLanguages.Csharp:
-                    return new Csharp();
-                case CodeLanguages.Gcode:
-                    return new GCode();
-                case CodeLanguages.Html:
-                    return new Html();
-            }
-            return null;
-        }
-        private CodeLanguages GetCodeLanguages(CodeLanguage Language)
-        {
-            if (System.Object.ReferenceEquals(Language, new Csharp()))
-                return CodeLanguages.Csharp;
-            else if (System.Object.ReferenceEquals(Language, new GCode()))
-                return CodeLanguages.Gcode;
-            else if (System.Object.ReferenceEquals(Language, new Html()))
-                return CodeLanguages.Html;
-            else return CodeLanguages.None;
-        }
-
-        //Get the position of the cursor and set it to the CursorPosition variable
-        private void UpdateCursorVariable(Point Point)
-        {
-            CursorPosition.LineNumber = CursorRenderer.GetCursorLineFromPoint(Point, SingleLineHeight, RenderedLines.Count, NumberOfStartLine, NumberOfUnrenderedLinesToRenderStart);
-
-            UpdateCurrentLineTextLayout();
-            CursorPosition.CharacterPosition = CursorRenderer.GetCharacterPositionFromPoint(GetCurrentLine(), CurrentLineTextLayout, Point, (float)-HorizontalScrollbar.Value);
         }
 
         //Syntaxhighlighting
@@ -827,7 +760,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 UpdateCursor();
             }
         }
-        private void _editContext_TextUpdating(CoreTextEditContext sender, CoreTextTextUpdatingEventArgs args)
+        private void EditContext_TextUpdating(CoreTextEditContext sender, CoreTextTextUpdatingEventArgs args)
         {
             if (IsReadonly)
                 return;
@@ -1035,7 +968,7 @@ namespace TextControlBox_TestApp.TextControlBox
         private void Canvas_Text_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
             //TEMPORARY:
-            _editContext.NotifyFocusEnter();
+            EditContext.NotifyFocusEnter();
 
             //Clear the rendered lines, to fill them with new lines
             RenderedLines.Clear();
@@ -1045,7 +978,6 @@ namespace TextControlBox_TestApp.TextControlBox
                 if (_ShowLineNumbers)
                     LineNumberTextFormat = TextRenderer.CreateLinenumberTextFormat(ZoomedFontSize);
                 TextFormat = TextRenderer.CreateCanvasTextFormat(ZoomedFontSize);
-                UpdateCharSize();
             }
 
             CreateColorResources(args.DrawingSession);
@@ -1423,6 +1355,21 @@ namespace TextControlBox_TestApp.TextControlBox
         {
             VerticalScrollbar.Value = (CursorPosition.LineNumber - RenderedLines.Count + 1) * SingleLineHeight;
         }
+        public void ScrollPageUp()
+        {
+            CursorPosition.LineNumber -= RenderedLines.Count;
+            if (CursorPosition.LineNumber < 0)
+                CursorPosition.LineNumber = 0;
+
+            VerticalScrollbar.Value -= RenderedLines.Count * SingleLineHeight;
+        }
+        public void ScrollPageDown()
+        {
+            CursorPosition.LineNumber += RenderedLines.Count;
+            if (CursorPosition.LineNumber > TotalLines.Count - 1)
+                CursorPosition.LineNumber = TotalLines.Count - 1;
+            VerticalScrollbar.Value += RenderedLines.Count * SingleLineHeight;
+        }
 
         //Properties:
         public ObservableCollection<TextHighlight> TextHighlights
@@ -1444,7 +1391,7 @@ namespace TextControlBox_TestApp.TextControlBox
             get => _CodeLanguages;
             set
             {
-                _CodeLanguage = GetCodeLanguage(value);
+                _CodeLanguage = CodeLanguageHelper.GetCodeLanguage(value);
                 UpdateSyntaxHighlighting();
             }
         }
