@@ -1289,7 +1289,11 @@ namespace TextControlBox_TestApp.TextControlBox
             var sel = UndoRedo.Undo(TotalLines, this, NewLineCharacter);
             Internal_TextChanged();
             if (sel == null)
+            {
+                UpdateText();
+                UpdateCursor();
                 return;
+            }
 
             selectionrenderer.SelectionStartPosition = sel.StartPosition;
             selectionrenderer.SelectionEndPosition = sel.EndPosition;

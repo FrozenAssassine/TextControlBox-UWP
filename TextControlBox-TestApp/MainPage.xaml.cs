@@ -24,11 +24,11 @@ namespace TextControlBox_TestApp
 
         private string GenerateContent()
         {
+            int Limit = 4000000;
             StringBuilder sb = new StringBuilder();
-            for (int i = 1; i < 40; i++)
+            for (int i = 1; i < Limit; i++)
             {
-                sb.Append("Line" + i + (i == 39 ? "" : "\n"));
-                //sb.Append("Line" + i + " Line" + (i+9) + (i == 9 ? "" : "\n"));
+                sb.Append("Line" + i + (i == Limit - 1 ? "" : "\n"));
             }
             return sb.ToString();
         }
