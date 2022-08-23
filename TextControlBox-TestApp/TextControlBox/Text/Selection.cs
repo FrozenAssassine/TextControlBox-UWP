@@ -86,11 +86,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             string[] lines = Text.Split(NewLineCharacter);
             Line CurrentLine = ListHelper.GetLine(TotalLines, CursorPosition.LineNumber);
 
-            string TextInFrontOfCursor = CurrentLine.Content.Substring(0, CursorPosition.CharacterPosition < 0 ? 0 : CursorPosition.CharacterPosition);
-            string TextBehindCursor =
-                CurrentLine.Length > CursorPosition.CharacterPosition ?
-                CurrentLine.Content.Remove(0, CursorPosition.CharacterPosition) : "";
-
             //Singleline
             if (lines.Length == 1 && Text != string.Empty)
             {
@@ -101,6 +96,14 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
 
             //Multiline
+
+            string TextInFrontOfCursor = CurrentLine.Content.Substring(0, CursorPosition.CharacterPosition < 0 ? 0 : CursorPosition.CharacterPosition);
+            string TextBehindCursor =
+                CurrentLine.Length > CursorPosition.CharacterPosition ?
+                CurrentLine.Content.Remove(0, CursorPosition.CharacterPosition) : "";
+
+            Debug.WriteLine(TextInFrontOfCursor + "::" + TextBehindCursor);
+
             ListHelper.DeleteAt(TotalLines, CursorPosition.LineNumber);
 
             List<Line> LinesToInsert = new List<Line>(lines.Length);
@@ -232,12 +235,13 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                     {
                         LinesToInsert.Add(new Line(SplittedText[i]));
                     }
+                    StartLine -= 1;
                 }
                 //Only the startline is completely selected
                 else if (StartPosition == 0 && EndPosition != End_Line.Length)
                 {
                     End_Line.Substring(EndPosition);
-                    ListHelper.RemoveRange(TotalLines, StartLine, EndLine - StartLine);
+                    ListHelper.RemoveRange(TotalLines, StartLine, EndLine - StartLine - 1);
 
                     for (int i = 0; i < SplittedText.Length; i++)
                     {
@@ -271,20 +275,22 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
                     for (int i = 0; i < SplittedText.Length; i++)
                     {
+
                         if (i == 0)
                             Start_Line.AddToEnd(SplittedText[i]);
                         if (i != 0 && i != SplittedText.Length - 1)
                             LinesToInsert.Add(new Line(SplittedText[i]));
                         if (i == SplittedText.Length - 1)
                         {
-                            Start_Line.AddToEnd(End_Line.Content);
+                            End_Line.AddToStart(SplittedText[i]);
                         }
                     }
-                    ListHelper.InsertRange(TotalLines, LinesToInsert, StartLine);
-                    LinesToInsert.Clear();
-                    TotalLines.Remove(End_Line);
                 }
-                return new CursorPosition(Start_Line.Length + End_Line.Length - 1, StartLine + SplittedText.Length);
+
+                ListHelper.InsertRange(TotalLines, LinesToInsert, StartLine + 1);
+                LinesToInsert.Clear();
+                //TotalLines.Remove(End_Line);
+                return new CursorPosition(Start_Line.Length + End_Line.Length - 1, StartLine + SplittedText.Length - 1);
             }
         }
 
