@@ -146,7 +146,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             if (StartLine < 0)
                 StartLine = 0;
 
-            TotalLines.RemoveRange(StartLine, Count);
+            TotalLines.RemoveRange(StartLine, Count - 1);
             TotalLines.InsertRange(StartLine, Replace);
 
             return new CursorPosition(Replace[Replace.Count - 1].Length - 1, StartLine);
