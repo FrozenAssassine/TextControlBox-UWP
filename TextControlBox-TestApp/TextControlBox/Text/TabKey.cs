@@ -9,7 +9,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             if (TextSelection == null)
             {
                 Line Line = ListHelper.GetLine(TotalLines, CursorPosition.LineNumber - 1);
-                UndoRedo.RecordSingleLineUndo(Line, CursorPosition);
+                //UndoRedo.RecordSingleLineUndo(Line, CursorPosition);
 
                 if (Line.Content.Contains(TabCharacter, System.StringComparison.Ordinal) && CursorPosition.CharacterPosition > 0)
                     CursorPosition.SubtractFromCharacterPos(1);
@@ -35,7 +35,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                     Line.SetText(Line.Content.RemoveFirstOccurence(TabCharacter));
                 }
 
-                UndoRedo.RecordMultiLineUndo(TextSelection.StartPosition.LineNumber + 1, UndoLines, UndoLines.Split(NewLineCharacter).Length, TextSelection);
+                //UndoRedo.RecordMultiLineUndo(TextSelection.StartPosition.LineNumber + 1, UndoLines, UndoLines.Split(NewLineCharacter).Length, TextSelection);
 
                 return new TextSelection(new CursorPosition(TextSelection.StartPosition), new CursorPosition(TextSelection.EndPosition));
             }
@@ -46,7 +46,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             if (TextSelection == null)
             {
                 Line Line = ListHelper.GetLine(TotalLines, CursorPosition.LineNumber - 1);
-                UndoRedo.RecordSingleLineUndo(Line, CursorPosition);
+                //UndoRedo.RecordSingleLineUndo(Line, CursorPosition);
 
                 Line.AddText(TabCharacter, CursorPosition.CharacterPosition);
 
@@ -74,7 +74,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                     TextSelection.EndPosition.AddToCharacterPos(1);
                 }
 
-                UndoRedo.RecordMultiLineUndo(TextSelection.StartPosition.LineNumber + 1, UndoLines, UndoLines.Split(NewLineCharacter).Length, TextSelection);
+                //UndoRedo.RecordMultiLineUndo(TextSelection.StartPosition.LineNumber + 1, UndoLines, UndoLines.Split(NewLineCharacter).Length, TextSelection);
 
                 return new TextSelection(new CursorPosition(TextSelection.StartPosition), new CursorPosition(TextSelection.EndPosition));
             }

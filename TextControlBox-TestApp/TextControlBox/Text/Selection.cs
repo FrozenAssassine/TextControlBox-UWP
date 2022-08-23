@@ -130,7 +130,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
             //Either add or insert to the List
             //ListHelper.InsertRange(TotalLines, Replace, StartLine);
-
+            
             int Count = LinesToDelete;
             if (StartLine >= TotalLines.Count)
             {
@@ -148,7 +148,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
             TotalLines.RemoveRange(StartLine, Count);
             TotalLines.InsertRange(StartLine, Replace);
-
+            
             return new CursorPosition(Replace[Replace.Count - 1].Length - 1, StartLine);
         }
 
