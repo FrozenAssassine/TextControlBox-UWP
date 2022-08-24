@@ -21,6 +21,7 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
+using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
 using static System.Net.Mime.MediaTypeNames;
 using Color = Windows.UI.Color;
@@ -213,13 +214,14 @@ namespace TextControlBox_TestApp.TextControlBox
             else
             {
                 CursorPosition = Selection.Replace(TextSelection, TotalLines, text, NewLineCharacter);
+                Debug.WriteLine(CursorPosition.LineNumber);
 
                 selectionrenderer.ClearSelection();
                 TextSelection = null;
                 UpdateSelection();
             }
 
-            UpdateScrollToShowCursor();
+            //UpdateScrollToShowCursor();
             UpdateText();
             UpdateCursor();
             Internal_TextChanged();
@@ -581,7 +583,7 @@ namespace TextControlBox_TestApp.TextControlBox
                             ClearSelectionIfNeeded();
                             CursorPosition = Cursor.MoveLeft(CursorPosition, TotalLines, CurrentLine);
                         }
-                        Cursor.RelativeToAbsolute(CursorPosition, NumberOfUnrenderedLinesToRenderStart);
+
                         UpdateScrollToShowCursor();
                         UpdateText();
                         UpdateCursor();
@@ -602,7 +604,6 @@ namespace TextControlBox_TestApp.TextControlBox
                             ClearSelectionIfNeeded();
                             CursorPosition = Cursor.MoveRight(CursorPosition, TotalLines, GetCurrentLine());
                         }
-                        Cursor.RelativeToAbsolute(CursorPosition, NumberOfUnrenderedLinesToRenderStart);
 
                         UpdateScrollToShowCursor();
                         UpdateText();
@@ -624,7 +625,6 @@ namespace TextControlBox_TestApp.TextControlBox
                             ClearSelectionIfNeeded();
                             CursorPosition = Cursor.MoveDown(CursorPosition, TotalLines.Count);
                         }
-                        Cursor.RelativeToAbsolute(CursorPosition, NumberOfUnrenderedLinesToRenderStart);
 
                         UpdateScrollToShowCursor();
                         UpdateText();
@@ -646,7 +646,6 @@ namespace TextControlBox_TestApp.TextControlBox
                             ClearSelectionIfNeeded();
                             CursorPosition = Cursor.MoveUp(CursorPosition);
                         }
-                        Cursor.RelativeToAbsolute(CursorPosition, NumberOfUnrenderedLinesToRenderStart);
 
                         UpdateScrollToShowCursor();
                         UpdateText();
@@ -994,7 +993,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 return;
 
             if (CursorPosition.LineNumber > TotalLines.Count)
-                CursorPosition.LineNumber = TotalLines.Count;
+                CursorPosition.LineNumber = TotalLines.Count - 1;
 
             //Calculate the distance to the top for the cursorposition and render the cursor
             float RenderPosY = (float)((CursorPosition.LineNumber - NumberOfUnrenderedLinesToRenderStart) * SingleLineHeight) + SingleLineHeight / 4;
@@ -1314,7 +1313,7 @@ namespace TextControlBox_TestApp.TextControlBox
         public CursorPosition CursorPosition
         {
             get => _CursorPosition;
-            set { _CursorPosition = new CursorPosition(value.CharacterPosition, value.LineNumber + (int)(VerticalScrollbar.Value / SingleLineHeight)); UpdateCursor(); }
+            set { _CursorPosition = new CursorPosition(value.CharacterPosition, value.LineNumber); UpdateCursor(); }
         }
         public new int FontSize { get => _FontSize; set { _FontSize = value; UpdateZoom(); } }
         public string Text { get => GetText(); set { SetText(value); } }
