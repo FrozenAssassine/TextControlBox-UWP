@@ -8,7 +8,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         {
             if (TextSelection == null)
             {
-                Line Line = ListHelper.GetLine(TotalLines, CursorPosition.LineNumber - 1);
+                Line Line = ListHelper.GetLine(TotalLines, CursorPosition.LineNumber);
                 //UndoRedo.RecordSingleLineUndo(Line, CursorPosition);
 
                 if (Line.Content.Contains(TabCharacter, System.StringComparison.Ordinal) && CursorPosition.CharacterPosition > 0)
@@ -45,7 +45,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         {
             if (TextSelection == null)
             {
-                Line Line = ListHelper.GetLine(TotalLines, CursorPosition.LineNumber - 1);
+                Line Line = ListHelper.GetLine(TotalLines, CursorPosition.LineNumber);
                 //UndoRedo.RecordSingleLineUndo(Line, CursorPosition);
 
                 Line.AddText(TabCharacter, CursorPosition.CharacterPosition);
