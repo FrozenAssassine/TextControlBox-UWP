@@ -175,7 +175,7 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         private void UpdateCursorVariable(Point Point)
         {
-            CursorPosition.LineNumber = CursorRenderer.GetCursorLineFromPoint(Point, SingleLineHeight, RenderedLines.Count, NumberOfStartLine, NumberOfUnrenderedLinesToRenderStart);
+            CursorPosition.LineNumber = CursorRenderer.GetCursorLineFromPoint(Point, SingleLineHeight, RenderedLines.Count, NumberOfStartLine);
 
             UpdateCurrentLineTextLayout();
             CursorPosition.CharacterPosition = CursorRenderer.GetCharacterPositionFromPoint(GetCurrentLine(), CurrentLineTextLayout, Point, (float)-HorizontalScrollbar.Value);

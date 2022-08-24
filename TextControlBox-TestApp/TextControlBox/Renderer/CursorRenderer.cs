@@ -8,15 +8,17 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
 {
     public class CursorRenderer
     {
-        public static int GetCursorLineFromPoint(Point Point, float SingleLineHeight, int NumberOfRenderedLines, int NumberOfStartLine, int NumberOfUnderedLines)
+        public static int GetCursorLineFromPoint(Point Point, float SingleLineHeight, int NumberOfRenderedLines, int NumberOfStartLine)
         {
             //Calculate the relative linenumber, where the pointer was pressed at
             int Linenumber = (int)(Point.Y / SingleLineHeight);
 
-            if (Linenumber > NumberOfStartLine + NumberOfRenderedLines)
-                Linenumber = NumberOfStartLine + NumberOfRenderedLines;
+            Linenumber += NumberOfStartLine;
 
-            return Linenumber + NumberOfUnderedLines;
+            if (Linenumber >= NumberOfStartLine + NumberOfRenderedLines)
+                Linenumber = NumberOfStartLine + NumberOfRenderedLines - 1;
+
+            return Linenumber;
         }
         public static int GetCharacterPositionFromPoint(Line CurrentLine, CanvasTextLayout TextLayout, Point CursorPosition, float MarginLeft)
         {
