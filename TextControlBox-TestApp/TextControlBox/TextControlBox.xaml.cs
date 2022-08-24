@@ -1142,12 +1142,10 @@ namespace TextControlBox_TestApp.TextControlBox
         /// </summary>
         /// <param name="index">The index of the line to select</param>
         /// <param name="CursorAtStart">Select whether the cursor moves to start or end of the line</param>
-        public void SelectLine(int index, bool CursorAtStart = false)
+        public void SelectLine(int index)
         {
             selectionrenderer.SelectionStartPosition = new CursorPosition(0, index);
-            CursorPosition pos = selectionrenderer.SelectionEndPosition = new CursorPosition(ListHelper.GetLine(TotalLines, index - 1).Length, index - 1);
-            CursorPosition.LineNumber = index;
-            CursorPosition.CharacterPosition = CursorAtStart ? 0 : pos.CharacterPosition;
+            CursorPosition = selectionrenderer.SelectionEndPosition = new CursorPosition(ListHelper.GetLine(TotalLines, index).Length, index);
 
             UpdateSelection();
             UpdateCursor();
