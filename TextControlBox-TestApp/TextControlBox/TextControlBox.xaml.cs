@@ -664,6 +664,12 @@ namespace TextControlBox_TestApp.TextControlBox
                 case VirtualKey.PageDown:
                     ScrollPageDown();
                     break;
+                case VirtualKey.End:
+                    CursorPosition = Cursor.MoveToLineEnd(CursorPosition, CurrentLine);
+                    break;
+                case VirtualKey.Home:
+                    CursorPosition = Cursor.MoveToLineStart(CursorPosition);
+                    break;
             }
 
             //Tab-key
