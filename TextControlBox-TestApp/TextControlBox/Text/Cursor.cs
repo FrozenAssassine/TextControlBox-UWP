@@ -173,5 +173,17 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 ReturnValue = CursorPosition.ChangeLineNumber(ReturnValue, CurrentCursorPosition.LineNumber - 1);
             return ReturnValue;
         }
+
+        public static CursorPosition MoveToLineEnd(CursorPosition CursorPosition, Line CurrentLine)
+        {
+            CursorPosition.CharacterPosition = CurrentLine.Length;
+            return CursorPosition;
+        }
+        
+        public static CursorPosition MoveToLineStart(CursorPosition CursorPosition)
+        {
+            CursorPosition.CharacterPosition = 0;
+            return CursorPosition;
+        }
     }
 }
