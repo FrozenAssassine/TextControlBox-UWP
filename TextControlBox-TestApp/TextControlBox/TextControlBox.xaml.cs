@@ -214,7 +214,6 @@ namespace TextControlBox_TestApp.TextControlBox
             else
             {
                 CursorPosition = Selection.Replace(TextSelection, TotalLines, text, NewLineCharacter);
-                Debug.WriteLine(CursorPosition.LineNumber);
 
                 selectionrenderer.ClearSelection();
                 TextSelection = null;
