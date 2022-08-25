@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -50,6 +51,7 @@ namespace TextControlBox_TestApp.TextControlBox
 
         int NumberOfStartLine = 0;
         int NumberOfUnrenderedLinesToRenderStart = 0;
+        float OldHorizontalScrollValue = 0;
 
         //Colors:
         CanvasSolidColorBrush TextColorBrush;
@@ -129,6 +131,12 @@ namespace TextControlBox_TestApp.TextControlBox
             ColorResourcesCreated = true;
         }
 
+        private void UpdateAll()
+        {
+            UpdateText();
+            UpdateSelection();
+            UpdateCursor();
+        }
         private void UpdateZoom()
         {
             ZoomedFontSize = (float)_FontSize * (float)_ZoomFactor / 100;
@@ -499,6 +507,40 @@ namespace TextControlBox_TestApp.TextControlBox
             return false;
         }
 
+        private void ScrollIntoViewHorizontal()
+        {
+            float CurPosInLine = CursorRenderer.GetCursorPositionInLine(CurrentLineTextLayout, CursorPosition, 0);
+            if (CurPosInLine == OldHorizontalScrollValue)
+                return;
+            
+            OldHorizontalScrollValue = CurPosInLine;
+            HorizontalScrollbar.Value = CurPosInLine - (Canvas_Text.ActualWidth - 5);
+
+            /*float CanvasWidth = (float)Canvas_Text.ActualWidth;
+            //Inbetween start and end of render region
+            if(CurPosInLine < CanvasWidth + HorizontalScrollbar.Value && CurPosInLine > HorizontalScrollbar.Value)
+            {
+                Debug.WriteLine("Inbetween");
+                Debug.WriteLine("INBETWEEN: " + CurPosInLine + "::" + (CanvasWidth - 20));
+
+                HorizontalScrollbar.Value = CurPosInLine - (CanvasWidth - 5);
+            }
+            else
+            {
+                if(CurPosInLine < CanvasWidth + HorizontalScrollbar.Value)
+                {
+                    Debug.WriteLine("At start");
+                    HorizontalScrollbar.Value = CurPosInLine - (CanvasWidth - 5);
+
+                }
+                else if(CurPosInLine > CanvasWidth + HorizontalScrollbar.Value)
+                {
+                    Debug.WriteLine("At end");
+                    HorizontalScrollbar.Value = CurPosInLine - (CanvasWidth - 5);
+                }
+            }*/ 
+        }
+
         //Syntaxhighlighting
         private void UpdateSyntaxHighlighting()
         {
@@ -550,7 +592,6 @@ namespace TextControlBox_TestApp.TextControlBox
 
                 if (e.VirtualKey != VirtualKey.Left && e.VirtualKey != VirtualKey.Right && e.VirtualKey != VirtualKey.Back && e.VirtualKey != VirtualKey.Delete)
                     return;
-
             }
 
             switch (e.VirtualKey)
@@ -729,19 +770,19 @@ namespace TextControlBox_TestApp.TextControlBox
         //Pointer-events:
         private void CoreWindow_PointerMoved(CoreWindow sender, PointerEventArgs args)
         {
-            Point PointerPosition = args.CurrentPoint.Position;
-
             if (selectionrenderer.IsSelecting)
             {
                 double CanvasWidth = Math.Round(this.ActualWidth, 2);
-                double CurPosX = Math.Round(PointerPosition.X, 2);
+                double CurPosX = Math.Round(args.CurrentPoint.Position.X, 2);
                 if (CurPosX > CanvasWidth - 100)
                 {
-                    HorizontalScrollbar.Value -= (CurPosX > CanvasWidth + 30 ? -20 : (-CanvasWidth - CurPosX) / 150);
+                    HorizontalScrollbar.Value += (CurPosX > CanvasWidth + 30 ? 20 : (CanvasWidth - CurPosX) / 150);
+                    UpdateAll();
                 }
                 else if (CurPosX < 100)
                 {
                     HorizontalScrollbar.Value += CurPosX < -30 ? -20 : -(100 - CurPosX) / 10;
+                    UpdateAll();
                 }
             }
         }
@@ -884,26 +925,24 @@ namespace TextControlBox_TestApp.TextControlBox
             else if (shift)
             {
                 HorizontalScrollbar.Value -= delta;
+                UpdateAll();
             }
             //Scroll vertical using mousewheel
             else
             {
                 VerticalScrollbar.Value -= delta;
+                UpdateAll();
             }
         }
 
-        //Scrolling and Zooming
-        private void VerticalScrollbar_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        //Scrolling
+        private void HorizontalScrollbar_Scroll(object sender, ScrollEventArgs e)
         {
-            Canvas_Text.Invalidate();
-            Canvas_Selection.Invalidate();
-            Canvas_Cursor.Invalidate();
+            UpdateAll();
         }
-        private void HorizontalScrollbar_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        private void VerticalScrollbar_Scroll(object sender, ScrollEventArgs e)
         {
-            Canvas_Text.Invalidate();
-            Canvas_Selection.Invalidate();
-            Canvas_Cursor.Invalidate();
+            UpdateAll();
         }
 
         private void Canvas_Text_Draw(CanvasControl sender, CanvasDrawEventArgs args)
@@ -933,8 +972,8 @@ namespace TextControlBox_TestApp.TextControlBox
             VerticalScrollbar.Maximum = (TotalLines.Count + 1) * SingleLineHeight - Scroll.ActualHeight;
             VerticalScrollbar.ViewportSize = sender.ActualHeight;
 
+            //Get all the lines, which needs to be rendered, from the list
             StringBuilder LineNumberContent = new StringBuilder();
-            //Get all the lines, which needs to be rendered, from the array with all lines
             StringBuilder TextToRender = new StringBuilder();
             for (int i = NumberOfStartLine; i < NumberOfStartLine + NumberOfLinesToBeRendered; i++)
             {
@@ -950,7 +989,7 @@ namespace TextControlBox_TestApp.TextControlBox
 
             if (_ShowLineNumbers)
                 LineNumberTextToRender = LineNumberContent.ToString();
-
+            
             RenderedText = TextToRender.ToString();
             //Clear the StringBuilder:
             TextToRender.Clear();
@@ -961,6 +1000,8 @@ namespace TextControlBox_TestApp.TextControlBox
             //Measure horizontal Width of longest line and apply to scrollbar
             HorizontalScrollbar.Maximum = LineLength.Width <= sender.ActualWidth ? 0 : LineLength.Width - sender.ActualWidth + 50;
             HorizontalScrollbar.ViewportSize = sender.ActualWidth;
+
+            ScrollIntoViewHorizontal();
 
             //Create the textlayout --> apply the Syntaxhighlighting --> render it
             DrawnTextLayout = TextRenderer.CreateTextResource(sender, DrawnTextLayout, TextFormat, RenderedText, new Size { Height = sender.Size.Height, Width = this.ActualWidth });
@@ -1249,23 +1290,27 @@ namespace TextControlBox_TestApp.TextControlBox
         public void ScrollOneLineUp()
         {
             VerticalScrollbar.Value -= SingleLineHeight;
+            UpdateAll();
         }
         public void ScrollOneLineDown()
         {
             VerticalScrollbar.Value += SingleLineHeight;
-            //UpdateText();
+            UpdateAll();
         }
         public void ScrollLineIntoView(int Line)
         {
             VerticalScrollbar.Value = Line * SingleLineHeight;
+            UpdateAll();
         }
         public void ScrollTopIntoView()
         {
             VerticalScrollbar.Value = (CursorPosition.LineNumber - 1) * SingleLineHeight;
+            UpdateAll();
         }
         public void ScrollBottomIntoView()
         {
             VerticalScrollbar.Value = (CursorPosition.LineNumber - RenderedLines.Count + 1) * SingleLineHeight;
+            UpdateAll();
         }
         public void ScrollPageUp()
         {
@@ -1274,6 +1319,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 CursorPosition.LineNumber = 0;
 
             VerticalScrollbar.Value -= RenderedLines.Count * SingleLineHeight;
+            UpdateAll();
         }
         public void ScrollPageDown()
         {
@@ -1281,6 +1327,7 @@ namespace TextControlBox_TestApp.TextControlBox
             if (CursorPosition.LineNumber > TotalLines.Count - 1)
                 CursorPosition.LineNumber = TotalLines.Count - 1;
             VerticalScrollbar.Value += RenderedLines.Count * SingleLineHeight;
+            UpdateAll();
         }
 
         //Properties:
@@ -1352,6 +1399,7 @@ namespace TextControlBox_TestApp.TextControlBox
         public event SelectionChangedEvent SelectionChanged;
         public delegate void ZoomChangedEvent(TextControlBox sender, int ZoomFactor);
         public event ZoomChangedEvent ZoomChanged;
+
     }
 
     public class ScrollBarPosition
