@@ -773,7 +773,22 @@ namespace TextControlBox_TestApp.TextControlBox
             if (selectionrenderer.IsSelecting)
             {
                 double CanvasWidth = Math.Round(this.ActualWidth, 2);
+                double CanvasHeight = Math.Round(this.ActualHeight, 2);
                 double CurPosX = Math.Round(args.CurrentPoint.Position.X, 2);
+                double CurPosY = Math.Round(args.CurrentPoint.Position.Y, 2);
+
+                if(CurPosY > CanvasHeight - 50)
+                {
+                    VerticalScrollbar.Value += (CurPosY > CanvasHeight + 30 ? 20 : (CanvasHeight - CurPosY) / 150);
+                    UpdateAll();
+                }
+                else if (CurPosY < 50)
+                {
+                    VerticalScrollbar.Value += CurPosY < -30 ? -20 : -(50 - CurPosY) / 10;
+                    UpdateAll();
+                }
+
+                //Horizontal
                 if (CurPosX > CanvasWidth - 100)
                 {
                     HorizontalScrollbar.Value += (CurPosX > CanvasWidth + 30 ? 20 : (CanvasWidth - CurPosX) / 150);
