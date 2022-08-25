@@ -17,14 +17,19 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         {
             string text = line.Content;
 
-            //If the text starts with a tab or a whitespace, replace them with the last character of the line, to
+            //If the text starts with a tab or a whitespace, replace it with the last character of the line, to
             //get the actual width of the line, because tabs and whitespaces at the beginning are not counted to the lenght
+            //Do the same for the end
             double WidthOfPlaceHolder = 0;
-
             if (text.StartsWith('\t') || text.StartsWith(' '))
             {
                 text = text.Insert(0, "|");
-                WidthOfPlaceHolder = MeasureTextSize(device, "|", textFormat).Width;
+                WidthOfPlaceHolder += MeasureTextSize(device, "|", textFormat).Width;
+            }
+            if(text.EndsWith('\t') ||text.EndsWith(' '))
+            {
+                text = text += "|";
+                WidthOfPlaceHolder += MeasureTextSize(device, "|", textFormat).Width;
             }
             CanvasTextLayout layout = new CanvasTextLayout(device, text, textFormat, 0, 0);
             return new Size(layout.DrawBounds.Width - WidthOfPlaceHolder, layout.DrawBounds.Height);

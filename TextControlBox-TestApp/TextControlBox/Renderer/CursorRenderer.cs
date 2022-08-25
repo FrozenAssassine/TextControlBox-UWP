@@ -31,6 +31,15 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
             return textLayoutRegion.CharacterIndex;
         }
 
+        //Return the position in pixels of the cursor in the current line
+        public static float GetCursorPositionInLine(CanvasTextLayout CurrentLineTextLayout, CursorPosition CursorPosition, float XOffset)
+        {
+            if (CurrentLineTextLayout == null)
+                return 0;
+
+            return CurrentLineTextLayout.GetCaretPosition(CursorPosition.CharacterPosition, false).X + XOffset;
+        }
+
         //Return the cursor Width
         public static void RenderCursor(CanvasTextLayout TextLayout, int CharacterPosition, float XOffset, float Y, float FontSize, CanvasDrawEventArgs args, CanvasSolidColorBrush CursorColorBrush)
         {
