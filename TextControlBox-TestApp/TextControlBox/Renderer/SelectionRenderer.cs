@@ -2,6 +2,7 @@
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using TextControlBox_TestApp.TextControlBox.Helper;
 using Windows.Foundation;
 using Windows.UI;
@@ -72,7 +73,7 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
         }
 
         //Draw the actual selection and return the cursorposition. Return -1 if no selection was drawn
-        public TextSelection DrawSelection(CanvasTextLayout TextLayout, List<Line> RenderedLines, CanvasDrawEventArgs args, float MarginLeft, float MarginTop, int UnrenderedLinesToRenderStart, int NumberOfRenderedLines)
+        public TextSelection DrawSelection(CanvasTextLayout TextLayout, List<Line> RenderedLines, CanvasDrawEventArgs args, float MarginLeft, float MarginTop, int UnrenderedLinesToRenderStart, int NumberOfRenderedLines, float FontSize)
         {
             if (HasSelection && SelectionEndPosition != null && SelectionStartPosition != null)
             {
@@ -148,6 +149,13 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                 CanvasTextLayoutRegion[] descriptions = TextLayout.GetCharacterRegions(SelectionStart, SelectionLength);
                 for (int i = 0; i < descriptions.Length; i++)
                 {
+                    //Change the width if selection in an emty line or starts at a line end
+                    if(descriptions[i].LayoutBounds.Width == 0)
+                    {
+                        var bounds = descriptions[i].LayoutBounds;
+                        descriptions[i].LayoutBounds = new Rect { Width = FontSize/4, Height = bounds.Height, X = bounds.X, Y = bounds.Y };
+                    }
+
                     args.DrawingSession.FillRectangle(CreateRect(descriptions[i].LayoutBounds, MarginLeft, MarginTop), SelectionColor);
                 }
                 return new TextSelection(SelectionStart, SelectionLength, new CursorPosition(SelectionStartPosition), new CursorPosition(SelectionEndPosition));

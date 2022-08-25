@@ -982,7 +982,7 @@ namespace TextControlBox_TestApp.TextControlBox
 
             if (selectionrenderer.HasSelection)
             {
-                TextSelection = selectionrenderer.DrawSelection(DrawnTextLayout, RenderedLines, args, (float)-HorizontalScrollbar.Value, SingleLineHeight / 4, NumberOfUnrenderedLinesToRenderStart, RenderedLines.Count);
+                TextSelection = selectionrenderer.DrawSelection(DrawnTextLayout, RenderedLines, args, (float)-HorizontalScrollbar.Value, SingleLineHeight / 4, NumberOfUnrenderedLinesToRenderStart, RenderedLines.Count, ZoomedFontSize);
             }
 
             if (TextSelection != null && !Selection.Equals(OldTextSelection, TextSelection))
