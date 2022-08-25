@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 
@@ -109,8 +110,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         public static CursorPosition MoveLeft(CursorPosition CurrentCursorPosition, List<Line> TotalLines, Line CurrentLine)
         {
             CursorPosition ReturnValue = new CursorPosition(CurrentCursorPosition);
-            int LineLength = ListHelper.GetLine(TotalLines, ReturnValue.LineNumber).Length;
-
             if (ReturnValue.LineNumber < 0)
             {
                 return ReturnValue;
@@ -127,9 +126,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                     ReturnValue.CharacterPosition -= CalculateStepsToMoveLeft(CurrentLine, CurrentCursorPosition.CharacterPosition);
                 }
             }
-
-            if (ReturnValue.CharacterPosition > LineLength)
-                ReturnValue.CharacterPosition = LineLength;
 
             return ReturnValue;
         }

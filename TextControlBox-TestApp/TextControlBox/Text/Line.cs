@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace TextControlBox_TestApp.TextControlBox
 {
@@ -38,19 +39,14 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         public string Remove(int Index, int Count = -1)
         {
-            if (Index >= Length || Index < 0)
+            if (Index > Length || Index < 0)
                 return Content;
 
-            try
-            {
-                if (Count == -1)
-                    Content = Content.Remove(Index);
-                else
-                    Content = Content.Remove(Index, Count);
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-            }
+            if (Count == -1)
+                Content = Content.Remove(Index);
+            else
+                Content = Content.Remove(Index, Count);
+
             return Content;
         }
         public string Substring(int Index, int Count = -1)

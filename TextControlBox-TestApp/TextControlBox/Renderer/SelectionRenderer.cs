@@ -150,7 +150,7 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                 for (int i = 0; i < descriptions.Length; i++)
                 {
                     //Change the width if selection in an emty line or starts at a line end
-                    if(descriptions[i].LayoutBounds.Width == 0)
+                    if(descriptions[i].LayoutBounds.Width == 0 && descriptions.Length > 1)
                     {
                         var bounds = descriptions[i].LayoutBounds;
                         descriptions[i].LayoutBounds = new Rect { Width = FontSize/4, Height = bounds.Height, X = bounds.X, Y = bounds.Y };
