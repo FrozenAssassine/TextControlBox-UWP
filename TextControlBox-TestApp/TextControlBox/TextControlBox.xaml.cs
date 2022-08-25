@@ -157,9 +157,8 @@ namespace TextControlBox_TestApp.TextControlBox
             }
 
             NeedsTextFormatUpdate = true;
-            UpdateScrollToShowCursor();
-            UpdateText();
-            Canvas_Selection.Invalidate();
+            ScrollLineIntoView(CursorPosition.LineNumber);
+            UpdateAll();
         }
         private void UpdateCursor()
         {
@@ -228,7 +227,7 @@ namespace TextControlBox_TestApp.TextControlBox
                 UpdateSelection();
             }
 
-            //UpdateScrollToShowCursor();
+            ScrollLineIntoView(CursorPosition.LineNumber);
             UpdateText();
             UpdateCursor();
             Internal_TextChanged();
@@ -242,10 +241,11 @@ namespace TextControlBox_TestApp.TextControlBox
 
             if (TextSelection == null)
             {
-                int StepsToMove = ControlIsPressed ? Cursor.CalculateStepsToMoveLeft(CurrentLine, CursorPosition.CharacterPosition) : 1;
-                if (CursorPosition.CharacterPosition > 0)
+                int CharacterPos = GetCurPosInLine();
+                int StepsToMove = ControlIsPressed ? Cursor.CalculateStepsToMoveLeft(CurrentLine, CharacterPos) : 1;
+                if (CharacterPos > 0)
                 {
-                    CurrentLine.Remove(CursorPosition.CharacterPosition - StepsToMove, StepsToMove);
+                    CurrentLine.Remove(CharacterPos - StepsToMove, StepsToMove);
                     CursorPosition.CharacterPosition -= StepsToMove;
                 }
                 else if (CursorPosition.LineNumber > 0)
@@ -261,8 +261,7 @@ namespace TextControlBox_TestApp.TextControlBox
             else
             {
                 AddCharacter(""); //Replace the selection by nothing
-                selectionrenderer.ClearSelection();
-                TextSelection = null;
+                ClearSelection();
                 UpdateSelection();
             }
 
@@ -278,11 +277,12 @@ namespace TextControlBox_TestApp.TextControlBox
 
             if (TextSelection == null)
             {
-                int StepsToMove = ControlIsPressed ? Cursor.CalculateStepsToMoveRight(CurrentLine, CursorPosition.CharacterPosition) : 1;
+                int CharacterPos = GetCurPosInLine();
+                int StepsToMove = ControlIsPressed ? Cursor.CalculateStepsToMoveRight(CurrentLine, CharacterPos) : 1;
 
-                if (CursorPosition.CharacterPosition < CurrentLine.Length)
+                if (CharacterPos < CurrentLine.Length)
                 {
-                    CurrentLine.Remove(CursorPosition.CharacterPosition, StepsToMove);
+                    CurrentLine.Remove(CharacterPos, StepsToMove);
                 }
                 else if (TotalLines.Count > CursorPosition.LineNumber)
                 {
@@ -344,20 +344,6 @@ namespace TextControlBox_TestApp.TextControlBox
                 UpdateCursor();
                 Internal_TextChanged();
                 return;
-            }
-
-            //Undo
-            string Lines;
-            if (TextSelection == null)
-                Lines = StartLine.Content;
-            else
-                Lines = Selection.GetSelectedTextWithoutCharacterPos(TotalLines, TextSelection, NewLineCharacter);
-
-            int UndoDeleteCount = 2;
-            //Whole lines are selected
-            if (TextSelection != null && StartLinePos.CharacterPosition == 0 && EndLinePos.CharacterPosition == ListHelper.GetLine(TotalLines, EndLinePos.LineNumber).Length)
-            {
-                UndoDeleteCount = 1;
             }
 
             if (TextSelection != null)
@@ -506,7 +492,12 @@ namespace TextControlBox_TestApp.TextControlBox
             }
             return false;
         }
-
+        private int GetCurPosInLine()
+        {
+            if (CursorPosition.CharacterPosition > CurrentLine.Length)
+                return CurrentLine.Length;
+            return CursorPosition.CharacterPosition;
+        }
         private void ScrollIntoViewHorizontal()
         {
             float CurPosInLine = CursorRenderer.GetCursorPositionInLine(CurrentLineTextLayout, CursorPosition, 0);
@@ -763,7 +754,6 @@ namespace TextControlBox_TestApp.TextControlBox
                 GotKeyboardInput = true;
             }
 
-
             AddCharacter(args.Text);
         }
 
@@ -934,20 +924,18 @@ namespace TextControlBox_TestApp.TextControlBox
             {
                 _ZoomFactor += delta / 20;
                 UpdateZoom();
-                e.Handled = true;
             }
             //Scroll horizontal using mousewheel
             else if (shift)
             {
                 HorizontalScrollbar.Value -= delta;
-                UpdateAll();
             }
             //Scroll vertical using mousewheel
             else
             {
                 VerticalScrollbar.Value -= delta;
-                UpdateAll();
             }
+            UpdateAll();
         }
 
         //Scrolling
@@ -1118,7 +1106,7 @@ namespace TextControlBox_TestApp.TextControlBox
         {
             SelectionChangedEventHandler args = new SelectionChangedEventHandler
             {
-                CharacterPositionInLine = CursorPosition.CharacterPosition + 1,
+                CharacterPositionInLine = GetCurPosInLine() + 1,
                 LineNumber = CursorPosition.LineNumber,
             };
             if (selectionrenderer.SelectionStartPosition != null && selectionrenderer.SelectionEndPosition != null)
@@ -1296,6 +1284,10 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         public void SelectAll()
         {
+            //No selection can be shown
+            if (TotalLines.Count == 1 && TotalLines[0].Length == 0)
+                return;
+
             selectionrenderer.SelectionStartPosition = new CursorPosition(0, 0);
             CursorPosition = selectionrenderer.SelectionEndPosition = new CursorPosition(ListHelper.GetLine(TotalLines, -1).Length, TotalLines.Count);
             selectionrenderer.HasSelection = true;
@@ -1314,7 +1306,7 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         public void ScrollLineIntoView(int Line)
         {
-            VerticalScrollbar.Value = Line * SingleLineHeight;
+            VerticalScrollbar.Value = (Line - RenderedLines.Count / 2) * SingleLineHeight;
             UpdateAll();
         }
         public void ScrollTopIntoView()
