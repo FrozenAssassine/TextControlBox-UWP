@@ -158,7 +158,6 @@ namespace TextControlBox_TestApp.TextControlBox
 
             NeedsTextFormatUpdate = true;
             ScrollLineIntoView(CursorPosition.LineNumber);
-            UpdateAll();
         }
         private void UpdateCursor()
         {
