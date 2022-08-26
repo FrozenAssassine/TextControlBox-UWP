@@ -6,7 +6,7 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
 {
     public class TextRenderer
     {
-        public static CanvasTextLayout CreateTextResource(ICanvasResourceCreatorWithDpi ResourceCreator, CanvasTextLayout TextLayout, CanvasTextFormat TextFormat, string Text, Size targetSize)
+        public static CanvasTextLayout CreateTextResource(ICanvasResourceCreatorWithDpi ResourceCreator, CanvasTextLayout TextLayout, CanvasTextFormat TextFormat, string Text, Size targetSize, float ZoomedFontSize)
         {
             if (TextLayout != null)
                 TextLayout.Dispose();
@@ -23,7 +23,7 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                 WordWrapping = CanvasWordWrapping.NoWrap,
                 LineSpacing = ZoomedFontSize + 2,
             };
-            textFormat.IncrementalTabStop = 137;
+            textFormat.IncrementalTabStop = ZoomedFontSize * 5; //default 137px
             textFormat.FontFamily = "Consolas";
             textFormat.TrimmingGranularity = CanvasTextTrimmingGranularity.None;
             textFormat.TrimmingSign = CanvasTrimmingSign.None;
