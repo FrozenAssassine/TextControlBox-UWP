@@ -1006,7 +1006,7 @@ namespace TextControlBox_TestApp.TextControlBox
             ScrollIntoViewHorizontal();
 
             //Create the textlayout --> apply the Syntaxhighlighting --> render it
-            DrawnTextLayout = TextRenderer.CreateTextResource(sender, DrawnTextLayout, TextFormat, RenderedText, new Size { Height = sender.Size.Height, Width = this.ActualWidth });
+            DrawnTextLayout = TextRenderer.CreateTextResource(sender, DrawnTextLayout, TextFormat, RenderedText, new Size { Height = sender.Size.Height, Width = this.ActualWidth }, ZoomedFontSize);
             UpdateSyntaxHighlighting();
             args.DrawingSession.DrawTextLayout(DrawnTextLayout, (float)-HorizontalScrollbar.Value, SingleLineHeight, TextColorBrush);
 
