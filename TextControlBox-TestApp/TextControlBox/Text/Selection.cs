@@ -96,10 +96,26 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
 
             //Multiline
-            string TextInFrontOfCursor = CurrentLine.Content.Substring(0, CursorPosition.CharacterPosition < 0 ? 0 : CursorPosition.CharacterPosition);
-            string TextBehindCursor =
-                CurrentLine.Length > CursorPosition.CharacterPosition ?
+            string TextInFrontOfCursor = "";
+            try
+            {
+                TextInFrontOfCursor = CurrentLine.Content.Substring(0, CursorPosition.CharacterPosition < 0 ? 0 : CursorPosition.CharacterPosition);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                Debug.WriteLine("*ArgumentOutOfRangeException* in InsertText");
+            }
+            string TextBehindCursor =  "";
+            try
+            {
+                TextBehindCursor = CurrentLine.Length > CursorPosition.CharacterPosition ?
                 CurrentLine.Content.Remove(0, CursorPosition.CharacterPosition) : "";
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                Debug.WriteLine("*ArgumentOutOfRangeException* in InsertText");
+            }
+
 
             ListHelper.DeleteAt(TotalLines, CursorPosition.LineNumber);
 
@@ -117,36 +133,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             ListHelper.InsertRange(TotalLines, LinesToInsert, CursorPosition.LineNumber);
             LinesToInsert.Clear();
             return new CursorPosition(CursorPosition.CharacterPosition + lines.Length > 0 ? lines[lines.Length - 1].Length : 0, CursorPosition.LineNumber + lines.Length - 1);
-        }
-
-        public static CursorPosition ReplaceUndo(int StartLine, List<Line> TotalLines, List<Line> Replace, int LinesToDelete)
-        {
-            StartLine -= 1;
-
-            //ListHelper.RemoveRange(TotalLines, StartLine, Count);
-
-            //Either add or insert to the List
-            //ListHelper.InsertRange(TotalLines, Replace, StartLine);
-            
-            int Count = LinesToDelete;
-            if (StartLine >= TotalLines.Count)
-            {
-                StartLine = TotalLines.Count - 1 - Count;
-            }
-            if (StartLine + Count >= TotalLines.Count)
-            {
-                int val = TotalLines.Count - StartLine;
-                if (val < 0)
-                    val = 0;
-                Count = val;
-            }
-            if (StartLine < 0)
-                StartLine = 0;
-
-            TotalLines.RemoveRange(StartLine, Count - 1);
-            TotalLines.InsertRange(StartLine, Replace);
-            
-            return new CursorPosition(Replace[Replace.Count - 1].Length - 1, StartLine);
         }
 
         public static CursorPosition Replace(TextSelection Selection, List<Line> TotalLines, string Text, string NewLineCharacter)
