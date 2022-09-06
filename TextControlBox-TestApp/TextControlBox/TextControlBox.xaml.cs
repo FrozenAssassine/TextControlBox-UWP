@@ -157,7 +157,7 @@ namespace TextControlBox_TestApp.TextControlBox
 			}
 
 			NeedsTextFormatUpdate = true;
-			ScrollLineIntoView(CursorPosition.LineNumber);
+			ScrollLineToCenter(CursorPosition.LineNumber);
 		}
 		private void UpdateCursor()
 		{
@@ -227,7 +227,7 @@ namespace TextControlBox_TestApp.TextControlBox
 				UpdateSelection();
 			}
 
-			ScrollLineIntoView(CursorPosition.LineNumber);
+			ScrollLineToCenter(CursorPosition.LineNumber);
 			UpdateText();
 			UpdateCursor();
 			Internal_TextChanged();
@@ -542,6 +542,14 @@ namespace TextControlBox_TestApp.TextControlBox
 					HorizontalScrollbar.Value = CurPosInLine - (CanvasWidth - 5);
 				}
 			}*/ 
+		}
+		private void ScrollLineToCenter(int Line)
+		{
+			//Check whether the current line is outside the bounds of the visible area
+			if (Line < NumberOfUnrenderedLinesToRenderStart || Line >= NumberOfUnrenderedLinesToRenderStart + RenderedLines.Count)
+			{
+				ScrollLineIntoView(Line);
+			}
 		}
 
 		public void Undo()
@@ -1364,7 +1372,7 @@ namespace TextControlBox_TestApp.TextControlBox
 			UpdateAll();
 		}
 		public void ScrollLineIntoView(int Line)
-		{
+        {
 			VerticalScrollbar.Value = (Line - RenderedLines.Count / 2) * SingleLineHeight;
 			UpdateAll();
 		}
