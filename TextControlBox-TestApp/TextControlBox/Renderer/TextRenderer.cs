@@ -23,7 +23,7 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                 WordWrapping = CanvasWordWrapping.NoWrap,
                 LineSpacing = ZoomedFontSize + 2,
             };
-            textFormat.IncrementalTabStop = ZoomedFontSize * 5; //default 137px
+            textFormat.IncrementalTabStop = ZoomedFontSize * 3; //default 137px
             textFormat.FontFamily = "Consolas";
             textFormat.TrimmingGranularity = CanvasTextTrimmingGranularity.None;
             textFormat.TrimmingSign = CanvasTrimmingSign.None;

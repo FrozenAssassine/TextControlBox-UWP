@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace TextControlBox_TestApp.TextControlBox.Helper
@@ -78,9 +79,10 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             else if (Index + Count - 1 >= TotalLines.Count)
             {
                 int difference = TotalLines.Count - Index + Count - 1;
-                if (difference <= 0)
-                    Count += difference;
+                if (difference > 0)
+                    Count = difference;
             }
+            Debug.WriteLine(Index + "::" + Count);
             TotalLines.RemoveRange(Index, Count);
         }
         public static void DeleteAt(List<Line> TotalLines, int Index)

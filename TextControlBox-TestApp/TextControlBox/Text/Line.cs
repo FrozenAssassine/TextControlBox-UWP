@@ -39,10 +39,10 @@ namespace TextControlBox_TestApp.TextControlBox
         }
         public string Remove(int Index, int Count = -1)
         {
-            if (Index > Length || Index < 0)
+            if (Index >= Length || Index < 0)
                 return Content;
 
-            if (Count == -1)
+            if (Count <= -1)
                 Content = Content.Remove(Index);
             else
                 Content = Content.Remove(Index, Count);
