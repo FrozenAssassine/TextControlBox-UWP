@@ -4,6 +4,7 @@ using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -24,9 +25,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
-using static System.Net.Mime.MediaTypeNames;
 using Color = Windows.UI.Color;
-using Size = Windows.Foundation.Size;
 
 namespace TextControlBox_TestApp.TextControlBox
 {
@@ -1121,6 +1120,7 @@ namespace TextControlBox_TestApp.TextControlBox
 				CharacterPos,
 				(float)-HorizontalScrollbar.Value,
 				RenderPosY, ZoomedFontSize,
+				CursorSize,
 				args,
 				CursorColorBrush);
 
@@ -1432,6 +1432,7 @@ namespace TextControlBox_TestApp.TextControlBox
 			set { _CursorPosition = new CursorPosition(value.CharacterPosition, value.LineNumber); UpdateCursor(); }
 		}
 		public new int FontSize { get => _FontSize; set { _FontSize = value; UpdateZoom(); } }
+		public float RenderedFontSize { get => ZoomedFontSize; }
 		public string Text { get => GetText(); set { SetText(value); } }
 		public Color TextColor = Color.FromArgb(255, 255, 255, 255);
 		public Color SelectionColor = Color.FromArgb(100, 0, 100, 255);
@@ -1454,6 +1455,8 @@ namespace TextControlBox_TestApp.TextControlBox
 		}
 		public int ZoomFactor { get => _ZoomFactor; set { _ZoomFactor = value; UpdateZoom(); } } //%
 		public bool IsReadonly { get; set; } = false;
+		[Description("Change the size of the cursor. Use null for the default size")]
+		public CursorSize CursorSize { get; set; } = null;
 
 		//Events:
 		public delegate void TextChangedEvent(TextControlBox sender, string Text);
@@ -1491,7 +1494,20 @@ namespace TextControlBox_TestApp.TextControlBox
 		public string Pattern { get; set; }
 		public Color Color { get; set; }
 	}
-
+	public class CursorSize
+    {
+		public CursorSize(float Width = 0, float Height = 0, float OffsetX = 0, float OffsetY = 0)
+        {
+			this.Width = Width;
+			this.Height = Height;
+			this.OffsetX = OffsetX;
+			this.OffsetY = OffsetY;
+        }
+		public float Width { get; set; }
+		public float Height { get; set; }
+		public float OffsetX { get; set; }
+		public float OffsetY { get; set; }
+	}
 	public static class Extensions
 	{
 		public static string RemoveFirstOccurence(this string value, string removeString)
