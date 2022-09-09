@@ -1002,6 +1002,14 @@ namespace TextControlBox_TestApp.TextControlBox
 			{
 				VerticalScrollbar.Value -= delta;
 			}
+
+			if (selectionrenderer.IsSelecting)
+			{
+				UpdateCursorVariable(e.GetCurrentPoint(Canvas_Selection).Position);
+				UpdateCursor();
+
+				selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
+			}
 			UpdateAll();
 		}
 
