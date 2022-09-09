@@ -22,9 +22,8 @@ using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Documents;
 using Windows.UI.Xaml.Input;
-using static System.Net.Mime.MediaTypeNames;
+using Windows.UI.Xaml.Media;
 using Color = Windows.UI.Color;
 using Size = Windows.Foundation.Size;
 
@@ -63,6 +62,7 @@ namespace TextControlBox_TestApp.TextControlBox
 		bool NeedsTextFormatUpdate = false;
 		bool GotKeyboardInput = false;
 		bool DragDropSelection = false;
+		bool HasFocus = false;
 
 		CanvasTextFormat TextFormat = null;
 		CanvasTextLayout DrawnTextLayout = null;
@@ -102,8 +102,7 @@ namespace TextControlBox_TestApp.TextControlBox
 			EditContext.TextRequested += delegate { };//Event only needs to be added -> No need to do something else
 			EditContext.SelectionRequested += delegate { };//Event only needs to be added -> No need to do something else
 			EditContext.TextUpdating += EditContext_TextUpdating;
-			EditContext.NotifyFocusEnter();
-
+            EditContext.FocusRemoved += EditContext_FocusRemoved;
 			//Classes & Variables:
 			selectionrenderer = new SelectionRenderer(SelectionColor);
 			inputPane = InputPane.GetForCurrentView();
@@ -111,10 +110,11 @@ namespace TextControlBox_TestApp.TextControlBox
 			//Events:
 			Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
 			Window.Current.CoreWindow.PointerMoved += CoreWindow_PointerMoved;
+            Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
 			InitialiseOnStart();
 		}
 
-		private void InitialiseOnStart()
+        private void InitialiseOnStart()
 		{
 			if (TotalLines.Count == 0)
 				TotalLines.Add(new Line());
@@ -543,49 +543,26 @@ namespace TextControlBox_TestApp.TextControlBox
 				}
 			}*/ 
 		}
-
-		public void Undo()
-		{
-			if (IsReadonly)
-				return;
-
-			//Do the Undo
-			var sel = UndoRedo.Undo(TotalLines, NewLineCharacter);
-			Internal_TextChanged();
-
-			if (sel != null)
-			{
-				selectionrenderer.SelectionStartPosition = sel.StartPosition;
-				selectionrenderer.SelectionEndPosition = sel.EndPosition;
-				selectionrenderer.HasSelection = true;
-				selectionrenderer.IsSelecting = false;
-			}
-			else
-				ForceClearSelection();
-			UpdateAll();
+		private void SetFocus()
+        {
+			if (!HasFocus)
+				GotFocus?.Invoke(this);
+			HasFocus = true;
+			EditContext.NotifyFocusEnter();
+			inputPane.TryShow();
+			ChangeCursor(CoreCursorType.IBeam);
 		}
-		public void Redo()
-		{
-			if (IsReadonly)
-				return;
+		private void RemoveFocus()
+        {
+			if (HasFocus)
+				LostFocus?.Invoke(this);
+			UpdateCursor();
 
-			//Do the Redo
-			var sel = UndoRedo.Redo(TotalLines, NewLineCharacter);
-			Internal_TextChanged();
-
-			if (sel != null)
-			{
-				selectionrenderer.SelectionStartPosition = sel.StartPosition;
-				selectionrenderer.SelectionEndPosition = sel.EndPosition;
-				selectionrenderer.HasSelection = true;
-				selectionrenderer.IsSelecting = false;
-			}
-			else
-				ForceClearSelection();
-			UpdateAll();
+			HasFocus = false;
+			EditContext.NotifyFocusLeave();
+			inputPane.TryHide();
+			ChangeCursor(CoreCursorType.Arrow);
 		}
-
-		//Syntaxhighlighting
 		private void UpdateSyntaxHighlighting()
 		{
 			if (_CodeLanguage == null || !SyntaxHighlighting)
@@ -602,9 +579,13 @@ namespace TextControlBox_TestApp.TextControlBox
 			}
 		}
 
+
 		//Handle keyinputs
 		private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs e)
 		{
+			if (!HasFocus)
+				return;
+
 			var ctrl = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
 			var shift = Window.Current.CoreWindow.GetKeyState(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down);
 			if (ctrl && !shift)
@@ -815,7 +796,6 @@ namespace TextControlBox_TestApp.TextControlBox
 
 			AddCharacter(args.Text);
 		}
-
 		//Pointer-events:
 		private void CoreWindow_PointerMoved(CoreWindow sender, PointerEventArgs args)
 		{
@@ -995,8 +975,16 @@ namespace TextControlBox_TestApp.TextControlBox
 				VerticalScrollbar.Value -= delta;
 			}
 			UpdateAll();
+		}		
+		//Change the cursor when entering/leaving the control
+		private void UserControl_PointerEntered(object sender, PointerRoutedEventArgs e)
+		{
+			ChangeCursor(CoreCursorType.IBeam);
 		}
-
+		private void UserControl_PointerExited(object sender, PointerRoutedEventArgs e)
+		{
+			ChangeCursor(CoreCursorType.Arrow);
+		}
 		//Scrolling
 		private void HorizontalScrollbar_Scroll(object sender, ScrollEventArgs e)
 		{
@@ -1006,7 +994,7 @@ namespace TextControlBox_TestApp.TextControlBox
 		{
 			UpdateAll();
 		}
-
+		//Canvas event
 		private void Canvas_Text_Draw(CanvasControl sender, CanvasDrawEventArgs args)
 		{
 			//TEMPORARY:
@@ -1097,7 +1085,7 @@ namespace TextControlBox_TestApp.TextControlBox
 		private void Canvas_Cursor_Draw(CanvasControl sender, CanvasDrawEventArgs args)
 		{
 			CurrentLine = GetCurrentLine();
-			if (CurrentLine == null || DrawnTextLayout == null)
+			if (CurrentLine == null || DrawnTextLayout == null || !HasFocus)
 				return;
 
 			if (CursorPosition.LineNumber > TotalLines.Count)
@@ -1155,7 +1143,6 @@ namespace TextControlBox_TestApp.TextControlBox
 			CanvasTextLayout LineNumberLayout = TextRenderer.CreateTextLayout(sender, LineNumberTextFormat, LineNumberTextToRender, (float)sender.Size.Width - SpaceBetweenLineNumberAndText, (float)sender.Size.Height);
 			args.DrawingSession.DrawTextLayout(LineNumberLayout, 0, SingleLineHeight, LineNumberColorBrush);
 		}
-
 		//Internal events:
 		private void Internal_TextChanged(string text = null)
 		{
@@ -1181,18 +1168,25 @@ namespace TextControlBox_TestApp.TextControlBox
 			}
 			SelectionChanged?.Invoke(this, args);
 		}
-
-		private void UserControl_FocusEngaged(Control sender, FocusEngagedEventArgs args)
+		//Focus:
+		private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
 		{
-			inputPane.TryShow();
-			ChangeCursor(CoreCursorType.IBeam);
+			//Check whether the cursor is inside the bounds of the Control
+			Rect contentRect = Utils.GetElementRect(MainGrid);
+			if (contentRect.Contains(args.CurrentPoint.Position))
+			{
+				SetFocus();
+				Focus(FocusState.Programmatic);
+			}
+			else
+			{
+				RemoveFocus();
+			}
 		}
-		private void UserControl_FocusDisengaged(Control sender, FocusDisengagedEventArgs args)
+		private void EditContext_FocusRemoved(CoreTextEditContext sender, object args)
 		{
-			inputPane.TryHide();
-			ChangeCursor(CoreCursorType.Arrow);
+			RemoveFocus();
 		}
-
 		//Cursor:
 		private void ChangeCursor(CoreCursorType CursorType)
 		{
@@ -1352,6 +1346,46 @@ namespace TextControlBox_TestApp.TextControlBox
 			selectionrenderer.HasSelection = true;
 			Canvas_Selection.Invalidate();
 		}
+		public void Undo()
+		{
+			if (IsReadonly)
+				return;
+
+			//Do the Undo
+			var sel = UndoRedo.Undo(TotalLines, NewLineCharacter);
+			Internal_TextChanged();
+
+			if (sel != null)
+			{
+				selectionrenderer.SelectionStartPosition = sel.StartPosition;
+				selectionrenderer.SelectionEndPosition = sel.EndPosition;
+				selectionrenderer.HasSelection = true;
+				selectionrenderer.IsSelecting = false;
+			}
+			else
+				ForceClearSelection();
+			UpdateAll();
+		}
+		public void Redo()
+		{
+			if (IsReadonly)
+				return;
+
+			//Do the Redo
+			var sel = UndoRedo.Redo(TotalLines, NewLineCharacter);
+			Internal_TextChanged();
+
+			if (sel != null)
+			{
+				selectionrenderer.SelectionStartPosition = sel.StartPosition;
+				selectionrenderer.SelectionEndPosition = sel.EndPosition;
+				selectionrenderer.HasSelection = true;
+				selectionrenderer.IsSelecting = false;
+			}
+			else
+				ForceClearSelection();
+			UpdateAll();
+		}
 
 		public void ScrollOneLineUp()
 		{
@@ -1462,9 +1496,13 @@ namespace TextControlBox_TestApp.TextControlBox
 		public event SelectionChangedEvent SelectionChanged;
 		public delegate void ZoomChangedEvent(TextControlBox sender, int ZoomFactor);
 		public event ZoomChangedEvent ZoomChanged;
+		public delegate void GotFocusEvent(TextControlBox sender);
+		public new event GotFocusEvent GotFocus;
+		public delegate void LostFocusEvent(TextControlBox sender);
+		public new event LostFocusEvent LostFocus;
 	}
 
-	public class ScrollBarPosition
+    public class ScrollBarPosition
 	{
 		public ScrollBarPosition(ScrollBarPosition ScrollBarPosition)
 		{

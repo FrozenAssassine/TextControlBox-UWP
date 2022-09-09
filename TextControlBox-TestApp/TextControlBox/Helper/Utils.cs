@@ -2,6 +2,7 @@
 using Microsoft.Graphics.Canvas.Text;
 using System.Collections.Generic;
 using Windows.Foundation;
+using Windows.UI.Xaml;
 
 namespace TextControlBox_TestApp.TextControlBox.Helper
 {
@@ -66,6 +67,10 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             string First = Index < Text.Length ? Text.Remove(Index) : Text;
             string Second = Index < Text.Length ? Text.Substring(Index) : "";
             return new string[] { First, Second };
+        }
+        public static Rect GetElementRect(FrameworkElement element)
+        {
+            return new Rect(element.TransformToVisual(null).TransformPoint(new Point()), new Size(element.ActualWidth, element.ActualHeight));
         }
     }
 }
