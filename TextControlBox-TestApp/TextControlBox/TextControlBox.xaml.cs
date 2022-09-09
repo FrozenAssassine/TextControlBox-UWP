@@ -545,13 +545,14 @@ namespace TextControlBox_TestApp.TextControlBox
 		}
 
 		private void SetFocus()
-        {
+		{
 			if (!HasFocus)
 				GotFocus?.Invoke(this);
 			HasFocus = true;
 			EditContext.NotifyFocusEnter();
 			inputPane.TryShow();
 			ChangeCursor(CoreCursorType.IBeam);
+		}
 
 		private void RemoveFocus()
         {
