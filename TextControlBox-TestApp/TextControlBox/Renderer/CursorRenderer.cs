@@ -41,13 +41,16 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
         }
 
         //Return the cursor Width
-        public static void RenderCursor(CanvasTextLayout TextLayout, int CharacterPosition, float XOffset, float Y, float FontSize, CanvasDrawEventArgs args, CanvasSolidColorBrush CursorColorBrush)
+        public static void RenderCursor(CanvasTextLayout TextLayout, int CharacterPosition, float XOffset, float Y, float FontSize, CursorSize CustomSize, CanvasDrawEventArgs args, CanvasSolidColorBrush CursorColorBrush)
         {
             if (TextLayout == null)
                 return;
 
             Vector2 vector = TextLayout.GetCaretPosition(CharacterPosition < 0 ? 0 : CharacterPosition, false);
-            args.DrawingSession.FillRectangle(vector.X + XOffset, Y, 1, FontSize, CursorColorBrush);
+            if(CustomSize == null)
+                args.DrawingSession.FillRectangle(vector.X + XOffset, Y, 1, FontSize, CursorColorBrush);
+            else
+                args.DrawingSession.FillRectangle(vector.X + XOffset + CustomSize.OffsetX, Y + CustomSize.OffsetY, (float)CustomSize.Width, (float)CustomSize.Height, CursorColorBrush);
         }
     }
 }
