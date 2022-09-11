@@ -475,19 +475,32 @@ namespace TextControlBox_TestApp.TextControlBox
 
 			ChangeCursor(CoreCursorType.IBeam);
 			DragDropSelection = false;
-			UpdateText();
-			UpdateCursor();
-			UpdateSelection();
+			UpdateAll();
 		}
 		private void EndDragDropSelection()
 		{
+			DragDropSelection = false;
 			ClearSelection();
 			UpdateSelection();
-			DragDropSelection = false;
 			ChangeCursor(CoreCursorType.IBeam);
 			selectionrenderer.IsSelecting = false;
 			UpdateCursor();
 		}
+		private bool DragDropOverSelection(Point CurPos)
+		{
+			if (selectionrenderer.CursorIsInSelection(CursorPosition, TextSelection) ||
+				selectionrenderer.PointerIsOverSelection(CurPos, TextSelection, DrawnTextLayout))
+			{
+				ChangeCursor(CoreCursorType.UniversalNo);
+				return true;
+			}
+            else
+            {
+				ChangeCursor(CoreCursorType.IBeam);
+				return false;
+			}
+		}
+
 		private void UpdateScrollToShowCursor()
 		{
 			if (NumberOfStartLine + RenderedLines.Count <= CursorPosition.LineNumber)
@@ -543,7 +556,6 @@ namespace TextControlBox_TestApp.TextControlBox
 				}
 			}*/ 
 		}
-
 		private void SetFocus()
 		{
 			if (!HasFocus)
@@ -553,7 +565,6 @@ namespace TextControlBox_TestApp.TextControlBox
 			inputPane.TryShow();
 			ChangeCursor(CoreCursorType.IBeam);
 		}
-
 		private void RemoveFocus()
         {
 			if (HasFocus)
@@ -580,7 +591,6 @@ namespace TextControlBox_TestApp.TextControlBox
 				}
 			}
 		}
-
 
 		//Handle keyinputs
 		private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs e)
@@ -835,7 +845,7 @@ namespace TextControlBox_TestApp.TextControlBox
 		private void Canvas_Selection_PointerReleased(object sender, PointerRoutedEventArgs e)
 		{
 			//End text drag/drop -> insert text at cursorposition
-			if (DragDropSelection && Window.Current.CoreWindow.PointerCursor.Type != CoreCursorType.UniversalNo)
+			if (DragDropSelection && !DragDropOverSelection(e.GetCurrentPoint(sender as UIElement).Position))
 			{
 				DoDragDropSelection();
 			}
@@ -854,14 +864,7 @@ namespace TextControlBox_TestApp.TextControlBox
 			//Drag drop text -> move the cursor to get the insertion point
 			if (DragDropSelection)
 			{
-				if (selectionrenderer.CursorIsInSelection(CursorPosition, TextSelection) ||
-					selectionrenderer.PointerIsOverSelection(e.GetCurrentPoint(Canvas_Selection).Position, TextSelection, DrawnTextLayout))
-				{
-					ChangeCursor(CoreCursorType.UniversalNo);
-				}
-				else
-					ChangeCursor(CoreCursorType.Arrow);
-
+				DragDropOverSelection(e.GetCurrentPoint(sender as UIElement).Position);
 				UpdateCursorVariable(e.GetCurrentPoint(Canvas_Selection).Position);
 				UpdateCursor();
 			}
@@ -915,22 +918,24 @@ namespace TextControlBox_TestApp.TextControlBox
 				{
 					UpdateCursorVariable(PointerPosition);
 
-					//Text dragging/dropping
+					//Text drag/drop
 					if (TextSelection != null)
 					{
 						if (selectionrenderer.PointerIsOverSelection(PointerPosition, TextSelection, DrawnTextLayout) && !DragDropSelection)
 						{
 							PointerClickCount = 0;
-							ChangeCursor(CoreCursorType.UniversalNo);
 							DragDropSelection = true;
+							ChangeCursor(CoreCursorType.UniversalNo);
 							return;
 						}
-						if (DragDropSelection)
+						//End the selection by pressing on it
+						if (DragDropSelection && DragDropOverSelection(PointerPosition))
 						{
 							EndDragDropSelection();
 						}
 					}
 
+					//Clear the selection when pressing anywhere
 					selectionrenderer.SelectionStartPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
 					if (selectionrenderer.HasSelection)
 					{
@@ -1432,7 +1437,6 @@ namespace TextControlBox_TestApp.TextControlBox
 				ScrollLineIntoView(Line);
 			}
 		}
-
 		public void ScrollOneLineUp()
 		{
 			VerticalScrollbar.Value -= SingleLineHeight;
