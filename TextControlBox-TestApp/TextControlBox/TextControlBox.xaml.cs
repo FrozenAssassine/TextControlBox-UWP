@@ -855,7 +855,7 @@ namespace TextControlBox_TestApp.TextControlBox
 			if (DragDropSelection)
 			{
 				if (selectionrenderer.CursorIsInSelection(CursorPosition, TextSelection) ||
-					selectionrenderer.PointerIsOverSelection(e.GetCurrentPoint(sender as UIElement).Position, TextSelection, DrawnTextLayout))
+					selectionrenderer.PointerIsOverSelection(e.GetCurrentPoint(Canvas_Selection).Position, TextSelection, DrawnTextLayout))
 				{
 					ChangeCursor(CoreCursorType.UniversalNo);
 				}
@@ -985,7 +985,34 @@ namespace TextControlBox_TestApp.TextControlBox
 				selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
 			}
 			UpdateAll();
-		}		
+		}
+		private void Canvas_LineNumber_PointerMoved(object sender, PointerRoutedEventArgs e)
+		{
+			if (selectionrenderer.IsSelecting)
+			{
+				var CurPoint = e.GetCurrentPoint(sender as UIElement).Position;
+				CurPoint.X = 0; //Set 0 to select whole lines
+				CurPoint.Y += SingleLineHeight;
+
+				//Select the last line completely
+				if(CurPoint.Y / SingleLineHeight > RenderedLines.Count)
+                {
+					CurPoint.X = Utils.MeasureLineLenght(CanvasDevice.GetSharedDevice(), CurrentLine, TextFormat).Width + 100;
+                }
+				
+				UpdateCursorVariable(CurPoint);
+				UpdateCursor();
+
+				selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
+				UpdateSelection();
+			}
+		}
+		private void Canvas_LineNumber_PointerPressed(object sender, PointerRoutedEventArgs e)
+		{
+			selectionrenderer.IsSelecting = true;
+			//Select the line where the cursor is over
+			SelectLine(CursorRenderer.GetCursorLineFromPoint(e.GetCurrentPoint(sender as UIElement).Position, SingleLineHeight, RenderedLines.Count, NumberOfStartLine));
+		}
 		//Change the cursor when entering/leaving the control
 		private void UserControl_PointerEntered(object sender, PointerRoutedEventArgs e)
 		{
@@ -1522,7 +1549,7 @@ namespace TextControlBox_TestApp.TextControlBox
 		public new event GotFocusEvent GotFocus;
 		public delegate void LostFocusEvent(TextControlBox sender);
 		public new event LostFocusEvent LostFocus;
-	}
+    }
 
     public class ScrollBarPosition
 	{
