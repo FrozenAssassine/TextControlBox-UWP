@@ -6,6 +6,32 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 {
     public class ListHelper
     {
+        public struct ValueResult
+        {
+            public ValueResult(int Index, int Count)
+            {
+                this.Index = Index;
+                this.Count = Count;
+            }
+            public int Index;
+            public int Count;
+        }
+        private static ValueResult CheckValues(List<Line> TotalLines, int Index, int Count)
+        {
+            if (Index >= TotalLines.Count)
+            {
+                Index = TotalLines.Count - 1 < 0 ? 0 : TotalLines.Count - 1;
+                Count = 0;
+            }
+            if (Index + Count - 1 >= TotalLines.Count)
+            {
+                int difference = TotalLines.Count - Index - 1;
+                if (difference >= 0)
+                    Count += difference;
+            }
+            return new ValueResult(Index, Count);
+        }
+
         public static Line GetLine(List<Line> TotalLines, int Index)
         {
             if (TotalLines.Count == 0)
@@ -19,23 +45,13 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
         public static List<Line> GetLines(List<Line> TotalLines, int Index, int Count)
         {
-            if (Index >= TotalLines.Count)
-            {
-                Index = TotalLines.Count - 1;
-                Count = 0;
-            }
-            else if (Index + Count - 1 >= TotalLines.Count)
-            {
-                int difference = TotalLines.Count - Index + Count - 1;
-                if (difference <= 0)
-                    Count += difference;
-            }
-            return TotalLines.GetRange(Index, Count);
+            var res = CheckValues(TotalLines, Index, Count);
+            return TotalLines.GetRange(res.Index, res.Count);
         }
 
         public static string GetLinesAsString(List<Line> TotalLines, int Index, int Count, string NewLineCharacter)
         {
-            return string.Join(NewLineCharacter, GetLines(TotalLines, Index, Count).Select(a => a.Content));
+            return GetLinesAsString(GetLines(TotalLines, Index, Count), NewLineCharacter);
         }
         public static string GetLinesAsString(List<Line> Lines, string NewLineCharacter)
         {
@@ -71,26 +87,13 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
         public static void RemoveRange(List<Line> TotalLines, int Index, int Count)
         {
-            if (Index >= TotalLines.Count)
-            {
-                Index = TotalLines.Count - 1;
-                Count = 0;
-            }
-            else if (Index + Count - 1 >= TotalLines.Count)
-            {
-                int difference = TotalLines.Count - Index + Count - 1;
-                if (difference > 0)
-                    Count = difference;
-            }
-            Debug.WriteLine(Index + "::" + Count);
-            TotalLines.RemoveRange(Index, Count);
+            var res = CheckValues(TotalLines, Index, Count);
+            TotalLines.RemoveRange(res.Index, res.Count);
         }
         public static void DeleteAt(List<Line> TotalLines, int Index)
         {
             if (Index >= TotalLines.Count)
-                Index = TotalLines.Count - 1;
-            if (Index < 0)
-                Index = 0;
+                Index = TotalLines.Count - 1 < 0 ? TotalLines.Count - 1 : 0;
 
             TotalLines.RemoveAt(Index);
         }
