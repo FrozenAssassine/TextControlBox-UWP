@@ -20,6 +20,9 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         //Order the selection that StartPosition is always smaller than EndPosition
         public static TextSelection OrderTextSelection(TextSelection Selection)
         {
+            if (Selection == null)
+                return Selection;
+
             int StartLine = Math.Min(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
             int EndLine = Math.Max(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
             int StartPosition;
