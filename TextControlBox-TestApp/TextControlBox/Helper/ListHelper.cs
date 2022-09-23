@@ -27,7 +27,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             {
                 int difference = TotalLines.Count - Index - 1;
                 if (difference >= 0)
-                    Count += difference;
+                    Count = difference;
             }
             return new ValueResult(Index, Count);
         }
