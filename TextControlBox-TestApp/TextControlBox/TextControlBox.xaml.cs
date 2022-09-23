@@ -997,10 +997,17 @@ namespace TextControlBox_TestApp.TextControlBox
 			{
 				var CurPoint = e.GetCurrentPoint(sender as UIElement).Position;
 				CurPoint.X = 0; //Set 0 to select whole lines
-				CurPoint.Y += SingleLineHeight;
+
+				if (TextSelection == null)
+					return;
+
+				if(TextSelection.StartPosition.LineNumber < TextSelection.EndPosition.LineNumber)
+                {
+					CurPoint.Y += SingleLineHeight;
+				}
 
 				//Select the last line completely
-				if(CurPoint.Y / SingleLineHeight > RenderedLines.Count)
+				if (CurPoint.Y / SingleLineHeight > RenderedLines.Count)
                 {
 					CurPoint.X = Utils.MeasureLineLenght(CanvasDevice.GetSharedDevice(), CurrentLine, TextFormat).Width + 100;
                 }
