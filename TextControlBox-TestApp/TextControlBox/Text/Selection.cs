@@ -81,8 +81,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
         public static CursorPosition InsertText(TextSelection Selection, CursorPosition CursorPosition, List<Line> TotalLines, string Text, string NewLineCharacter)
         {
-            Debug.WriteLine("--Insert text--");
-
             if (Selection != null)
                 return Replace(Selection, TotalLines, Text, NewLineCharacter);
 
@@ -140,8 +138,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
         public static CursorPosition Replace(TextSelection Selection, List<Line> TotalLines, string Text, string NewLineCharacter)
         {
-            Debug.WriteLine("--Replace text--");
-
             //Just delete the text if the string is emty
             if (Text == "")
             {
@@ -291,7 +287,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
         public static CursorPosition Remove(TextSelection Selection, List<Line> TotalLines)
         {
-            Debug.WriteLine("--Remove text--");
             Selection = OrderTextSelection(Selection);
             int StartLine = Selection.StartPosition.LineNumber;
             int EndLine = Selection.EndPosition.LineNumber;

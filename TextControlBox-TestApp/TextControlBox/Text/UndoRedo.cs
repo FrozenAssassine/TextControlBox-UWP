@@ -39,7 +39,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 }
             }
 
-
             var lines = ListHelper.GetLinesFromString(item.UndoText, NewLineCharacter);
 
             ListHelper.RemoveRange(TotalLines, item.StartLine, item.Count);
@@ -69,10 +68,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         {
             if (item.Selection == null)
             {
-                Debug.WriteLine("Selection is null");
                 var lines = ListHelper.GetLinesFromString(item.RedoText, NewLineCharacter);
-
-                Debug.WriteLine(item.StartLine + "::" + item.Count);
 
                 if (item.IsDeletion)
                     ListHelper.RemoveRange(TotalLines, item.StartLine, item.Count);
@@ -133,7 +129,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
 
             RecordMultiLineUndo(TotalLines, StartLine, Count, Text, RedoText, TextSelection, NewLineCharacter, IsDeletion, ChangeCount);
         }
-        public void RecordMultiLineUndo(List<Line> TotalLines, int StartLine, int Count, string UndoText, string RedoText, TextSelection TextSelection, string NewLineCharacter, bool IsDeletion, bool ChangeCount = true)
+        public void RecordMultiLineUndo(List<Line> TotalLines, int StartLine, int Count, string UndoText, string RedoText, TextSelection TextSelection, string NewLineCharacter, bool IsDeletion, bool ChangeCount = true, bool ExcecutePrevUndoToo = false)
         {
             UndoStack.Push(new UndoRedoItem
             {
@@ -143,7 +139,8 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 Selection = TextSelection,
                 UndoRedoType = UndoRedoType.MultilineEdit,
                 IsDeletion = IsDeletion,
-                RedoText = RedoText
+                RedoText = RedoText,
+                ExcecutePrevUndoToo = ExcecutePrevUndoToo,
             });
         }
         public void RecordNewLineUndo(List<Line> TotalLines, int StartLine, int Count, string UndoText, string RedoText, TextSelection TextSelection, string NewLineCharacter)
@@ -172,13 +169,25 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 return null;
 
             UndoRedoItem item = UndoStack.Pop();
-            RecordRedo(item);
+            if(!item.ExcecutePrevUndoToo)
+                RecordRedo(item);
+            
             if (item.UndoRedoType == UndoRedoType.SingleLineEdit)
                 return DoSingleLineUndo(TotalLines, item);
             else if (item.UndoRedoType == UndoRedoType.NewLineEdit)
                 return DoNewLineUndo(TotalLines, item, NewLineCharacter);
             else
-                return DoMultilineUndo(TotalLines, item, NewLineCharacter);
+            {
+                var res = DoMultilineUndo(TotalLines, item, NewLineCharacter);
+                if (item.ExcecutePrevUndoToo)
+                {
+                    var NewItem = UndoStack.Pop();
+                    RecordRedo(NewItem);
+                    RecordRedo(item);
+                    return DoMultilineUndo(TotalLines, NewItem, NewLineCharacter);
+                }
+                return res;
+            }
         }
         
         /// <summary>
@@ -193,13 +202,25 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 return null;
 
             UndoRedoItem item = RedoStack.Pop();
-            RecordUndo(item);            
-            if (item.UndoRedoType == UndoRedoType.SingleLineEdit)
+            if (!item.ExcecutePrevUndoToo)
+                RecordUndo(item);
+            
+            if (item.UndoRedoType == UndoRedoType.SingleLineEdit)  
                 return DoSingleLineRedo(TotalLines, item);
             else if(item.UndoRedoType == UndoRedoType.NewLineEdit)
                 return DoNewLineRedo(TotalLines, item, NewLineCharacter);
-            else 
-                return DoMultilineRedo(TotalLines, item, NewLineCharacter);
+            else
+            {
+                var res = DoMultilineRedo(TotalLines, item, NewLineCharacter);
+                if (item.ExcecutePrevUndoToo)
+                {
+                    var NewItem = RedoStack.Pop();
+                    RecordUndo(NewItem);
+                    RecordUndo(item);
+                    return DoMultilineRedo(TotalLines, NewItem, NewLineCharacter);
+                }
+                return res;
+            }
         }
 
         /// <summary>
@@ -235,5 +256,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
         public string RedoText { get; set; }
         public TextSelection Selection { get; set; }
         public UndoRedoType UndoRedoType { get; set; }
+        public bool ExcecutePrevUndoToo { get; set; }
     }
 }

@@ -25,6 +25,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using static System.Net.Mime.MediaTypeNames;
 using Color = Windows.UI.Color;
 
 namespace TextControlBox_TestApp.TextControlBox
@@ -187,7 +188,7 @@ namespace TextControlBox_TestApp.TextControlBox
 			CursorPosition.CharacterPosition = CursorRenderer.GetCharacterPositionFromPoint(GetCurrentLine(), CurrentLineTextLayout, Point, (float)-HorizontalScrollbar.Value);
 		}
 
-		private void AddCharacter(string text, bool IgnoreSelection = false)
+		private void AddCharacter(string text, bool IgnoreSelection = false, bool ExcecutePrevUndoToo = false)
 		{
 			if (CurrentLine == null || IsReadonly)
 				return;
@@ -215,7 +216,7 @@ namespace TextControlBox_TestApp.TextControlBox
 				string UndoText = ListHelper.GetLinesAsString(TotalLines, LineNumber, 2, NewLineCharacter);	
 				CursorPosition = Selection.InsertText(TextSelection, CursorPosition, TotalLines, text, NewLineCharacter);
 				string RedoText = ListHelper.GetLinesAsString(TotalLines, LineNumber, SplittedTextLength, NewLineCharacter);
-				UndoRedo.RecordMultiLineUndo(TotalLines, LineNumber, SplittedTextLength + 1, UndoText, RedoText, null, NewLineCharacter, false, false);
+				UndoRedo.RecordMultiLineUndo(TotalLines, LineNumber, SplittedTextLength + 1, UndoText, RedoText, null, NewLineCharacter, false, false, ExcecutePrevUndoToo);
 			}
 			else
 			{
@@ -456,22 +457,14 @@ namespace TextControlBox_TestApp.TextControlBox
 				return;
 
 			string TextToInsert = SelectedText();
+			CursorPosition curpos = new CursorPosition(CursorPosition);
 
-			/*CursorPosition StartLine = Selection.GetMin(TextSelection.StartPosition, TextSelection.EndPosition);
-			int DeleteCount = StartLine.CharacterPosition == 0 ? 0 : 1;
-			if (DeleteCount == 0)
-			{
-				CursorPosition EndLine = Selection.GetMax(TextSelection.StartPosition, TextSelection.EndPosition);
-				DeleteCount = EndLine.CharacterPosition == ListHelper.GetLine(TotalLines, EndLine.LineNumber).Length ? 0 : 1;
-			}
-			*/
-			Selection.Remove(TextSelection, TotalLines);
+			//Delete the selection
+			RemoveText();
 
-			ClearSelection();
+			CursorPosition = curpos;
 
-			CursorPosition.ChangeLineNumber(CursorPosition.LineNumber - TextToInsert.Split(NewLineCharacter).Length);
-
-			CursorPosition = Selection.InsertText(TextSelection, CursorPosition, TotalLines, TextToInsert, NewLineCharacter);
+			AddCharacter(TextToInsert, false, true);
 
 			ChangeCursor(CoreCursorType.IBeam);
 			DragDropSelection = false;
@@ -500,7 +493,6 @@ namespace TextControlBox_TestApp.TextControlBox
 				return false;
 			}
 		}
-
 		private void UpdateScrollToShowCursor()
 		{
 			if (NumberOfStartLine + RenderedLines.Count <= CursorPosition.LineNumber)
@@ -1436,7 +1428,7 @@ namespace TextControlBox_TestApp.TextControlBox
 				ForceClearSelection();
 			UpdateAll();
 		}
-		private void ScrollLineToCenter(int Line)
+		public void ScrollLineToCenter(int Line)
 		{
 			//Check whether the current line is outside the bounds of the visible area
 			if (Line < NumberOfUnrenderedLinesToRenderStart || Line >= NumberOfUnrenderedLinesToRenderStart + RenderedLines.Count)
@@ -1486,6 +1478,31 @@ namespace TextControlBox_TestApp.TextControlBox
 			VerticalScrollbar.Value += RenderedLines.Count * SingleLineHeight;
 			UpdateAll();
 		}
+		public void ReplaceSelection(string text, CursorPosition InsertPosition = null)
+        {
+			if (TextSelection == null)
+				AddCharacter(Text);
+			else
+			{
+				var OrderedSelection = Selection.OrderTextSelection(TextSelection);
+				//Singleline
+				if (OrderedSelection.StartPosition.LineNumber == OrderedSelection.EndPosition.LineNumber)
+				{
+
+				}
+				else //Multiline
+				{
+					TextSelection InsertionPoint = new TextSelection(CursorPosition, CursorPosition);
+
+					UndoRedo.RecordMultiLineUndo(TotalLines, CursorPosition.LineNumber, text.Split(NewLineCharacter).Length, text, TextSelection, NewLineCharacter, text == "");
+					CursorPosition = Selection.Replace(TextSelection, TotalLines, text, NewLineCharacter);
+
+					selectionrenderer.ClearSelection();
+					TextSelection = null;
+					UpdateSelection();
+				}
+			}
+        }
 
 		//Properties:
 		public bool SyntaxHighlighting { get; set; } = true;
@@ -1611,5 +1628,4 @@ namespace TextControlBox_TestApp.TextControlBox
 			return index < 0 ? value : value.Remove(index, removeString.Length);
 		}
 	}
-
 }

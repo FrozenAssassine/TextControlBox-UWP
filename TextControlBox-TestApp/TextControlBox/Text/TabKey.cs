@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
+using Windows.UI.Text;
 
 namespace TextControlBox_TestApp.TextControlBox.Helper
 {
@@ -9,7 +11,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             if (TextSelection == null)
             {
                 Line Line = ListHelper.GetLine(TotalLines, CursorPosition.LineNumber);
-                //UndoRedo.RecordSingleLineUndo(Line, CursorPosition);
+                UndoRedo.RecordSingleLineUndo(Line.Content, CursorPosition.LineNumber, false);
 
                 if (Line.Content.Contains(TabCharacter, System.StringComparison.Ordinal) && CursorPosition.CharacterPosition > 0)
                     CursorPosition.SubtractFromCharacterPos(1);
@@ -19,25 +21,29 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             }
             else
             {
-                TextSelection = Selection.OrderTextSelection(TextSelection);
-                var Lines = Selection.GetPointerToSelectedLines(TotalLines, TextSelection);
-                //Undo
-                string UndoLines = Selection.GetSelectedTextWithoutCharacterPos(TotalLines, TextSelection, NewLineCharacter);
+                var OrderedSelection = Selection.OrderTextSelection(TextSelection);
+                var Lines = Selection.GetPointerToSelectedLines(TotalLines, OrderedSelection);
+
+                string UndoText = Selection.GetSelectedTextWithoutCharacterPos(TotalLines, OrderedSelection, NewLineCharacter);
 
                 for (int i = 0; i < Lines.Count; i++)
                 {
                     Line Line = Lines[i];
                     if (i == 0 && Line.Content.Contains(TabCharacter, System.StringComparison.Ordinal) && CursorPosition.CharacterPosition > 0)
-                        TextSelection.StartPosition.SubtractFromCharacterPos(1);
+                        OrderedSelection.StartPosition.SubtractFromCharacterPos(1);
                     else if (i == Lines.Count - 1 && Line.Content.Contains(TabCharacter, System.StringComparison.Ordinal))
-                        TextSelection.EndPosition.SubtractFromCharacterPos(1);
+                        OrderedSelection.EndPosition.SubtractFromCharacterPos(1);
 
                     Line.SetText(Line.Content.RemoveFirstOccurence(TabCharacter));
                 }
+                string RedoText = Selection.GetSelectedTextWithoutCharacterPos(TotalLines, OrderedSelection, NewLineCharacter);
+                TextSelection tempSel = new TextSelection(OrderedSelection);
+                tempSel.StartPosition.CharacterPosition = 0;
+                tempSel.EndPosition.CharacterPosition = ListHelper.GetLine(TotalLines, TextSelection.EndPosition.LineNumber).Length;
+                
+                UndoRedo.RecordMultiLineUndo(TotalLines, OrderedSelection.StartPosition.LineNumber, Lines.Count, UndoText, RedoText, tempSel, NewLineCharacter, false);
 
-                //UndoRedo.RecordMultiLineUndo(TextSelection.StartPosition.LineNumber + 1, UndoLines, UndoLines.Split(NewLineCharacter).Length, TextSelection);
-
-                return new TextSelection(new CursorPosition(TextSelection.StartPosition), new CursorPosition(TextSelection.EndPosition));
+                return new TextSelection(new CursorPosition(OrderedSelection.StartPosition), new CursorPosition(TextSelection.EndPosition));
             }
         }
 
@@ -46,7 +52,7 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             if (TextSelection == null)
             {
                 Line Line = ListHelper.GetLine(TotalLines, CursorPosition.LineNumber);
-                //UndoRedo.RecordSingleLineUndo(Line, CursorPosition);
+                UndoRedo.RecordSingleLineUndo(Line.Content, CursorPosition.LineNumber, false);
 
                 Line.AddText(TabCharacter, CursorPosition.CharacterPosition);
 
@@ -57,8 +63,6 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
             {
                 var Lines = Selection.GetPointerToSelectedLines(TotalLines, TextSelection);
                 TextSelection = Selection.OrderTextSelection(TextSelection);
-                //Undo
-                string UndoLines = Selection.GetSelectedTextWithoutCharacterPos(TotalLines, TextSelection, NewLineCharacter);
 
                 if (TextSelection.StartPosition.LineNumber == TextSelection.EndPosition.LineNumber) //Singleline
                 {
@@ -66,15 +70,24 @@ namespace TextControlBox_TestApp.TextControlBox.Helper
                 }
                 else
                 {
+                    string UndoText = Selection.GetSelectedTextWithoutCharacterPos(TotalLines, TextSelection, NewLineCharacter);
+
                     for (int i = 0; i < Lines.Count; i++)
                     {
                         Lines[i].AddText(TabCharacter, 0);
                     }
-                    TextSelection.StartPosition.AddToCharacterPos(1);
-                    TextSelection.EndPosition.AddToCharacterPos(1);
-                }
+                    string RedoText = Selection.GetSelectedTextWithoutCharacterPos(TotalLines, TextSelection, NewLineCharacter);
 
-                //UndoRedo.RecordMultiLineUndo(TextSelection.StartPosition.LineNumber + 1, UndoLines, UndoLines.Split(NewLineCharacter).Length, TextSelection);
+                    TextSelection.EndPosition.AddToCharacterPos(1);
+                    TextSelection.StartPosition.AddToCharacterPos(1);
+
+                    TextSelection tempSel = new TextSelection(TextSelection);
+                    tempSel.StartPosition.CharacterPosition = 0;
+                    tempSel.EndPosition.CharacterPosition = ListHelper.GetLine(TotalLines, TextSelection.EndPosition.LineNumber).Length;
+
+                    UndoRedo.RecordMultiLineUndo(TotalLines, TextSelection.StartPosition.LineNumber, Lines.Count, UndoText, RedoText, tempSel, NewLineCharacter, false);
+
+                }
 
                 return new TextSelection(new CursorPosition(TextSelection.StartPosition), new CursorPosition(TextSelection.EndPosition));
             }
