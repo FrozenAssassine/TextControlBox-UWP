@@ -281,7 +281,7 @@ namespace TextControlBox
 			}
 			else
 			{
-				AddCharacter(""); //Replace the selection by nothing
+				AddCharacter(""); //Replace the selection with nothing
 				ClearSelection();
 				UpdateSelection();
 			}
@@ -332,9 +332,8 @@ namespace TextControlBox
 			}
 			else
 			{
-				AddCharacter(""); //Replace the selection by nothing
-				selectionrenderer.ClearSelection();
-				TextSelection = null;
+				AddCharacter(""); //Replace the selection with nothing
+				ClearSelection();
 				UpdateSelection();
 			}
 
@@ -890,8 +889,12 @@ namespace TextControlBox
 		private void Canvas_Selection_PointerPressed(object sender, PointerRoutedEventArgs e)
 		{
 			Point PointerPosition = e.GetCurrentPoint(sender as UIElement).Position;
+			bool LeftButtonPressed = e.GetCurrentPoint(sender as UIElement).Properties.IsLeftButtonPressed;
+			bool RightButtonPressed = e.GetCurrentPoint(sender as UIElement).Properties.IsRightButtonPressed;
+			
+			if (LeftButtonPressed)
+				PointerClickCount++;
 
-			PointerClickCount++;
 			if (PointerClickCount == 3)
 			{
 				SelectLine(CursorPosition.LineNumber);
@@ -905,14 +908,23 @@ namespace TextControlBox
 			}
 			else
 			{
-				bool IsShiftPressed = Window.Current.CoreWindow.GetKeyState(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down);
-				bool LeftButtonPressed = e.GetCurrentPoint(sender as UIElement).Properties.IsLeftButtonPressed;
 
 				//Show the onscreenkeyboard if no physical keyboard is attached
 				inputPane.TryShow();
 
+				//Show the contextflyout
+				if(RightButtonPressed)
+                {
+                    if (!ContextFlyoutDisabled && ContextFlyout != null)
+                    {
+						ContextFlyout.ShowAt(sender as FrameworkElement, new FlyoutShowOptions { Position = PointerPosition});
+                    }
+					else
+						return;
+                }
+
 				//Shift + click = set selection
-				if (IsShiftPressed && LeftButtonPressed)
+				if (Window.Current.CoreWindow.GetKeyState(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down) && LeftButtonPressed)
 				{
 					UpdateCursorVariable(PointerPosition);
 
@@ -1586,7 +1598,24 @@ namespace TextControlBox
 		public bool IsReadonly { get; set; } = false;
 		[Description("Change the size of the cursor. Use null for the default size")]
 		public CursorSize CursorSize { get => _CursorSize; set { _CursorSize = value; UpdateCursor(); } }
-		
+		public new MenuFlyout ContextFlyout
+		{
+			get { return FlyoutHelper.MenuFlyout; }
+			set
+			{
+				//Use the inbuild flyout
+				if (value == null)
+				{
+					FlyoutHelper.CreateFlyout(this);
+				}
+				else //Use a custom flyout
+				{
+					FlyoutHelper.MenuFlyout = value;
+				}
+			}
+		}
+		public bool ContextFlyoutDisabled { get; set; }
+
 		//Events:
 		public delegate void TextChangedEvent(TextControlBox sender, string Text);
 		public event TextChangedEvent TextChanged;
@@ -1600,7 +1629,6 @@ namespace TextControlBox
 		public new event LostFocusEvent LostFocus;
     }
 
-	public enum TabType { Spaces, TabStop }
 	public class ScrollBarPosition
 	{
 		public ScrollBarPosition(ScrollBarPosition ScrollBarPosition)
