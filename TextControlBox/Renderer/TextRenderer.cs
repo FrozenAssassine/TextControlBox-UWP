@@ -1,6 +1,7 @@
 ﻿using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
 using Windows.Foundation;
+using Windows.UI.Xaml.Media;
 
 namespace TextControlBox_TestApp.TextControlBox.Renderer
 {
@@ -12,7 +13,7 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                 TextLayout.Dispose();
             return CreateTextLayout(ResourceCreator, TextFormat, Text, targetSize);
         }
-        public static CanvasTextFormat CreateCanvasTextFormat(float ZoomedFontSize)
+        public static CanvasTextFormat CreateCanvasTextFormat(float ZoomedFontSize, FontFamily FontFamily)
         {
             CanvasTextFormat textFormat;
             textFormat = new CanvasTextFormat()
@@ -24,7 +25,7 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                 LineSpacing = ZoomedFontSize + 2,
             };
             textFormat.IncrementalTabStop = ZoomedFontSize * 3; //default 137px
-            textFormat.FontFamily = "Consolas";
+            textFormat.FontFamily = FontFamily.Source;
             textFormat.TrimmingGranularity = CanvasTextTrimmingGranularity.None;
             textFormat.TrimmingSign = CanvasTrimmingSign.None;
             return textFormat;
@@ -37,7 +38,7 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
         {
             return new CanvasTextLayout(ResourceCreator, Text, TextFormat, Width, Height);
         }
-        public static CanvasTextFormat CreateLinenumberTextFormat(float FontSize)
+        public static CanvasTextFormat CreateLinenumberTextFormat(float FontSize, FontFamily FontFamily)
         {
             CanvasTextFormat textFormat;
 
@@ -49,7 +50,7 @@ namespace TextControlBox_TestApp.TextControlBox.Renderer
                 WordWrapping = CanvasWordWrapping.NoWrap,
                 LineSpacing = FontSize + 2,
             };
-            textFormat.FontFamily = "Consolas";
+            textFormat.FontFamily = FontFamily.Source;
             textFormat.TrimmingGranularity = CanvasTextTrimmingGranularity.None;
             textFormat.TrimmingSign = CanvasTrimmingSign.None;
             return textFormat;
