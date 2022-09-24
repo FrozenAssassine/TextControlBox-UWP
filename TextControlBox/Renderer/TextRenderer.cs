@@ -3,7 +3,7 @@ using Microsoft.Graphics.Canvas.Text;
 using Windows.Foundation;
 using Windows.UI.Xaml.Media;
 
-namespace TextControlBox_TestApp.TextControlBox.Renderer
+namespace TextControlBox.Renderer
 {
     public class TextRenderer
     {

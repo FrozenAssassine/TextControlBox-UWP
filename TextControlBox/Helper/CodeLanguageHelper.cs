@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using TextControlBox_TestApp.TextControlBox.Languages;
+using TextControlBox.Languages;
 
-namespace TextControlBox_TestApp.TextControlBox.Helper
+namespace TextControlBox.Helper
 {
     public class CodeLanguageHelper
     {

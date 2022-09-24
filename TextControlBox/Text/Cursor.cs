@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using TextControlBox.Helper;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 
-namespace TextControlBox_TestApp.TextControlBox.Helper
+namespace TextControlBox.Text
 {
     public class Cursor
     {

@@ -2,7 +2,7 @@
 using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 
-namespace TextControlBox_TestApp.TextControlBox.Renderer
+namespace TextControlBox.Renderer
 {
     public class LineHighlighter
     {

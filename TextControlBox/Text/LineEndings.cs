@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace TextControlBox_TestApp.TextControlBox.Helper
+namespace TextControlBox.Text
 {
     public class LineEndings
     {

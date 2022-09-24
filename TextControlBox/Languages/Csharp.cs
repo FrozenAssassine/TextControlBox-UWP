@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
-using TextControlBox_TestApp.TextControlBox.Helper;
+using TextControlBox.Helper;
 using Windows.UI;
 
-namespace TextControlBox_TestApp.TextControlBox.Languages
+namespace TextControlBox.Languages
 {
     public class Csharp : CodeLanguage
     {

@@ -1,10 +1,11 @@
 ﻿using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
 using System.Collections.Generic;
+using TextControlBox.Text;
 using Windows.Foundation;
 using Windows.UI.Xaml;
 
-namespace TextControlBox_TestApp.TextControlBox.Helper
+namespace TextControlBox.Helper
 {
     public class Utils
     {

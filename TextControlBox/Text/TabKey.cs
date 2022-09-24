@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using TextControlBox.Helper;
 using Windows.UI.Text;
 
-namespace TextControlBox_TestApp.TextControlBox.Helper
+namespace TextControlBox.Text
 {
     public class TabKey
     {

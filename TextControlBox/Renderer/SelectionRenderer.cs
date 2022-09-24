@@ -3,11 +3,11 @@ using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using TextControlBox_TestApp.TextControlBox.Helper;
+using TextControlBox.Text;
 using Windows.Foundation;
 using Windows.UI;
 
-namespace TextControlBox_TestApp.TextControlBox.Renderer
+namespace TextControlBox.Renderer
 {
     public class SelectionRenderer
     {

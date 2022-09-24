@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using TextControlBox.Helper;
 
-namespace TextControlBox_TestApp.TextControlBox.Helper
+namespace TextControlBox.Text
 {
     public class UndoRedo
     {

@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using TextControlBox.Text;
 
-namespace TextControlBox_TestApp.TextControlBox.Helper
+namespace TextControlBox.Helper
 {
     public class ListHelper
     {

@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using TextControlBox.Text;
 
-namespace TextControlBox_TestApp.TextControlBox.Helper
+namespace TextControlBox.Helper
 {
     public class DebugHelper
     {

@@ -2,9 +2,10 @@
 using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using System.Numerics;
+using TextControlBox.Text;
 using Windows.Foundation;
 
-namespace TextControlBox_TestApp.TextControlBox.Renderer
+namespace TextControlBox.Renderer
 {
     public class CursorRenderer
     {

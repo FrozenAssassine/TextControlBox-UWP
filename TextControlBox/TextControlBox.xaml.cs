@@ -11,8 +11,9 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using TextControlBox_TestApp.TextControlBox.Helper;
-using TextControlBox_TestApp.TextControlBox.Renderer;
+using TextControlBox.Helper;
+using TextControlBox.Renderer;
+using TextControlBox.Text;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.System;
@@ -25,10 +26,9 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
-using static System.Net.Mime.MediaTypeNames;
 using Color = Windows.UI.Color;
 
-namespace TextControlBox_TestApp.TextControlBox
+namespace TextControlBox
 {
 	public partial class TextControlBox : UserControl
 	{
@@ -99,6 +99,7 @@ namespace TextControlBox_TestApp.TextControlBox
 		//Classes
 		private readonly SelectionRenderer selectionrenderer;
 		private readonly UndoRedo UndoRedo = new UndoRedo();
+		private readonly FlyoutHelper FlyoutHelper;
 
 		public TextControlBox()
 		{
@@ -113,7 +114,9 @@ namespace TextControlBox_TestApp.TextControlBox
 			EditContext.FocusRemoved += EditContext_FocusRemoved;
 			//Classes & Variables:
 			selectionrenderer = new SelectionRenderer(SelectionColor);
+			FlyoutHelper = new FlyoutHelper(this);
 			inputPane = InputPane.GetForCurrentView();
+
 
 			//Events:
 			Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
@@ -1206,7 +1209,7 @@ namespace TextControlBox_TestApp.TextControlBox
 		}
 		private void Internal_CursorChanged()
 		{
-			SelectionChangedEventHandler args = new SelectionChangedEventHandler
+            Text.SelectionChangedEventHandler args = new Text.SelectionChangedEventHandler
 			{
 				CharacterPositionInLine = GetCurPosInLine() + 1,
 				LineNumber = CursorPosition.LineNumber,
@@ -1583,11 +1586,11 @@ namespace TextControlBox_TestApp.TextControlBox
 		public bool IsReadonly { get; set; } = false;
 		[Description("Change the size of the cursor. Use null for the default size")]
 		public CursorSize CursorSize { get => _CursorSize; set { _CursorSize = value; UpdateCursor(); } }
-
+		
 		//Events:
 		public delegate void TextChangedEvent(TextControlBox sender, string Text);
 		public event TextChangedEvent TextChanged;
-		public delegate void SelectionChangedEvent(TextControlBox sender, SelectionChangedEventHandler args);
+		public delegate void SelectionChangedEvent(TextControlBox sender, Text.SelectionChangedEventHandler args);
 		public event SelectionChangedEvent SelectionChanged;
 		public delegate void ZoomChangedEvent(TextControlBox sender, int ZoomFactor);
 		public event ZoomChangedEvent ZoomChanged;

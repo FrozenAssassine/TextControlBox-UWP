@@ -1,4 +1,4 @@
-﻿namespace TextControlBox_TestApp.TextControlBox
+﻿namespace TextControlBox.Text
 {
     public class SelectionChangedEventHandler
     {
