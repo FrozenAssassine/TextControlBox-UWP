@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using TextControlBox.Extensions;
 using TextControlBox.Helper;
 using Windows.UI.Text;
 

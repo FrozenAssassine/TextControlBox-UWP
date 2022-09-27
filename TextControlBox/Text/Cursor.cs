@@ -12,12 +12,12 @@ namespace TextControlBox.Text
 
         public static int CursorPositionToIndex(List<Line> TotalLines, CursorPosition CursorPosition)
         {
-            int CursorIndex = 0;
-            for (int i = 0; i < CursorPosition.LineNumber - 1; i++)
+            int CursorIndex = CursorPosition.CharacterPosition;
+            for (int i = 0; i < CursorPosition.LineNumber; i++)
             {
-                CursorIndex += ListHelper.GetLine(TotalLines, i).Length + 1;
+                CursorIndex += TotalLines[i].Length + 1;
             }
-            return CursorIndex + CursorPosition.CharacterPosition;
+            return CursorIndex;
         }
 
         public static bool Equals(CursorPosition CurPos1, CursorPosition CurPos2)
@@ -68,7 +68,7 @@ namespace TextControlBox.Text
         }
 
         //Calculates how many characters the cursor needs to move if control is pressed
-        //Returns 1 if control is not pressed
+        //Returns 1 when control is not pressed
         public static int CalculateStepsToMoveLeft(Line CurrentLine, int CursorCharPosition)
         {
             if (!ControlIsPressed)

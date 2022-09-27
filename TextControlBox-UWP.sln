@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.1.32228.430
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextControlBox-TestApp", "TextControlBox-TestApp\TextControlBox-TestApp.csproj", "{386FA1B4-59CF-48B8-A3F1-F7644850D47D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{2B1B83A3-B887-4ED3-A5D5-83E2C5ABD39F} = {2B1B83A3-B887-4ED3-A5D5-83E2C5ABD39F}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextControlBox", "TextControlBox\TextControlBox.csproj", "{2B1B83A3-B887-4ED3-A5D5-83E2C5ABD39F}"
 EndProject

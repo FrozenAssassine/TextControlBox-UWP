@@ -1,6 +1,7 @@
 ﻿using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
 using System.Collections.Generic;
+using System.Diagnostics;
 using TextControlBox.Text;
 using Windows.Foundation;
 using Windows.UI.Xaml;
@@ -18,6 +19,8 @@ namespace TextControlBox.Helper
         public static Size MeasureLineLenght(CanvasDevice device, Line line, CanvasTextFormat textFormat)
         {
             string text = line.Content;
+            if (text.Length == 0)
+                return new Size(0, 0);
 
             //If the text starts with a tab or a whitespace, replace it with the last character of the line, to
             //get the actual width of the line, because tabs and whitespaces at the beginning are not counted to the lenght
@@ -33,6 +36,7 @@ namespace TextControlBox.Helper
                 text = text += "|";
                 WidthOfPlaceHolder += MeasureTextSize(device, "|", textFormat).Width;
             }
+
             CanvasTextLayout layout = new CanvasTextLayout(device, text, textFormat, 0, 0);
             return new Size(layout.DrawBounds.Width - WidthOfPlaceHolder, layout.DrawBounds.Height);
         }
@@ -72,6 +76,15 @@ namespace TextControlBox.Helper
         public static Rect GetElementRect(FrameworkElement element)
         {
             return new Rect(element.TransformToVisual(null).TransformPoint(new Point()), new Size(element.ActualWidth, element.ActualHeight));
+        }
+        public static int CountCharacters(List<Line> TotalLines)
+        {
+            int Count = 0;
+            for(int i = 0; i<TotalLines.Count; i++)
+            {
+                Count += TotalLines[i].Length + 1;
+            }
+            return Count - 1;
         }
     }
 }

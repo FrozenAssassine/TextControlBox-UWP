@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using TextControlBox.Extensions;
 using TextControlBox.Helper;
 using TextControlBox.Renderer;
 using TextControlBox.Text;
@@ -19,6 +20,7 @@ using Windows.Foundation;
 using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Popups;
+using Windows.UI.Text;
 using Windows.UI.Text.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
@@ -39,6 +41,7 @@ namespace TextControlBox
 		private Color _CursorColor = Color.FromArgb(255, 255, 255, 255);
 		private Color _LineHighlighterColor = Color.FromArgb(50, 0, 0, 0);
 		private Color _LineNumberColor = Color.FromArgb(255, 150, 150, 150);
+		private Color _LineNumberBackground = Color.FromArgb(50, 80, 80, 80);
 		private string NewLineCharacter = "\r\n";
 		private string TabCharacter = "\t";
 		private InputPane inputPane;
@@ -48,7 +51,7 @@ namespace TextControlBox
 		private LineEnding _LineEnding = LineEnding.CRLF;
 		private bool _ShowLineHighlighter = true;
 		private int _FontSize = 18;
-		private int _ZoomFactor = 100; //%
+		private int _ZoomFactor = 101; //%
 
 		float SingleLineHeight { get => TextFormat == null ? 0 : TextFormat.LineSpacing; }
 		float ZoomedFontSize = 0;
@@ -127,6 +130,7 @@ namespace TextControlBox
 
 		private void InitialiseOnStart()
 		{
+			UpdateZoom();
 			if (TotalLines.Count == 0)
 				TotalLines.Add(new Line());
 		}
@@ -204,7 +208,7 @@ namespace TextControlBox
 			UpdateCurrentLineTextLayout();
 			CursorPosition.CharacterPosition = CursorRenderer.GetCharacterPositionFromPoint(GetCurrentLine(), CurrentLineTextLayout, Point, (float)-HorizontalScrollbar.Value);
 		}
-
+		
 		private void AddCharacter(string text, bool IgnoreSelection = false, bool ExcecutePrevUndoToo = false)
 		{
 			if (CurrentLine == null || IsReadonly)
@@ -221,7 +225,7 @@ namespace TextControlBox
 				UndoRedo.RecordSingleLineUndo(CurrentLine.Content, CursorPosition.LineNumber, text == "");
 
 				var CharacterPos = GetCurPosInLine();
-				if (CharacterPos > GetLineContentWidth(CurrentLine) - 1)
+				if (CharacterPos > CurrentLine.Length - 1)
 					CurrentLine.AddToEnd(text);
 				else
 					CurrentLine.AddText(text, CharacterPos);
@@ -405,12 +409,6 @@ namespace TextControlBox
 			Internal_TextChanged();
 		}
 
-		private int GetLineContentWidth(Line line)
-		{
-			if (line == null || line.Content == null)
-				return -1;
-			return line.Length;
-		}
 		private Line GetCurrentLine()
 		{
 			return ListHelper.GetLine(TotalLines, CursorPosition.LineNumber);
@@ -450,7 +448,7 @@ namespace TextControlBox
 				return true;
 			return selectionrenderer.SelectionStartPosition == null || selectionrenderer.SelectionEndPosition == null;
 		}
-		public void SelectSingleWord(CursorPosition CursorPosition)
+		private void SelectSingleWord(CursorPosition CursorPosition)
 		{
 			int Characterpos = CursorPosition.CharacterPosition;
 			//Update variables
@@ -472,7 +470,7 @@ namespace TextControlBox
 			if (TextSelection == null || IsReadonly)
 				return;
 
-			string TextToInsert = SelectedText();
+			string TextToInsert = SelectedText;
 			CursorPosition curpos = new CursorPosition(CursorPosition);
 
 			//Delete the selection
@@ -1148,6 +1146,7 @@ namespace TextControlBox
 
 			if (TextSelection != null && !Selection.Equals(OldTextSelection, TextSelection))
 			{
+				//Update the variables
 				OldTextSelection = new TextSelection(TextSelection);
 				Internal_CursorChanged();
 			}
@@ -1196,7 +1195,7 @@ namespace TextControlBox
 		}
 		private void Canvas_LineNumber_Draw(CanvasControl sender, CanvasDrawEventArgs args)
 		{
-			if (LineNumberTextToRender.Length == 0 || !_ShowLineNumbers)
+			if (LineNumberTextToRender.Length == 0)
 				return;
 
 			if (_ShowLineNumbers)
@@ -1212,7 +1211,8 @@ namespace TextControlBox
 			}
 
 			CanvasTextLayout LineNumberLayout = TextRenderer.CreateTextLayout(sender, LineNumberTextFormat, LineNumberTextToRender, (float)sender.Size.Width - SpaceBetweenLineNumberAndText, (float)sender.Size.Height);
-			args.DrawingSession.DrawTextLayout(LineNumberLayout, 0, SingleLineHeight, LineNumberColorBrush);
+			args.DrawingSession.DrawTextLayout(LineNumberLayout, 10, SingleLineHeight, LineNumberColorBrush);
+			args.DrawingSession.FillRectangle(0, 0, (float)sender.ActualWidth, (float)sender.ActualHeight, _LineNumberBackground);
 		}
 		//Internal events:
 		private void Internal_TextChanged(string text = null)
@@ -1230,12 +1230,12 @@ namespace TextControlBox
 			{
 				var Sel = Selection.GetIndexOfSelection(TotalLines, new TextSelection(selectionrenderer.SelectionStartPosition, selectionrenderer.SelectionEndPosition));
 				args.SelectionLength = Sel.Length;
-				args.SelectionStartIndex = 1 + Sel.Index;
+				args.SelectionStartIndex = Sel.Index;
 			}
 			else
 			{
 				args.SelectionLength = 0;
-				args.SelectionStartIndex = 1 + Cursor.CursorPositionToIndex(TotalLines, new CursorPosition { CharacterPosition = GetCurPosInLine(), LineNumber = CursorPosition.LineNumber });
+				args.SelectionStartIndex = Cursor.CursorPositionToIndex(TotalLines, new CursorPosition { CharacterPosition = GetCurPosInLine(), LineNumber = CursorPosition.LineNumber });
 			}
 			SelectionChanged?.Invoke(this, args);
 		}
@@ -1324,6 +1324,13 @@ namespace TextControlBox
 			UpdateSelection();
 			UpdateCursor();
 		}
+		public void GoToLine(int index)
+        {
+			CursorPosition = selectionrenderer.SelectionEndPosition = selectionrenderer.SelectionStartPosition = new CursorPosition(0, index);
+
+			UpdateSelection();
+			UpdateCursor();
+		}
 		public async void SetText(string text)
 		{
 			if (await IsOverTextLimit(text.Length))
@@ -1366,44 +1373,38 @@ namespace TextControlBox
 		public void Copy()
 		{
 			DataPackage dataPackage = new DataPackage();
-			dataPackage.SetText(LineEndings.ChangeLineEndings(SelectedText(), LineEnding));
+			dataPackage.SetText(LineEndings.ChangeLineEndings(SelectedText, LineEnding));
 			dataPackage.RequestedOperation = DataPackageOperation.Copy;
 			Clipboard.SetContent(dataPackage);
 		}
 		public void Cut()
 		{
 			DataPackage dataPackage = new DataPackage();
-			dataPackage.SetText(LineEndings.ChangeLineEndings(SelectedText(), LineEnding));
+			dataPackage.SetText(LineEndings.ChangeLineEndings(SelectedText, LineEnding));
 			DeleteText(); //Delete the selected text
 			dataPackage.RequestedOperation = DataPackageOperation.Move;
 			Clipboard.SetContent(dataPackage);
 			ClearSelection();
 		}
-		public string SelectedText()
-		{
-			if (TextSelection != null && Selection.WholeTextSelected(TextSelection, TotalLines))
-				return GetText();
-
-			return Selection.GetSelectedText(TotalLines, TextSelection, CursorPosition.LineNumber, NewLineCharacter);
-		}
 		public string GetText()
 		{
 			return String.Join(NewLineCharacter, TotalLines.Select(item => item.Content));
 		}
-		public void SetSelection(CursorPosition StartPosition, CursorPosition EndPosition = null)
-		{
-			//Nothing gets selected:
-			if (EndPosition == null || (StartPosition.LineNumber == EndPosition.LineNumber && StartPosition.CharacterPosition == EndPosition.CharacterPosition))
-			{
-				CursorPosition = new CursorPosition(StartPosition.CharacterPosition, StartPosition.LineNumber - 1);
-			}
-			else
-			{
-				selectionrenderer.SelectionStartPosition = new CursorPosition(StartPosition.CharacterPosition, StartPosition.LineNumber - 1);
-				selectionrenderer.SelectionEndPosition = new CursorPosition(EndPosition.CharacterPosition, StartPosition.LineNumber - 1);
+		public void SetSelection(int start, int length)
+        {
+			var result = Selection.GetSelectionFromPosition(TotalLines, start, length, CharacterCount);	
+			if (result != null)
+            {
+				selectionrenderer.SelectionStartPosition = result.StartPosition;
+				selectionrenderer.SelectionEndPosition = result.EndPosition;
+				if (result.EndPosition != null)
+					CursorPosition = result.EndPosition;
+
 				selectionrenderer.HasSelection = true;
-				Canvas_Selection.Invalidate();
+				selectionrenderer.IsSelecting = false;
 			}
+
+			UpdateSelection();
 			UpdateCursor();
 		}
 		public void SelectAll()
@@ -1413,7 +1414,7 @@ namespace TextControlBox
 				return;
 
 			selectionrenderer.SelectionStartPosition = new CursorPosition(0, 0);
-			CursorPosition = selectionrenderer.SelectionEndPosition = new CursorPosition(ListHelper.GetLine(TotalLines, -1).Length, TotalLines.Count);
+			CursorPosition = selectionrenderer.SelectionEndPosition = new CursorPosition(ListHelper.GetLine(TotalLines, -1).Length, TotalLines.Count - 1);
 			selectionrenderer.HasSelection = true;
 			Canvas_Selection.Invalidate();
 		}
@@ -1457,12 +1458,12 @@ namespace TextControlBox
 				ForceClearSelection();
 			UpdateAll();
 		}
-		public void ScrollLineToCenter(int Line)
+		public void ScrollLineToCenter(int line)
 		{
 			//Check whether the current line is outside the bounds of the visible area
-			if (Line < NumberOfUnrenderedLinesToRenderStart || Line >= NumberOfUnrenderedLinesToRenderStart + RenderedLines.Count)
+			if (line < NumberOfUnrenderedLinesToRenderStart || line >= NumberOfUnrenderedLinesToRenderStart + RenderedLines.Count)
 			{
-				ScrollLineIntoView(Line);
+				ScrollLineIntoView(line);
 			}
 		}
 		public void ScrollOneLineUp()
@@ -1475,9 +1476,9 @@ namespace TextControlBox
 			VerticalScrollbar.Value += SingleLineHeight;
 			UpdateAll();
 		}
-		public void ScrollLineIntoView(int Line)
+		public void ScrollLineIntoView(int line)
 		{
-			VerticalScrollbar.Value = (Line - RenderedLines.Count / 2) * SingleLineHeight;
+			VerticalScrollbar.Value = (line - RenderedLines.Count / 2) * SingleLineHeight;
 			UpdateAll();
 		}
 		public void ScrollTopIntoView()
@@ -1507,30 +1508,175 @@ namespace TextControlBox
 			VerticalScrollbar.Value += RenderedLines.Count * SingleLineHeight;
 			UpdateAll();
 		}
-		public void ReplaceSelection(string text, CursorPosition InsertPosition = null)
+		public string GetLineContent(int line)
+        {
+			return ListHelper.GetLine(TotalLines, line).Content;
+        }
+		public string GetLinesContent(int startLine, int count)
+        {
+			return ListHelper.GetLinesAsString(TotalLines, startLine, count, NewLineCharacter);
+        }
+		public void SetLineContent(int line, string text)
+        {
+			ListHelper.GetLine(TotalLines, line).Content = text;
+			UpdateText();
+		}
+		public void DeleteLine(int line)
+        {
+			TotalLines.RemoveAt(line);
+			UpdateText();
+		}
+		public void AddLine(int position, string text)
 		{
-			if (TextSelection == null)
-				AddCharacter(Text);
+			ListHelper.Insert(TotalLines, new Line(text), position);
+			UpdateText();
+		}
+		public TextSelectionPosition FindInText(string pattern)
+        {
+			var pos = Regex.Match(GetText(), pattern);
+			return new TextSelectionPosition(pos.Index, pos.Length);
+        }
+		public void SourroundSelectionWith(string value)
+        {
+			SourroundSelectionWith(value, value);
+		}
+		public void SourroundSelectionWith(string value1, string value2)
+        {
+            if (!SelectionIsNull())
+            {
+				AddCharacter(value1 + SelectedText + value2);
+            }
+		}
+		public void DuplicateLine(int line)
+        {
+			var content = new Line(ListHelper.GetLine(TotalLines, line).Content);
+			ListHelper.Insert(TotalLines, content, line);
+			CursorPosition.LineNumber += 1;
+			UpdateText();
+			UpdateCursor();
+        }
+		public bool FindInText(string Word, bool Up, bool MatchCase, bool WholeWord)
+		{
+			string Text = GetText();
+			bool NotFound()
+			{
+				SetSelection(SelectionStart, 0);
+				return false;
+			}
+			//Search down:
+			if (!Up)
+			{
+				if (!MatchCase)
+				{
+					Text = Text.ToLower();
+					Word = Word.ToLower();
+				}
+				if (SelectionStart == -1)
+				{
+					SelectionStart = 0;
+				}
+
+				int startpos = SelectionStart;
+				if (SelectionLength > 0)
+				{
+					startpos = SelectionStart + SelectionLength;
+				}
+				if (Word.Length + startpos > Text.Length)
+				{
+					return NotFound();
+				}
+
+				int index = WholeWord ? StringExtension.IndexOfWholeWord(Text, Word, startpos) : Text.IndexOf(Word, startpos);
+				if (index == -1)
+				{
+					return NotFound();
+				}
+				SetSelection(index, Word.Length);
+				ScrollTopIntoView();
+				return true;
+			}
 			else
 			{
-				var OrderedSelection = Selection.OrderTextSelection(TextSelection);
-				//Singleline
-				if (OrderedSelection.StartPosition.LineNumber == OrderedSelection.EndPosition.LineNumber)
+				try
 				{
+					if (!MatchCase)
+					{
+						Text = Text.ToLower();
+						Word = Word.ToLower();
+					}
+					if (SelectionStart == -1)
+					{
+						SelectionStart = 0;
+					}
 
+					string shortedText = Text.Substring(0, SelectionStart);
+					int index = WholeWord ? StringExtension.LastIndexOfWholeWord(shortedText, Word) : shortedText.LastIndexOf(Word);
+					if (index == -1)
+					{
+						SetSelection(Text.Length, 0);
+						return NotFound();
+					}
+
+					SetSelection(index, Word.Length);
+					ScrollTopIntoView();
+					return true;
 				}
-				else //Multiline
+				catch (Exception ex)
 				{
-					TextSelection InsertionPoint = new TextSelection(CursorPosition, CursorPosition);
-
-					UndoRedo.RecordMultiLineUndo(TotalLines, CursorPosition.LineNumber, text.Split(NewLineCharacter).Length, text, TextSelection, NewLineCharacter, text == "");
-					CursorPosition = Selection.Replace(TextSelection, TotalLines, text, NewLineCharacter);
-
-					selectionrenderer.ClearSelection();
-					TextSelection = null;
-					UpdateSelection();
+					Debug.WriteLine("Exception in TextControlBox --> FindInText:" + "\n" + ex.Message);
+					return false;
 				}
 			}
+		}
+		public bool ReplaceInText(string Word, string ReplaceWord, bool Up, bool MatchCase, bool WholeWord)
+		{
+			if (Word.Length == 0)
+			{
+				return false;
+			}
+
+			bool res = FindInText(Word, Up, MatchCase, WholeWord);
+			if (res)
+			{
+				SelectedText = ReplaceWord;
+			}
+
+			return res;
+		}
+		public bool ReplaceAll(string Word, string ReplaceWord, bool Up, bool MatchCase, bool WholeWord)
+		{
+
+			if (Word.Length == 0)
+			{
+				return false;
+			}
+
+			int selstart = SelectionStart, sellenght = SelectionLength;
+
+			if (!WholeWord)
+			{
+				SelectAll();
+				if (MatchCase)
+				{
+					SelectedText = GetText().Replace(Word, ReplaceWord);
+				}
+				else
+				{
+					SelectedText = GetText().Replace(Word.ToLower(), ReplaceWord.ToLower());
+				}
+
+				return true;
+			}
+
+			SetSelection(SelectionStart, 0);
+			bool res = true;
+			while (res)
+			{
+				res = ReplaceInText(Word, ReplaceWord, Up, MatchCase, WholeWord);
+			}
+
+			SetSelection(selstart, sellenght);
+			return true;
 		}
 
 		//Properties:
@@ -1580,6 +1726,7 @@ namespace TextControlBox
 		public Color CursorColor { get => _CursorColor; set { _CursorColor = value; ColorResourcesCreated = false; UpdateAll(); } }
 		public Color LineNumberColor { get => _LineNumberColor; set { _LineNumberColor = value; ColorResourcesCreated = false; UpdateAll(); } }
 		public Color LineHighlighterColor { get => _LineHighlighterColor; set { _LineHighlighterColor = value; ColorResourcesCreated = false; UpdateAll(); } }
+		public Color LineNumberBackground { get => _LineNumberBackground; set { _LineNumberBackground = value; ColorResourcesCreated = false; UpdateAll(); } }
 		public bool ShowLineNumbers
 		{
 			get => _ShowLineNumbers;
@@ -1615,6 +1762,30 @@ namespace TextControlBox
 			}
 		}
 		public bool ContextFlyoutDisabled { get; set; }
+		public int SelectionStart { get => selectionrenderer.SelectionStart; set { SetSelection(value, SelectionLength); } }
+		public int SelectionLength { get => selectionrenderer.SelectionLength; set { SetSelection(SelectionStart, value); } }
+		public string SelectedText 
+		{
+			get
+			{
+				if (TextSelection != null && Selection.WholeTextSelected(TextSelection, TotalLines))
+					return GetText();
+
+				return Selection.GetSelectedText(TotalLines, TextSelection, CursorPosition.LineNumber, NewLineCharacter);
+			}
+            set
+            {
+				AddCharacter(value);
+            }
+		}
+		public int NumberOfLines { get => TotalLines.Count; }
+		public int CurrentLineIndex { get => CursorPosition.LineNumber; }
+		public ScrollBarPosition ScrollBarPosition 
+		{
+			get => new ScrollBarPosition(HorizontalScrollbar.Value, VerticalScrollbar.Value);
+			set { HorizontalScrollbar.Value = value.ValueX; VerticalScrollbar.Value = value.ValueY; }
+		}
+		public int CharacterCount { get => Utils.CountCharacters(TotalLines); }
 
 		//Events:
 		public delegate void TextChangedEvent(TextControlBox sender, string Text);
@@ -1669,13 +1840,5 @@ namespace TextControlBox
 		public float Height { get; private set; }
 		public float OffsetX { get; private set; }
 		public float OffsetY { get; private set; }
-	}
-	public static class Extensions
-	{
-		public static string RemoveFirstOccurence(this string value, string removeString)
-		{
-			int index = value.IndexOf(removeString, StringComparison.Ordinal);
-			return index < 0 ? value : value.Remove(index, removeString.Length);
-		}
 	}
 }
