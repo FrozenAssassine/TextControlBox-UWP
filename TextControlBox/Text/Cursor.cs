@@ -43,7 +43,7 @@ namespace TextControlBox.Text
             for (int i = CursorCharPosition - 1; i >= 0; i--)
             {
                 char CurrentCharacter = CurrentLine.Content[i < CurrentLine.Length ? i : CurrentLine.Length - 1];
-                if (char.IsLetterOrDigit(CurrentCharacter))
+                if (char.IsLetterOrDigit(CurrentCharacter) || CurrentCharacter == '_')
                     Count++;
                 else if (i == CursorCharPosition - 1 && char.IsWhiteSpace(CurrentCharacter))
                     return 0;
@@ -57,9 +57,10 @@ namespace TextControlBox.Text
             int Count = 0;
             for (int i = CursorCharPosition; i < CurrentLine.Length; i++)
             {
-                if (char.IsLetterOrDigit(CurrentLine.Content[i]))
+                char CurrentCharacter = CurrentLine.Content[i < CurrentLine.Length ? i : CurrentLine.Length - 1];
+                if (char.IsLetterOrDigit(CurrentCharacter) || CurrentCharacter == '_')
                     Count++;
-                else if (i == CursorCharPosition && char.IsWhiteSpace(CurrentLine.Content[i]))
+                else if (i == CursorCharPosition && char.IsWhiteSpace(CurrentCharacter))
                     return 0;
                 else
                     break;
@@ -77,7 +78,7 @@ namespace TextControlBox.Text
             for (int i = CursorCharPosition - 1; i >= 0; i--)
             {
                 char CurrentCharacter = CurrentLine.Content[i < CurrentLine.Length ? i : CurrentLine.Length - 1];
-                if (char.IsLetterOrDigit(CurrentCharacter))
+                if (char.IsLetterOrDigit(CurrentCharacter) || CurrentCharacter == '_')
                     Count++;
                 else if (i == CursorCharPosition - 1 && char.IsWhiteSpace(CurrentCharacter))
                     Count++;
@@ -95,9 +96,10 @@ namespace TextControlBox.Text
             int Count = 0;
             for (int i = CursorCharPosition; i < CurrentLine.Length; i++)
             {
-                if (char.IsLetterOrDigit(CurrentLine.Content[i]))
+                char CurrentCharacter = CurrentLine.Content[i < CurrentLine.Length ? i : CurrentLine.Length - 1];
+                if (char.IsLetterOrDigit(CurrentCharacter) || CurrentCharacter == '_')
                     Count++;
-                else if (i == CursorCharPosition && char.IsWhiteSpace(CurrentLine.Content[i]))
+                else if (i == CursorCharPosition && char.IsWhiteSpace(CurrentCharacter))
                     Count++;
                 else
                     break;

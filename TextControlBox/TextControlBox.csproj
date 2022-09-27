@@ -134,6 +134,7 @@
     <Compile Include="Renderer\LineHighlighter.cs" />
     <Compile Include="Renderer\SelectionRenderer.cs" />
     <Compile Include="Renderer\TextRenderer.cs" />
+    <Compile Include="Extensions\StringExtension.cs" />
     <Compile Include="TextControlBox.xaml.cs">
       <DependentUpon>TextControlBox.xaml</DependentUpon>
     </Compile>
