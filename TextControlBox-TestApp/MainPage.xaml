@@ -5,14 +5,15 @@
     xmlns:local="using:TextControlBox_TestApp"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:muxc="using:Microsoft.UI.Xaml.Controls" xmlns:textcontrolbox="using:TextControlBox"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d"
-    muxc:BackdropMaterial.ApplyToRootOrPageBackground="False">
+    muxc:BackdropMaterial.ApplyToRootOrPageBackground="False"
+    xmlns:textcontrolbox="using:TextControlBox">
     <Page.Background>
         <AcrylicBrush TintColor="Black" TintOpacity="0.7" BackgroundSource="HostBackdrop">
         </AcrylicBrush>
     </Page.Background>
     <Grid>
-        <textcontrolbox:TextControlBox x:Name="TextControlBox"/>
+        <textcontrolbox:TextControlBox Text="Hello World" x:Name="TextControlBox"/>
     </Grid>
 </Page>

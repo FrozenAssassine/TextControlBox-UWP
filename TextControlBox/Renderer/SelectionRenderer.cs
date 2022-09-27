@@ -24,42 +24,6 @@ namespace TextControlBox.Renderer
             this.SelectionColor = SelectionColor;
         }
 
-        //Get the point, where the selection starts, It is always the higest cursorposition
-        public CursorPosition GetSelectionEndPoint()
-        {
-            if (SelectionStartPosition == null || SelectionEndPosition == null)
-                return null;
-
-            int EndLine = Math.Max(SelectionStartPosition.LineNumber, SelectionEndPosition.LineNumber);
-            int EndCharacterPos;
-
-            if (EndLine == SelectionEndPosition.LineNumber)
-            {
-                EndCharacterPos = SelectionEndPosition.CharacterPosition;
-            }
-            else
-            {
-                EndCharacterPos = SelectionStartPosition.CharacterPosition;
-            }
-            return new CursorPosition(EndCharacterPos, EndLine);
-        }
-        //Get the point, where the selection starts, It is always the lowest cursorposition
-        public CursorPosition GetSelectionStartPoint()
-        {
-            int StartLine = Math.Min(SelectionStartPosition.LineNumber, SelectionEndPosition.LineNumber);
-            int StartCharacterPos;
-
-            if (StartLine == SelectionStartPosition.LineNumber)
-            {
-                StartCharacterPos = SelectionStartPosition.CharacterPosition;
-            }
-            else
-            {
-                StartCharacterPos = SelectionEndPosition.CharacterPosition;
-            }
-            return new CursorPosition(StartCharacterPos, StartLine);
-        }
-
         //Create the rect, to render
         public Rect CreateRect(Rect r, float MarginLeft = 0, float MarginTop = 0)
         {
@@ -115,7 +79,6 @@ namespace TextControlBox.Renderer
                             LenghtToLine += RenderedLines[i].Length + 2;
                         }
                     }
-
 
                     SelStartIndex = CharacterPosStart + LenghtToLine;
                     SelEndIndex = CharacterPosEnd + LenghtToLine;

@@ -11,7 +11,7 @@
     AllowFocusOnInteraction="True" 
     PointerWheelChanged="Canvas_Selection_PointerWheelChanged" PointerEntered="UserControl_PointerEntered" PointerExited="UserControl_PointerExited" AllowDrop="True" Drop="UserControl_Drop" DragOver="UserControl_DragOver">
 
-    <Grid x:Name="MainGrid" Margin="10">
+    <Grid x:Name="MainGrid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="auto"/>
             <ColumnDefinition Width="*"/>

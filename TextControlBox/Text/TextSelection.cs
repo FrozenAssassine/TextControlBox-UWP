@@ -2,6 +2,13 @@
 {
     public class TextSelection
     {
+        public TextSelection()
+        {
+            Index = 0;
+            Length = 0;
+            StartPosition = null;
+            EndPosition = null;
+        }
         public TextSelection(int index = 0, int length = 0, CursorPosition startPosition = null, CursorPosition endPosition = null)
         {
             Index = index;

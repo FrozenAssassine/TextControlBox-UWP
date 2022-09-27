@@ -347,40 +347,74 @@ namespace TextControlBox.Text
         public static TextSelectionPosition GetIndexOfSelection(List<Line> TotalLines, TextSelection Selection)
         {
             var Sel = OrderTextSelection(Selection);
-            int SelStartIndex = Sel.StartPosition.CharacterPosition;
-            int SelEndIndex = Sel.EndPosition.CharacterPosition;
-            int StartLine = Sel.StartPosition.LineNumber;
-            int EndLine = Sel.EndPosition.LineNumber;
-
-            if (StartLine == EndLine)
-            {
-                for (int i = 0; i < StartLine; i++)
-                {
-                    int val = ListHelper.GetLine(TotalLines, i).Length + 1;
-                    SelEndIndex += val;
-                    SelStartIndex += val;
-                }
-            }
-            else
-            {
-                for (int i = 0; i < StartLine; i++)
-                {
-                    SelStartIndex += ListHelper.GetLine(TotalLines, i).Length + 1;
-                }
-
-                for (int i = StartLine; i < EndLine; i++)
-                {
-                    SelEndIndex += ListHelper.GetLine(TotalLines, i).Length + 1;
-                }
-            }
+            int StartIndex = Cursor.CursorPositionToIndex(TotalLines, Sel.StartPosition);
+            int EndIndex = Cursor.CursorPositionToIndex(TotalLines, Sel.EndPosition);
 
             int SelectionLength;
-            if (SelEndIndex > SelStartIndex)
-                SelectionLength = SelEndIndex - SelStartIndex;
+            if (EndIndex > StartIndex)
+                SelectionLength = EndIndex - StartIndex;
             else
-                SelectionLength = SelStartIndex - SelEndIndex;
+                SelectionLength = StartIndex - EndIndex;
 
-            return new TextSelectionPosition(Math.Min(SelStartIndex, SelEndIndex), SelectionLength);
+            return new TextSelectionPosition(Math.Min(StartIndex, EndIndex), SelectionLength);
+        }
+
+        public static TextSelection GetSelectionFromPosition(List<Line> TotalLines, int StartPosition, int Length, int NumberOfCharacters)
+        {
+            TextSelection returnValue = new TextSelection();
+            
+            if (StartPosition + Length > NumberOfCharacters)
+            {
+                if(StartPosition > NumberOfCharacters)
+                {
+                    StartPosition = NumberOfCharacters;
+                    Length = 0;
+                }
+                else
+                {
+                    Length = NumberOfCharacters - StartPosition;
+                }
+            }
+
+            void GetIndexInLine(int CurrentIndex, int CurrentTotalLength)
+            {
+                int Position = Math.Abs(CurrentTotalLength - StartPosition);
+
+                returnValue.StartPosition = 
+                    new CursorPosition(Position, CurrentIndex);
+
+                if (Length == 0)
+                    returnValue.EndPosition = new CursorPosition(returnValue.StartPosition);
+                else
+                {
+                    int LengthCount = 0;
+                    for (int i = CurrentIndex; i < TotalLines.Count; i++)
+                    {
+                        int lineLength = TotalLines[i].Length + 1;
+                        if (LengthCount + lineLength > Length)
+                        {
+                            returnValue.EndPosition = new CursorPosition(Math.Abs(LengthCount - Length) + Position, i);
+                            break;
+                        }
+                        LengthCount += lineLength;
+                    }
+                }
+            }
+
+            //Get the Length
+            int TotalLength = 0;
+            for(int i = 0; i<TotalLines.Count; i++)
+            {
+                int lineLength = TotalLines[i].Length + 1;
+                if (TotalLength + lineLength > StartPosition)
+                {
+                    GetIndexInLine(i, TotalLength);
+                    break;
+                }
+
+                TotalLength += lineLength;
+            }
+            return returnValue;
         }
 
         //Returns the whole lines, without respecting the characterposition of the selection
