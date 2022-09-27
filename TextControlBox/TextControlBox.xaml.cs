@@ -1552,6 +1552,7 @@ namespace TextControlBox
 			var content = new Line(ListHelper.GetLine(TotalLines, line).Content);
 			ListHelper.Insert(TotalLines, content, line);
 			CursorPosition.LineNumber += 1;
+			ScrollOneLineDown();
 			UpdateText();
 			UpdateCursor();
         }

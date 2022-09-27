@@ -23,14 +23,8 @@ namespace TextControlBox_TestApp
             //OpenFile();
             TextControlBox.SetText(GenerateContent());
             TextControlBox.FontSize = 42;
-            TextControlBox.SelectionChanged += TextControlBox_SelectionChanged;
         }
         
-        private void TextControlBox_SelectionChanged(TextControlBox.TextControlBox sender, TextControlBox.Text.SelectionChangedEventHandler args)
-        {
-            Debug.WriteLine("Selection: " + args.SelectionStartIndex + "::" + args.SelectionLength + "::" + TextControlBox.CharacterCount);
-        }
-
         private string GenerateContent()
         {
             int Limit = 140;
@@ -53,17 +47,6 @@ namespace TextControlBox_TestApp
             {
                 TextControlBox.DuplicateLine(TextControlBox.CurrentLineIndex);
             }
-            if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.Q)
-            {
-                TextControlBox.SetSelection(100, 1500);
-            }
-        }
-
-        private async void OpenFile()
-        {
-            StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync("csharp.txt", CreationCollisionOption.OpenIfExists);
-            string text = await FileIO.ReadTextAsync(file);
-            //TextControlBox.SetText(text);
         }
     }
 }
