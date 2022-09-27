@@ -1361,7 +1361,7 @@ namespace TextControlBox
 			DataPackageView dataPackageView = Clipboard.GetContent();
 			if (dataPackageView.Contains(StandardDataFormats.Text))
 			{
-				string Text = LineEndings.ChangeLineEndings(await dataPackageView.GetTextAsync(), LineEnding);
+				string Text = LineEndings.CleanLineEndings(await dataPackageView.GetTextAsync(), LineEnding);
 				if (await IsOverTextLimit(Text.Length))
 					return;
 

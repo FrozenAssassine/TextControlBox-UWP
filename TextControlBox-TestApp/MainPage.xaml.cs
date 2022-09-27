@@ -2,9 +2,8 @@
 using System.Diagnostics;
 using System.Text;
 using TextControlBox.Helper;
-//using TextControlBox.Helper;
-//using TextControlBox.Text;
 using Windows.Storage;
+using Windows.Storage.Pickers;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
@@ -36,7 +35,7 @@ namespace TextControlBox_TestApp
             return sb.ToString();
         }
 
-        private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
+        private async void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
         {
             bool ControlKey = Window.Current.CoreWindow.GetKeyState(Windows.System.VirtualKey.Control).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
             if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.R)
@@ -46,6 +45,20 @@ namespace TextControlBox_TestApp
             if(ControlKey && args.VirtualKey == Windows.System.VirtualKey.D)
             {
                 TextControlBox.DuplicateLine(TextControlBox.CurrentLineIndex);
+            }
+            if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.O)
+            {
+                FileOpenPicker openPicker = new FileOpenPicker();
+                openPicker.ViewMode = PickerViewMode.Thumbnail;
+                openPicker.SuggestedStartLocation = PickerLocationId.Desktop;
+                openPicker.FileTypeFilter.Add("*");
+
+                var file = await openPicker.PickSingleFileAsync();
+                if(file != null)
+                {
+                    string text = await FileIO.ReadTextAsync(file);
+                    TextControlBox.SetText(text);
+                }
             }
         }
     }
