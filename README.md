@@ -23,19 +23,19 @@ UWP has a default Textbox and a RichTextBox. Both of them are very slow in rende
 - Outstanding performance because it only renders the lines that are needed to display
 - Linenumbering
 - Linehighlighter
-- Customization with all
 - C# class to create custom syntaxhighlighting using Regex patterns
-
 
 ## Problems:
 - Multiple longer lines with 5000 characters and more are currently slowing down the rendering 
 - Because all the lines are stored in a List the ram usage with a million lines ore more is pretty high.
 - Current text limit are 100 million characters
 - Currently there is no textwrapping
-- 
 
+## Usage:
 
-## Properties:
+<details><summary><h2>Properties</h2></summary> 
+ 
+ ```
 - ScrollBarPosition (get/set)
 - CharacterCount (get)
 - NumberOfLines (get)
@@ -66,8 +66,12 @@ UWP has a default Textbox and a RichTextBox. Both of them are very slow in rende
 - CodeLanguage (get/set)
 - CustomCodeLanguage (get/set)
 - SyntaxHighlighting (get/set)
-
-## Functions:
+  ```
+</details>
+<details>
+  <summary><h2>Functions</h2></summary>
+ 
+  ```
 - SelectLine(index)
 - GoToLine(index)
 - SetText(text)
@@ -99,6 +103,8 @@ UWP has a default Textbox and a RichTextBox. Both of them are very slow in rende
 - FindInText(word, up, matchCase, wholeWord)
 - ReplaceInText(word, replaceword, up, matchCase, wholeword)
 - ReplaceAll(word, replaceword, up, matchCase, wholeword)
+  ```
+</details>
 
 
 ## Contributors:
