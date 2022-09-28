@@ -81,6 +81,7 @@ UWP has a default Textbox and a RichTextBox. Both of them are very slow in rende
 - GetText()
 - SetSelection(start, length)
 - SelectAll()
+- ClearSelection()
 - Undo()
 - Redo()
 - ScrollLineToCenter(line)
