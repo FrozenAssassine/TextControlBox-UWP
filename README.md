@@ -30,6 +30,7 @@ UWP has a default Textbox and a RichTextBox. Both of them are very slow in rende
 - Because all the lines are stored in a List the ram usage with a million lines ore more is pretty high.
 - Current text limit are 100 million characters
 - Currently there is no textwrapping
+- There are still some issues with undo/redo
 
 ## Usage:
 
