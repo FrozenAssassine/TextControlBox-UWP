@@ -1,7 +1,5 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace TextControlBox.Text
 {
@@ -26,7 +24,8 @@ namespace TextControlBox.Text
             {
                 return LineEnding.CR;
             }
-            else {
+            else
+            {
                 return LineEnding.CRLF;
             }
         }
@@ -45,11 +44,11 @@ namespace TextControlBox.Text
         }
         public static string CleanLineEndings(string Text, LineEnding lineEnding)
         {
-            Text = Regex.Replace(Text, "\r\n", "\n");
-            Text = Regex.Replace(Text, "\r", "\n");
-            return Regex.Replace(Text, "\n", LineEndingToString(lineEnding));
+            //Text = Regex.Replace(Text, "\r\n", "\n");
+            //Text = Regex.Replace(Text, "\r", "\n");
+            //return Regex.Replace(Text, "\n", LineEndingToString(lineEnding));
 
-            //return Text.Replace("\r\n", "\n").Replace('\r', '\n').Replace("\n", LineEndingToString(lineEnding));
+            return Text.Replace("\r\n", "\n").Replace('\r', '\n').Replace("\n", LineEndingToString(lineEnding));
         }
     }
     public enum LineEnding

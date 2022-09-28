@@ -2,7 +2,6 @@
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using TextControlBox.Text;
 using Windows.Foundation;
 using Windows.UI;
@@ -113,10 +112,10 @@ namespace TextControlBox.Renderer
                 for (int i = 0; i < descriptions.Length; i++)
                 {
                     //Change the width if selection in an emty line or starts at a line end
-                    if(descriptions[i].LayoutBounds.Width == 0 && descriptions.Length > 1)
+                    if (descriptions[i].LayoutBounds.Width == 0 && descriptions.Length > 1)
                     {
                         var bounds = descriptions[i].LayoutBounds;
-                        descriptions[i].LayoutBounds = new Rect { Width = FontSize/4, Height = bounds.Height, X = bounds.X, Y = bounds.Y };
+                        descriptions[i].LayoutBounds = new Rect { Width = FontSize / 4, Height = bounds.Height, X = bounds.X, Y = bounds.Y };
                     }
 
                     args.DrawingSession.FillRectangle(CreateRect(descriptions[i].LayoutBounds, MarginLeft, MarginTop), SelectionColor);

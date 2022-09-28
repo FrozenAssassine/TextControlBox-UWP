@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using TextControlBox.Helper;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
@@ -178,7 +177,7 @@ namespace TextControlBox.Text
             CursorPosition.CharacterPosition = CurrentLine.Length;
             return CursorPosition;
         }
-        
+
         public static CursorPosition MoveToLineStart(CursorPosition CursorPosition)
         {
             CursorPosition.CharacterPosition = 0;

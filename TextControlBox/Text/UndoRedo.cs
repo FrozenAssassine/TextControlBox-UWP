@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using TextControlBox.Helper;
 
 namespace TextControlBox.Text
@@ -29,8 +27,8 @@ namespace TextControlBox.Text
             if (item.Selection != null)
             {
                 var sel = Selection.OrderTextSelection(item.Selection);
-                if (item.IsDeletion &&  sel.StartPosition.LineNumber < sel.EndPosition.LineNumber)
-                {            
+                if (item.IsDeletion && sel.StartPosition.LineNumber < sel.EndPosition.LineNumber)
+                {
                     //If all lines are completely selected Count has to be smaller, because no line will stay after deleting the selection
                     if (sel.StartPosition.CharacterPosition == 0 &&
                         sel.EndPosition.CharacterPosition == ListHelper.GetLine(TotalLines, item.StartLine + item.Count - 2).Length)
@@ -59,7 +57,7 @@ namespace TextControlBox.Text
 
             return item.Selection;
         }
-        
+
         private TextSelection DoSingleLineRedo(List<Line> TotalLines, UndoRedoItem item)
         {
             ListHelper.GetLine(TotalLines, item.StartLine).SetText(item.UndoText);
@@ -170,9 +168,9 @@ namespace TextControlBox.Text
                 return null;
 
             UndoRedoItem item = UndoStack.Pop();
-            if(!item.ExcecutePrevUndoToo)
+            if (!item.ExcecutePrevUndoToo)
                 RecordRedo(item);
-            
+
             if (item.UndoRedoType == UndoRedoType.SingleLineEdit)
                 return DoSingleLineUndo(TotalLines, item);
             else if (item.UndoRedoType == UndoRedoType.NewLineEdit)
@@ -190,7 +188,7 @@ namespace TextControlBox.Text
                 return res;
             }
         }
-        
+
         /// <summary>
         /// Excecutes the redo and apply the changes to the text
         /// </summary>
@@ -205,10 +203,10 @@ namespace TextControlBox.Text
             UndoRedoItem item = RedoStack.Pop();
             if (!item.ExcecutePrevUndoToo)
                 RecordUndo(item);
-            
-            if (item.UndoRedoType == UndoRedoType.SingleLineEdit)  
+
+            if (item.UndoRedoType == UndoRedoType.SingleLineEdit)
                 return DoSingleLineRedo(TotalLines, item);
-            else if(item.UndoRedoType == UndoRedoType.NewLineEdit)
+            else if (item.UndoRedoType == UndoRedoType.NewLineEdit)
                 return DoNewLineRedo(TotalLines, item, NewLineCharacter);
             else
             {

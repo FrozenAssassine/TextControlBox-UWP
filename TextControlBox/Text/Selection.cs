@@ -107,7 +107,7 @@ namespace TextControlBox.Text
             {
                 Debug.WriteLine("*ArgumentOutOfRangeException* in InsertText");
             }
-            string TextBehindCursor =  "";
+            string TextBehindCursor = "";
             try
             {
                 TextBehindCursor = CurrentLine.Length > CursorPosition.CharacterPosition ?
@@ -201,7 +201,7 @@ namespace TextControlBox.Text
                 if (TotalLines.Count == 0)
                     TotalLines.Add(new Line());
 
-                return new CursorPosition(ListHelper.GetLine(TotalLines, - 1).Length, TotalLines.Count - 1);
+                return new CursorPosition(ListHelper.GetLine(TotalLines, -1).Length, TotalLines.Count - 1);
             }
             else
             {
@@ -281,7 +281,7 @@ namespace TextControlBox.Text
                     ListHelper.InsertRange(TotalLines, LinesToInsert, StartLine + 1);
                     LinesToInsert.Clear();
                 }
-                                
+
                 return new CursorPosition(Start_Line.Length + End_Line.Length - 1, InsertPosition + SplittedText.Length - 1);
             }
         }
@@ -362,10 +362,10 @@ namespace TextControlBox.Text
         public static TextSelection GetSelectionFromPosition(List<Line> TotalLines, int StartPosition, int Length, int NumberOfCharacters)
         {
             TextSelection returnValue = new TextSelection();
-            
+
             if (StartPosition + Length > NumberOfCharacters)
             {
-                if(StartPosition > NumberOfCharacters)
+                if (StartPosition > NumberOfCharacters)
                 {
                     StartPosition = NumberOfCharacters;
                     Length = 0;
@@ -380,7 +380,7 @@ namespace TextControlBox.Text
             {
                 int Position = Math.Abs(CurrentTotalLength - StartPosition);
 
-                returnValue.StartPosition = 
+                returnValue.StartPosition =
                     new CursorPosition(Position, CurrentIndex);
 
                 if (Length == 0)
@@ -403,7 +403,7 @@ namespace TextControlBox.Text
 
             //Get the Length
             int TotalLength = 0;
-            for(int i = 0; i<TotalLines.Count; i++)
+            for (int i = 0; i < TotalLines.Count; i++)
             {
                 int lineLength = TotalLines[i].Length + 1;
                 if (TotalLength + lineLength > StartPosition)

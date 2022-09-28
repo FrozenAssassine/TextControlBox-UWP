@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using TextControlBox.Extensions;
 using TextControlBox.Helper;
-using Windows.UI.Text;
 
 namespace TextControlBox.Text
 {
@@ -42,7 +40,7 @@ namespace TextControlBox.Text
                 TextSelection tempSel = new TextSelection(OrderedSelection);
                 tempSel.StartPosition.CharacterPosition = 0;
                 tempSel.EndPosition.CharacterPosition = ListHelper.GetLine(TotalLines, TextSelection.EndPosition.LineNumber).Length;
-                
+
                 UndoRedo.RecordMultiLineUndo(TotalLines, OrderedSelection.StartPosition.LineNumber, Lines.Count, UndoText, RedoText, tempSel, NewLineCharacter, false);
 
                 return new TextSelection(new CursorPosition(OrderedSelection.StartPosition), new CursorPosition(TextSelection.EndPosition));

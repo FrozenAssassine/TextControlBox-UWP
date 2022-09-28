@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
 
 namespace TextControlBox.Helper
 {
@@ -30,11 +25,11 @@ namespace TextControlBox.Helper
 
         public MenuFlyoutItem CreateItem(Action action, string Text, Symbol Icon, string Key)
         {
-            var Item = new MenuFlyoutItem 
-            { 
-                Text = Text, 
-                KeyboardAcceleratorTextOverride = Key, 
-                Icon = new SymbolIcon { Symbol = Icon } 
+            var Item = new MenuFlyoutItem
+            {
+                Text = Text,
+                KeyboardAcceleratorTextOverride = Key,
+                Icon = new SymbolIcon { Symbol = Icon }
             };
             Item.Click += delegate
             {

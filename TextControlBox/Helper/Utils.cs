@@ -1,9 +1,9 @@
 ﻿using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
 using System.Collections.Generic;
-using System.Diagnostics;
 using TextControlBox.Text;
 using Windows.Foundation;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 
 namespace TextControlBox.Helper
@@ -31,7 +31,7 @@ namespace TextControlBox.Helper
                 text = text.Insert(0, "|");
                 WidthOfPlaceHolder += MeasureTextSize(device, "|", textFormat).Width;
             }
-            if(text.EndsWith('\t') ||text.EndsWith(' '))
+            if (text.EndsWith('\t') || text.EndsWith(' '))
             {
                 text = text += "|";
                 WidthOfPlaceHolder += MeasureTextSize(device, "|", textFormat).Width;
@@ -80,11 +80,16 @@ namespace TextControlBox.Helper
         public static int CountCharacters(List<Line> TotalLines)
         {
             int Count = 0;
-            for(int i = 0; i<TotalLines.Count; i++)
+            for (int i = 0; i < TotalLines.Count; i++)
             {
                 Count += TotalLines[i].Length + 1;
             }
             return Count - 1;
         }
+        public static void ChangeCursor(CoreCursorType CursorType)
+        {
+            Window.Current.CoreWindow.PointerCursor = new CoreCursor(CursorType, 0);
+        }
+
     }
 }
