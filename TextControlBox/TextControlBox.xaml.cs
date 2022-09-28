@@ -1063,7 +1063,7 @@ namespace TextControlBox
             TextToRender.Clear();
 
             //Get text from longest line in whole text
-            Size LineLength = Utils.MeasureLineLenght(CanvasDevice.GetSharedDevice(), TotalLines[Utils.GetLongestLineIndex(TotalLines)], TextFormat);
+            Size LineLength = Utils.MeasureLineLenght(CanvasDevice.GetSharedDevice(), ListHelper.GetLine(TotalLines, Utils.GetLongestLineIndex(TotalLines)), TextFormat);
 
             //Measure horizontal Width of longest line and apply to scrollbar
             HorizontalScrollbar.Maximum = LineLength.Width <= sender.ActualWidth ? 0 : LineLength.Width - sender.ActualWidth + 50;
@@ -1277,7 +1277,11 @@ namespace TextControlBox
             UpdateSelection();
             UpdateCursor();
         }
-        public async void SetText(string text)
+        /// <summary>
+        /// Load text to the textbox everything currently in it will reset. Use this to load text on application start
+        /// </summary>
+        /// <param name="text">The text to load</param>
+        public async void LoadText(string text)
         {
             if (await IsOverTextLimit(text.Length))
                 return;
@@ -1299,8 +1303,36 @@ namespace TextControlBox
 
             Debug.WriteLine("Loaded " + lines.Length + " lines with the lineending " + LineEnding.ToString());
             Internal_TextChanged(text);
-            UpdateText();
-            UpdateSelection();
+            UpdateAll();
+        }
+        /// <summary>
+        /// Load new content to the textbox an undo will be recorded. Use this to change the text when the app is running
+        /// </summary>
+        /// <param name="text">The text to load</param>
+        public async void SetText(string text)
+        {
+            if (await IsOverTextLimit(text.Length))
+                return;
+
+            selectionrenderer.ClearSelection();
+
+            text = LineEndings.CleanLineEndings(text, _LineEnding);
+            var lines = text.Split(NewLineCharacter);
+
+            string UndoText = ListHelper.GetLinesAsString(TotalLines, 0, lines.Length, NewLineCharacter);
+
+            TotalLines.Clear();
+            RenderedLines.Clear();
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                TotalLines.Add(new Line(lines[i]));
+            }
+
+            string RedoText = ListHelper.GetLinesAsString(TotalLines, 0, lines.Length, NewLineCharacter);
+            UndoRedo.RecordMultiLineUndo(TotalLines, 0, lines.Length, UndoText, RedoText, null, NewLineCharacter, false, false);
+            
+            UpdateAll();
         }
         public async void Paste()
         {
