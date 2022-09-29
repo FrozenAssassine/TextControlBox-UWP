@@ -97,30 +97,21 @@ namespace TextControlBox.Text
                 return CursorPosition;
             }
 
-            //Multiline
-            string TextInFrontOfCursor = "";
-            try
-            {
-                TextInFrontOfCursor = CurrentLine.Content.Substring(0, CursorPosition.CharacterPosition < 0 ? 0 : CursorPosition.CharacterPosition);
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                Debug.WriteLine("*ArgumentOutOfRangeException* in InsertText");
-            }
-            string TextBehindCursor = "";
-            try
-            {
-                TextBehindCursor = CurrentLine.Length > CursorPosition.CharacterPosition ?
-                CurrentLine.Content.Remove(0, CursorPosition.CharacterPosition) : "";
-            }
-            catch (ArgumentOutOfRangeException)
-            {
-                Debug.WriteLine("*ArgumentOutOfRangeException* in InsertText");
-            }
+            //Multiline:
 
+            //Get the text in front of the cursor
+            int CurPos = CursorPosition.CharacterPosition;
+
+            if (CurPos > CurrentLine.Length)
+                CurPos = CurrentLine.Length;
+            string TextInFrontOfCursor = CurrentLine.Content.Substring(0, CurPos < 0 ? 0 : CurPos);
+
+            //Get the text behind the cursor
+            if (CurPos > CurrentLine.Length)
+                CurPos = CurrentLine.Length;
+            string TextBehindCursor = CurrentLine.Content.Remove(0, CurPos < 0 ? 0 : CurPos);
 
             ListHelper.DeleteAt(TotalLines, CursorPosition.LineNumber);
-
             List<Line> LinesToInsert = new List<Line>(lines.Length);
             //Paste the text
             for (int i = 0; i < lines.Length; i++)
