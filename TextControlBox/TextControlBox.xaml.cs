@@ -1235,7 +1235,7 @@ namespace TextControlBox
             if (e.DataView.Contains(StandardDataFormats.Text))
             {
                 string text = await e.DataView.GetTextAsync();
-                text = LineEndings.ChangeLineEndings(text, _LineEnding);
+                text = LineEndings.CleanLineEndings(text, _LineEnding);
                 AddCharacter(text, true);
                 UpdateText();
             }
@@ -1351,14 +1351,14 @@ namespace TextControlBox
         public void Copy()
         {
             DataPackage dataPackage = new DataPackage();
-            dataPackage.SetText(LineEndings.ChangeLineEndings(SelectedText, LineEnding));
+            dataPackage.SetText(LineEndings.CleanLineEndings(SelectedText, LineEnding));
             dataPackage.RequestedOperation = DataPackageOperation.Copy;
             Clipboard.SetContent(dataPackage);
         }
         public void Cut()
         {
             DataPackage dataPackage = new DataPackage();
-            dataPackage.SetText(LineEndings.ChangeLineEndings(SelectedText, LineEnding));
+            dataPackage.SetText(LineEndings.CleanLineEndings(SelectedText, LineEnding));
             DeleteText(); //Delete the selected text
             dataPackage.RequestedOperation = DataPackageOperation.Move;
             Clipboard.SetContent(dataPackage);
