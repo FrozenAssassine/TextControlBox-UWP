@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Collections.Pooled;
+using System.Collections.Generic;
 using TextControlBox.Helper;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
@@ -9,7 +10,7 @@ namespace TextControlBox.Text
     {
         private static bool ControlIsPressed { get => Window.Current.CoreWindow.GetKeyState(Windows.System.VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down); }
 
-        public static int CursorPositionToIndex(List<Line> TotalLines, CursorPosition CursorPosition)
+        public static int CursorPositionToIndex(PooledList<Line> TotalLines, CursorPosition CursorPosition)
         {
             int CursorIndex = CursorPosition.CharacterPosition;
             for (int i = 0; i < CursorPosition.LineNumber; i++)
@@ -109,7 +110,7 @@ namespace TextControlBox.Text
         }
 
         //Move cursor:
-        public static CursorPosition MoveLeft(CursorPosition CurrentCursorPosition, List<Line> TotalLines, Line CurrentLine)
+        public static CursorPosition MoveLeft(CursorPosition CurrentCursorPosition, PooledList<Line> TotalLines, Line CurrentLine)
         {
             CursorPosition ReturnValue = new CursorPosition(CurrentCursorPosition);
             if (ReturnValue.LineNumber < 0)
@@ -131,7 +132,7 @@ namespace TextControlBox.Text
 
             return ReturnValue;
         }
-        public static CursorPosition MoveRight(CursorPosition CurrentCursorPosition, List<Line> TotalLines, Line CurrentLine)
+        public static CursorPosition MoveRight(CursorPosition CurrentCursorPosition, PooledList<Line> TotalLines, Line CurrentLine)
         {
             CursorPosition ReturnValue = new CursorPosition(CurrentCursorPosition);
             int LineLength = ListHelper.GetLine(TotalLines, ReturnValue.LineNumber).Length;

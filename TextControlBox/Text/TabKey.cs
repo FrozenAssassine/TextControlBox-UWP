@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Collections.Pooled;
+using System.Collections.Generic;
 using TextControlBox.Extensions;
 using TextControlBox.Helper;
 
@@ -6,7 +7,7 @@ namespace TextControlBox.Text
 {
     public class TabKey
     {
-        public static TextSelection MoveTabBack(List<Line> TotalLines, TextSelection TextSelection, CursorPosition CursorPosition, string TabCharacter, string NewLineCharacter, UndoRedo UndoRedo)
+        public static TextSelection MoveTabBack(PooledList<Line> TotalLines, TextSelection TextSelection, CursorPosition CursorPosition, string TabCharacter, string NewLineCharacter, UndoRedo UndoRedo)
         {
             if (TextSelection == null)
             {
@@ -47,7 +48,7 @@ namespace TextControlBox.Text
             }
         }
 
-        public static TextSelection MoveTab(List<Line> TotalLines, TextSelection TextSelection, CursorPosition CursorPosition, string TabCharacter, string NewLineCharacter, UndoRedo UndoRedo)
+        public static TextSelection MoveTab(PooledList<Line> TotalLines, TextSelection TextSelection, CursorPosition CursorPosition, string TabCharacter, string NewLineCharacter, UndoRedo UndoRedo)
         {
             if (TextSelection == null)
             {

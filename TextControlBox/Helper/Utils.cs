@@ -1,4 +1,5 @@
-﻿using Microsoft.Graphics.Canvas;
+﻿using Collections.Pooled;
+using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
 using System.Collections.Generic;
 using TextControlBox.Text;
@@ -42,7 +43,7 @@ namespace TextControlBox.Helper
         }
 
         //Get the longest line and create a string with all the content, that is in the textbox, to save performance by iterating just one time throught the list
-        public static int GetLongestLineIndex(List<Line> TotalLines)
+        public static int GetLongestLineIndex(PooledList<Line> TotalLines)
         {
             int LongestIndex = 0;
             int OldLenght = 0;
@@ -62,7 +63,7 @@ namespace TextControlBox.Helper
         {
             return First.LineNumber == Second.LineNumber && First.CharacterPosition == Second.CharacterPosition;
         }
-        public static bool IndexIsInRangeOf(List<Line> Lines, int Index)
+        public static bool IndexIsInRangeOf(PooledList<Line> Lines, int Index)
         {
             return Index < Lines.Count && Index > -1;
         }
@@ -77,7 +78,7 @@ namespace TextControlBox.Helper
         {
             return new Rect(element.TransformToVisual(null).TransformPoint(new Point()), new Size(element.ActualWidth, element.ActualHeight));
         }
-        public static int CountCharacters(List<Line> TotalLines)
+        public static int CountCharacters(PooledList<Line> TotalLines)
         {
             int Count = 0;
             for (int i = 0; i < TotalLines.Count; i++)

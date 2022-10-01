@@ -14,6 +14,6 @@
         </AcrylicBrush>
     </Page.Background>
     <Grid>
-        <textcontrolbox:TextControlBox Text="Hello World" x:Name="TextControlBox"/>
+        <textcontrolbox:TextControlBox x:Name="TextControlBox"/>
     </Grid>
 </Page>
