@@ -1,4 +1,5 @@
-﻿using Microsoft.Graphics.Canvas;
+﻿using Collections.Pooled;
+using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Brushes;
 using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
@@ -94,7 +95,7 @@ namespace TextControlBox
         CoreTextEditContext EditContext;
 
         //Store the lines in Lists
-        private List<Line> TotalLines = new List<Line>();
+        private PooledList<Line> TotalLines = new PooledList<Line>();
         private List<Line> RenderedLines = new List<Line>();
 
         //Classes
@@ -348,8 +349,7 @@ namespace TextControlBox
             if (Selection.WholeTextSelected(TextSelection, TotalLines))
             {
                 UndoRedo.RecordMultiLineUndo(TotalLines, StartLinePos.LineNumber, 2, "", TextSelection, NewLineCharacter, false);
-                TotalLines.Clear();
-                TotalLines.Add(new Line());
+                ListHelper.Clear(TotalLines, true);
                 CursorPosition = new CursorPosition(0, 1);
 
                 ForceClearSelection();
@@ -1020,6 +1020,7 @@ namespace TextControlBox
 
             //Clear the rendered lines, to fill them with new lines
             RenderedLines.Clear();
+            RenderedLines.TrimExcess();
             //Create resources and layouts:
             if (NeedsTextFormatUpdate || TextFormat == null)
             {
@@ -1278,7 +1279,7 @@ namespace TextControlBox
             UpdateCursor();
         }
         /// <summary>
-        /// Load text to the textbox everything currently in it will reset. Use this to load text on application start
+        /// Load text to the textbox everything in it will reset. Use this to load text on application start
         /// </summary>
         /// <param name="text">The text to load</param>
         public async void LoadText(string text)
@@ -1286,22 +1287,21 @@ namespace TextControlBox
             if (await IsOverTextLimit(text.Length))
                 return;
 
-            TotalLines.Clear();
+            ListHelper.Clear(TotalLines);
             RenderedLines.Clear();
-            UndoRedo.ClearAll();
+            RenderedLines.TrimExcess();
             selectionrenderer.ClearSelection();
 
             //Get the LineEnding
             LineEnding = LineEndings.FindLineEnding(text);
 
-            //Split the lines by the current LineEnding
+            //Split the lines using the current LineEnding
             var lines = text.Split(NewLineCharacter);
             for (int i = 0; i < lines.Length; i++)
             {
                 TotalLines.Add(new Line(lines[i]));
             }
 
-            Debug.WriteLine("Loaded " + lines.Length + " lines with the lineending " + LineEnding.ToString());
             Internal_TextChanged(text);
             UpdateAll();
         }
@@ -1321,8 +1321,10 @@ namespace TextControlBox
 
             string UndoText = ListHelper.GetLinesAsString(TotalLines, 0, lines.Length, NewLineCharacter);
 
-            TotalLines.Clear();
+            //Clear the lists
+            ListHelper.Clear(TotalLines);
             RenderedLines.Clear();
+            RenderedLines.TrimExcess();
 
             for (int i = 0; i < lines.Length; i++)
             {

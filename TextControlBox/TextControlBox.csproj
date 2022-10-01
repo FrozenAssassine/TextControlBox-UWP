@@ -150,6 +150,9 @@
     <EmbeddedResource Include="Properties\TextControlBox.rd.xml" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Collections.Pooled">
+      <Version>1.0.82</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.13</Version>
     </PackageReference>

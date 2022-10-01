@@ -81,6 +81,7 @@ namespace TextControlBox.Renderer
 
                     SelStartIndex = CharacterPosStart + LenghtToLine;
                     SelEndIndex = CharacterPosEnd + LenghtToLine;
+                    
                 }
                 else
                 {

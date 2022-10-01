@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using Collections.Pooled;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using TextControlBox.Text;
 
@@ -16,7 +19,7 @@ namespace TextControlBox.Helper
             public int Index;
             public int Count;
         }
-        private static ValueResult CheckValues(List<Line> TotalLines, int Index, int Count)
+        private static ValueResult CheckValues(PooledList<Line> TotalLines, int Index, int Count)
         {
             if (Index >= TotalLines.Count)
             {
@@ -32,7 +35,18 @@ namespace TextControlBox.Helper
             return new ValueResult(Index, Count);
         }
 
-        public static Line GetLine(List<Line> TotalLines, int Index)
+        public static void Clear(PooledList<Line> TotalLines, bool AddNewLine = false)
+        {
+            TotalLines.Clear();
+            TotalLines.TrimExcess();
+            //GC.Collect();
+
+            if (AddNewLine)
+            {
+                TotalLines.Add(new Line());            }
+        }
+
+        public static Line GetLine(PooledList<Line> TotalLines, int Index)
         {
             if (TotalLines.Count == 0)
                 TotalLines.Add(new Line());
@@ -43,25 +57,32 @@ namespace TextControlBox.Helper
             return TotalLines[Index >= TotalLines.Count ? TotalLines.Count - 1 : Index >= 0 ? Index : 0];
         }
 
-        public static List<Line> GetLines(List<Line> TotalLines, int Index, int Count)
+        public static PooledList<Line> GetLines(PooledList<Line> TotalLines, int Index, int Count)
         {
             var res = CheckValues(TotalLines, Index, Count);
-            return TotalLines.GetRange(res.Index, res.Count);
+            using (PooledList<Line> tempLines = new PooledList<Line>())
+            {
+                for (int i = res.Index; i < res.Count; i++)
+                {
+                    tempLines.Add(GetLine(TotalLines, i));
+                }
+                return tempLines;
+            }
         }
 
-        public static string GetLinesAsString(List<Line> TotalLines, int Index, int Count, string NewLineCharacter)
+        public static string GetLinesAsString(PooledList<Line> TotalLines, int Index, int Count, string NewLineCharacter)
         {
             return GetLinesAsString(GetLines(TotalLines, Index, Count), NewLineCharacter);
         }
-        public static string GetLinesAsString(List<Line> Lines, string NewLineCharacter)
+        public static string GetLinesAsString(PooledList<Line> Lines, string NewLineCharacter)
         {
             return string.Join(NewLineCharacter, Lines.Select(a => a.Content));
         }
 
-        public static List<Line> GetLinesFromString(string content, string NewLineCharacter)
+        public static PooledList<Line> GetLinesFromString(string content, string NewLineCharacter)
         {
             var Splitted = content.Split(NewLineCharacter);
-            List<Line> Content = new List<Line>(Splitted.Length);
+            PooledList<Line> Content = new PooledList<Line>(Splitted.Length);
             for (int i = 0; i < Splitted.Length; i++)
             {
                 Content.Add(new Line(Splitted[i]));
@@ -69,7 +90,7 @@ namespace TextControlBox.Helper
             return Content;
         }
 
-        public static void Insert(List<Line> TotalLines, Line Line, int Position)
+        public static void Insert(PooledList<Line> TotalLines, Line Line, int Position)
         {
             if (Position >= TotalLines.Count)
                 TotalLines.Add(Line);
@@ -77,25 +98,31 @@ namespace TextControlBox.Helper
                 TotalLines.Insert(Position, Line);
         }
 
-        public static void InsertRange(List<Line> TotalLines, List<Line> Lines, int Position)
+        public static void InsertRange(PooledList<Line> TotalLines, PooledList<Line> Lines, int Position)
         {
             if (Position >= TotalLines.Count)
                 TotalLines.AddRange(Lines);
             else
                 TotalLines.InsertRange(Position < 0 ? 0 : Position, Lines);
+
+            TotalLines.TrimExcess();
         }
 
-        public static void RemoveRange(List<Line> TotalLines, int Index, int Count)
+        public static void RemoveRange(PooledList<Line> TotalLines, int Index, int Count)
         {
             var res = CheckValues(TotalLines, Index, Count);
             TotalLines.RemoveRange(res.Index, res.Count);
+            TotalLines.TrimExcess();
+            //GC.Collect();
         }
-        public static void DeleteAt(List<Line> TotalLines, int Index)
+        public static void DeleteAt(PooledList<Line> TotalLines, int Index)
         {
             if (Index >= TotalLines.Count)
                 Index = TotalLines.Count - 1 < 0 ? TotalLines.Count - 1 : 0;
 
             TotalLines.RemoveAt(Index);
+            TotalLines.TrimExcess();
+            //GC.Collect();
         }
     }
 }

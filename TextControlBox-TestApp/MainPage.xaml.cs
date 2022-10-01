@@ -20,13 +20,14 @@ namespace TextControlBox_TestApp
             TextControlBox.CodeLanguage = CodeLanguages.Csharp;
             //Open a test file
             //OpenFile();
-            TextControlBox.SetText(GenerateContent());
+            TextControlBox.LoadText(GenerateContent());
             TextControlBox.FontSize = 42;
+            //GC.Collect();
         }
         
         private string GenerateContent()
         {
-            int Limit = 140;
+            int Limit = 100000;
             StringBuilder sb = new StringBuilder();
             for (int i = 1; i < Limit; i++)
             {
