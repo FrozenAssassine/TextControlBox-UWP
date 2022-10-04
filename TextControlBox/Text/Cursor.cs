@@ -13,9 +13,10 @@ namespace TextControlBox.Text
         public static int CursorPositionToIndex(PooledList<Line> TotalLines, CursorPosition CursorPosition)
         {
             int CursorIndex = CursorPosition.CharacterPosition;
-            for (int i = 0; i < CursorPosition.LineNumber; i++)
+            int LineNumber = CursorPosition.LineNumber < TotalLines.Count ? CursorIndex : TotalLines.Count - 1;
+            for (int i = 0; i < LineNumber; i++)
             {
-                CursorIndex += TotalLines[i].Length + 1;
+                CursorIndex += ListHelper.GetLine(TotalLines, i).Length + 1;
             }
             return CursorIndex;
         }

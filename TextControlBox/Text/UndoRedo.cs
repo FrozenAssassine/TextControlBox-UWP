@@ -1,5 +1,6 @@
 ﻿using Collections.Pooled;
 using System.Collections.Generic;
+using System.Diagnostics;
 using TextControlBox.Helper;
 
 namespace TextControlBox.Text
@@ -39,10 +40,11 @@ namespace TextControlBox.Text
                 }
             }
 
-            var lines = ListHelper.GetLinesFromString(item.UndoText, NewLineCharacter);
-
-            ListHelper.RemoveRange(TotalLines, item.StartLine, item.Count);
-            ListHelper.InsertRange(TotalLines, lines, item.StartLine);
+            var lines = ListHelper.GetStringLinesFromString(item.UndoText, NewLineCharacter);
+            Selection.ReplaceLines2(TotalLines, item.StartLine, item.Count, lines);
+            //var lines = ListHelper.GetLinesFromString(item.UndoText, NewLineCharacter);
+            //ListHelper.RemoveRange(TotalLines, item.StartLine, item.Count);
+            //ListHelper.InsertRange(TotalLines, lines, item.StartLine);
 
             return item.Selection;
         }

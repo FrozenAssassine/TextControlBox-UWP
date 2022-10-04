@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Collections.Pooled;
+using System.Collections.Generic;
 using System.Diagnostics;
 using TextControlBox.Text;
 
@@ -6,7 +7,7 @@ namespace TextControlBox.Helper
 {
     public class DebugHelper
     {
-        public static void DebugList(List<Line> List, string DebugTitle = "--DebugList--")
+        public static void DebugList(PooledList<Line> List, string DebugTitle = "--DebugList--")
         {
             Debug.WriteLine(DebugTitle);
             if (List == null)
