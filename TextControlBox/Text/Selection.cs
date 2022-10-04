@@ -1,9 +1,7 @@
 ﻿using Collections.Pooled;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.ConstrainedExecution;
 using System.Text;
 using TextControlBox.Helper;
 
@@ -57,8 +55,8 @@ namespace TextControlBox.Text
             if (Selection == null)
                 return false;
 
-            return Utils.CursorPositionsAreEqual(Selection.StartPosition, new CursorPosition(0, 0)) &&
-                Utils.CursorPositionsAreEqual(Selection.EndPosition, new CursorPosition(ListHelper.GetLine(TotalLines, -1).Length, TotalLines.Count));
+            return Utils.CursorPositionsAreEqual(Selection.StartPosition, new CursorPosition(0, 0)) && 
+                Utils.CursorPositionsAreEqual(Selection.EndPosition, new CursorPosition(ListHelper.GetLine(TotalLines, -1).Length, TotalLines.Count-1));               
         }
 
         public static CursorPosition GetMax(CursorPosition Pos1, CursorPosition Pos2)
@@ -185,31 +183,23 @@ namespace TextControlBox.Text
             }
             else if (WholeTextSelected(Selection, TotalLines))
             {
-                ListHelper.Clear(TotalLines);
-                using (PooledList<Line> LinesToAdd = new PooledList<Line>(SplittedText.Length))
-                {
-                    for (int i = 0; i < SplittedText.Length; i++)
-                        LinesToAdd.Add(new Line(SplittedText[i]));
-
-                    TotalLines.AddRange(LinesToAdd);
-
-                    if (TotalLines.Count == 0)
-                        TotalLines.Add(new Line());
-
-                    return new CursorPosition(ListHelper.GetLine(TotalLines, -1).Length, TotalLines.Count - 1);
-                }
+                ReplaceLines(TotalLines, SplittedText);
+                return new CursorPosition(ListHelper.GetLine(TotalLines, -1).Length, TotalLines.Count - 1);
             }
             else
             {
                 using (PooledList<Line> LinesToInsert = new PooledList<Line>(SplittedText.Length))
                 {
-                    Line End_Line = ListHelper.GetLine(TotalLines, EndLine);
+                    int RemoveStart, RemoveCount;
                     int InsertPosition = StartLine;
-                    //all lines are selected from start to finish
+                    Line End_Line = ListHelper.GetLine(TotalLines, EndLine);
+
+                    //All lines are selected from start to finish
                     if (StartPosition == 0 && EndPosition == End_Line.Length)
                     {
-                        ListHelper.RemoveRange(TotalLines, StartLine, EndLine - StartLine + 1);
-
+                        //ListHelper.RemoveRange(TotalLines, StartLine, EndLine - StartLine + 1);
+                        RemoveStart = StartLine;
+                        RemoveCount = EndLine - StartLine + 1;
                         for (int i = 0; i < SplittedText.Length; i++)
                         {
                             LinesToInsert.Add(new Line(SplittedText[i]));
@@ -220,7 +210,9 @@ namespace TextControlBox.Text
                     else if (StartPosition == 0 && EndPosition != End_Line.Length)
                     {
                         End_Line.Substring(EndPosition);
-                        ListHelper.RemoveRange(TotalLines, StartLine, EndLine - StartLine);
+                        //ListHelper.RemoveRange(TotalLines, StartLine, EndLine - StartLine);
+                        RemoveStart = StartLine;
+                        RemoveCount = EndLine - StartLine;
 
                         for (int i = 0; i < SplittedText.Length; i++)
                         {
@@ -235,7 +227,9 @@ namespace TextControlBox.Text
                     else if (StartPosition != 0 && EndPosition == End_Line.Length)
                     {
                         Start_Line.Remove(StartPosition);
-                        ListHelper.RemoveRange(TotalLines, StartLine + 1, EndLine - StartLine);
+                        //ListHelper.RemoveRange(TotalLines, StartLine + 1, EndLine - StartLine);
+                        RemoveStart = StartLine + 1;
+                        RemoveCount = EndLine - StartLine;
 
                         for (int i = 0; i < SplittedText.Length; i++)
                         {
@@ -251,7 +245,9 @@ namespace TextControlBox.Text
                         End_Line.Substring(EndPosition);
 
                         int Remove = EndLine - StartLine - 1;
-                        ListHelper.RemoveRange(TotalLines, StartLine + 1, Remove < 0 ? 0 : Remove);
+                        //ListHelper.RemoveRange(TotalLines, StartLine + 1, Remove < 0 ? 0 : Remove);
+                        RemoveStart = StartLine + 1;
+                        RemoveCount = Remove < 0 ? 0 : Remove;
 
                         if (SplittedText.Length == 1)
                         {
@@ -273,6 +269,8 @@ namespace TextControlBox.Text
                             }
                         }
                     }
+
+                    ListHelper.RemoveRange(TotalLines, RemoveStart, RemoveCount);
                     if (LinesToInsert.Count > 0)
                     {
                         ListHelper.InsertRange(TotalLines, LinesToInsert, StartLine + 1);
@@ -457,15 +455,13 @@ namespace TextControlBox.Text
             }
 
             //Create new items with same content from CurrentItems into NewItems
-            using (PooledList<Line> NewItems = new PooledList<Line>())
+            PooledList<Line> NewItems = new PooledList<Line>();
+            for (int i = 0; i < CurrentItems.Count; i++)
             {
-                for (int i = 0; i < CurrentItems.Count; i++)
-                {
-                    NewItems.Add(new Line(CurrentItems[i].Content));
-                }
-                CurrentItems = null;
-                return NewItems;
+                NewItems.Add(new Line(CurrentItems[i].Content));
             }
+            CurrentItems = null;
+            return NewItems;
         }
 
         public static string GetSelectedTextWithoutCharacterPos(PooledList<Line> TotalLines, TextSelection TextSelection, string NewLineCharacter)
@@ -519,26 +515,121 @@ namespace TextControlBox.Text
             }
             else if (WholeTextSelected(TextSelection, TotalLines))
             {
-                return String.Join(NewLineCharacter, TotalLines.Select(x => x.Content));
+                StringBuilder.Append(ListHelper.GetLinesAsString(TotalLines, NewLineCharacter));
             }
             else //Multiline
             {
-                for (int i = StartLine; i < EndLine + 1; i++)
+                //StartLine
+                StringBuilder.Append(ListHelper.GetLine(TotalLines, StartLine).Content.Substring(StartIndex) + NewLineCharacter);
+
+                //Other lines
+                if(EndLine - StartLine > 1)
+                    StringBuilder.Append(ListHelper.GetLinesAsString(TotalLines, StartLine + 1, EndLine - StartLine - 1, NewLineCharacter) + NewLineCharacter);
+
+                //Endline
+                Line CurrentLine = ListHelper.GetLine(TotalLines, EndLine);
+                StringBuilder.Append(EndIndex == CurrentLine.Length ? CurrentLine.Content : CurrentLine.Content.Remove(EndIndex));
+            }
+            return StringBuilder.ToString();
+        }
+    
+        /// <summary>
+        /// All lines in TotalLines, starting by 0 to the length of TotalLines, get replaced with the lines in SplittedText 
+        /// </summary>
+        /// <param name="TotalLines"></param>
+        /// <param name="SplittedText"></param>
+        public static void ReplaceLines(PooledList<Line> TotalLines, string[] SplittedText)
+        {
+            if (SplittedText.Length == 0)
+            {
+                ListHelper.Clear(TotalLines);
+            }
+            else
+            {
+                //TotalLines has more items than replace has items
+                if (TotalLines.Count >= SplittedText.Length)
                 {
-                    if (i == StartLine)
-                        StringBuilder.Append(ListHelper.GetLine(TotalLines, StartLine).Content.Substring(StartIndex) + NewLineCharacter);
-                    else if (i == EndLine)
+                    //Replace the existing with new content
+                    for (int i = 0; i < SplittedText.Length; i++)
                     {
-                        Line CurrentLine = ListHelper.GetLine(TotalLines, EndLine);
-                        StringBuilder.Append(EndIndex == CurrentLine.Length ? CurrentLine.Content : CurrentLine.Content.Remove(EndIndex));
+                        TotalLines[i].Content = SplittedText[i];
                     }
-                    else
-                        StringBuilder.Append(ListHelper.GetLine(TotalLines, i).Content + NewLineCharacter);
+
+                    ListHelper.RemoveRange(TotalLines, SplittedText.Length, TotalLines.Count - SplittedText.Length);
+                }
+                //TotalLines has less items than replace has items
+                else if (TotalLines.Count < SplittedText.Length)
+                {
+                    //Replace as many as possible
+                    for (int i = 0; i < TotalLines.Count; i++)
+                    {
+                        TotalLines[i].Content = SplittedText[i];
+                    }
+                    //Add the missing one
+                    using (var LinesToAdd = new PooledList<Line>(TotalLines))
+                    {
+                        for (int i = TotalLines.Count; i < SplittedText.Length; i++)
+                            LinesToAdd.Add(new Line(SplittedText[i]));
+
+                        TotalLines.AddRange(LinesToAdd);
+                    }
+                }
+                TotalLines.TrimExcess();
+            }
+        }
+
+        /// <summary>
+        /// Replaces the lines in TotalLines, starting by Start replacing Count number of items, with the string in SplittedText
+        /// All lines that can be replaced get replaced all lines that are needed additionally get added
+        /// </summary>
+        /// <param name="TotalLines"></param>
+        /// <param name="Start"></param>
+        /// <param name="Count"></param>
+        /// <param name="SplittedText"></param>
+        public static void ReplaceLines2(PooledList<Line> TotalLines, int Start, int Count, string[] SplittedText)
+        {
+            if (SplittedText.Length == 0)
+            {
+                ListHelper.RemoveRange(TotalLines, Start, Count);
+            }
+            else
+            {
+                //delete items from Start to Count
+                //Insert SplittedText at Start
+
+                var linesToReplace = ListHelper.GetLines(TotalLines, Start, Count);
+                if (linesToReplace.Count >= SplittedText.Length)
+                {
+                    for (int i = 0; i < linesToReplace.Count; i++)
+                    {
+                        if (i >= SplittedText.Length)
+                        {
+                            ListHelper.RemoveRange(linesToReplace, Start + i, linesToReplace.Count - i);
+                            break;
+                        }
+                        linesToReplace[i].SetText(SplittedText[i]);
+                    }
+                }
+                else
+                {
+                    for (int i = 0; i < SplittedText.Length; i++)
+                    {
+                        if (i >= linesToReplace.Count)
+                        {
+                            using (var addLines = new PooledList<Line>())
+                            {
+                                for (int j = i; j < SplittedText.Length; j++)
+                                {
+                                    addLines.Add(new Line(SplittedText[j]));
+                                }
+                                TotalLines.InsertRange(Start + i, addLines);
+                            }
+                            break;
+                        }
+                        linesToReplace[i].SetText(SplittedText[i]);
+                    }
                 }
             }
-            string text = StringBuilder.ToString();
-            StringBuilder.Clear();
-            return text;
         }
     }
 }

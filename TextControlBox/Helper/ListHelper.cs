@@ -32,6 +32,12 @@ namespace TextControlBox.Helper
                 if (difference >= 0)
                     Count = difference;
             }
+
+            if (Count < 0)
+                Count = 0;
+            if (Index < 0)
+                Index = 0;
+
             return new ValueResult(Index, Count);
         }
 
@@ -43,7 +49,8 @@ namespace TextControlBox.Helper
 
             if (AddNewLine)
             {
-                TotalLines.Add(new Line());            }
+                TotalLines.Add(new Line());            
+            }
         }
 
         public static Line GetLine(PooledList<Line> TotalLines, int Index)
@@ -60,14 +67,7 @@ namespace TextControlBox.Helper
         public static PooledList<Line> GetLines(PooledList<Line> TotalLines, int Index, int Count)
         {
             var res = CheckValues(TotalLines, Index, Count);
-            using (PooledList<Line> tempLines = new PooledList<Line>())
-            {
-                for (int i = res.Index; i < res.Count; i++)
-                {
-                    tempLines.Add(GetLine(TotalLines, i));
-                }
-                return tempLines;
-            }
+            return TotalLines.GetRange(res.Index, res.Count).ToPooledList();
         }
 
         public static string GetLinesAsString(PooledList<Line> TotalLines, int Index, int Count, string NewLineCharacter)
@@ -90,6 +90,11 @@ namespace TextControlBox.Helper
             return Content;
         }
 
+        public static string[] GetStringLinesFromString(string content, string NewLineCharacter)
+        {
+            return content.Split(NewLineCharacter);
+        }
+
         public static void Insert(PooledList<Line> TotalLines, Line Line, int Position)
         {
             if (Position >= TotalLines.Count)
@@ -104,8 +109,6 @@ namespace TextControlBox.Helper
                 TotalLines.AddRange(Lines);
             else
                 TotalLines.InsertRange(Position < 0 ? 0 : Position, Lines);
-
-            TotalLines.TrimExcess();
         }
 
         public static void RemoveRange(PooledList<Line> TotalLines, int Index, int Count)

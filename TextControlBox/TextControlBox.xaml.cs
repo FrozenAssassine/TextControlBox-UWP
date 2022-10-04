@@ -244,7 +244,6 @@ namespace TextControlBox
                 CursorPosition = Selection.Replace(TextSelection, TotalLines, text, NewLineCharacter);
 
                 selectionrenderer.ClearSelection();
-                TextSelection = null;
                 UpdateSelection();
             }
 
@@ -1291,6 +1290,7 @@ namespace TextControlBox
             RenderedLines.Clear();
             RenderedLines.TrimExcess();
             selectionrenderer.ClearSelection();
+            UndoRedo.ClearAll();
 
             //Get the LineEnding
             LineEnding = LineEndings.FindLineEnding(text);
