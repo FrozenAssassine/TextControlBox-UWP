@@ -1505,17 +1505,28 @@ namespace TextControlBox
         }
         public void SetLineContent(int line, string text)
         {
+            string UndoText = ListHelper.GetLine(TotalLines, line).Content;
             ListHelper.GetLine(TotalLines, line).Content = text;
+            string RedoText = ListHelper.GetLine(TotalLines, line).Content;
+            UndoRedo.RecordMultiLineUndo(TotalLines, line, 1, UndoText, RedoText, TextSelection, NewLineCharacter, false);
             UpdateText();
         }
         public void DeleteLine(int line)
         {
+            string UndoText = ListHelper.GetLinesAsString(TotalLines, line, 2,NewLineCharacter);
             TotalLines.RemoveAt(line);
+            string RedoText = ListHelper.GetLinesAsString(TotalLines, line, 2, NewLineCharacter);
+            UndoRedo.RecordMultiLineUndo(TotalLines, line, 2, UndoText, RedoText, TextSelection, NewLineCharacter, false);
+
             UpdateText();
         }
         public void AddLine(int position, string text)
-        {
+{
+            string UndoText = ListHelper.GetLinesAsString(TotalLines, position, 2, NewLineCharacter);
             ListHelper.Insert(TotalLines, new Line(text), position);
+            string RedoText = ListHelper.GetLinesAsString(TotalLines, position, 2, NewLineCharacter);
+            UndoRedo.RecordMultiLineUndo(TotalLines, position, 2, UndoText, RedoText, TextSelection, NewLineCharacter, false);
+
             UpdateText();
         }
         public TextSelectionPosition FindInText(string pattern)
