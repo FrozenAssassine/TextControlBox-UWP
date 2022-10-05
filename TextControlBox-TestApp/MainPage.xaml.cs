@@ -27,7 +27,7 @@ namespace TextControlBox_TestApp
         
         private string GenerateContent()
         {
-            int Limit = 100000;
+            int Limit = 100;
             StringBuilder sb = new StringBuilder();
             for (int i = 1; i < Limit; i++)
             {

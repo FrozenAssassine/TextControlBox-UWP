@@ -1107,8 +1107,11 @@ namespace TextControlBox
             if (CurrentLine == null || DrawnTextLayout == null || !HasFocus)
                 return;
 
-            if (CursorPosition.LineNumber > TotalLines.Count)
+            if (CursorPosition.LineNumber >= TotalLines.Count)
+            {
                 CursorPosition.LineNumber = TotalLines.Count - 1;
+                CursorPosition.CharacterPosition = CurrentLine.Length;
+            }
 
             //Calculate the distance to the top for the cursorposition and render the cursor
             float RenderPosY = (float)((CursorPosition.LineNumber - NumberOfUnrenderedLinesToRenderStart) * SingleLineHeight) + SingleLineHeight / 4;
