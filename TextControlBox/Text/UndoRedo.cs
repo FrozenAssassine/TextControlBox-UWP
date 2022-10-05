@@ -31,10 +31,16 @@ namespace TextControlBox.Text
                 var sel = Selection.OrderTextSelection(item.Selection);
                 if (item.IsDeletion && sel.StartPosition.LineNumber < sel.EndPosition.LineNumber)
                 {
-                    //If all lines are completely selected Count has to be smaller, because no line will stay after deleting the selection
+                    Debug.WriteLine(sel.ToString());
+                    var splitted = item.UndoText.Split(NewLineCharacter);
+                    var line = splitted[splitted.Length - 1];
+                    Debug.WriteLine(line + " | " + line.Length + "::" + sel.EndPosition.CharacterPosition);
+
+                    //If lines are selected from start to finish, selected Count has to be smaller, because no line will stay after deleting the selection
                     if (sel.StartPosition.CharacterPosition == 0 &&
-                        sel.EndPosition.CharacterPosition == ListHelper.GetLine(TotalLines, item.StartLine + item.Count - 2).Length)
+                        sel.EndPosition.CharacterPosition == line.Length)
                     {
+                        Debug.WriteLine("SUBTRACT");
                         item.Count -= 1;
                     }
                 }

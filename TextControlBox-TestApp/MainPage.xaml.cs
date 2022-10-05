@@ -58,7 +58,7 @@ namespace TextControlBox_TestApp
                 if(file != null)
                 {
                     string text = await FileIO.ReadTextAsync(file);
-                    TextControlBox.SetText(text);
+                    TextControlBox.LoadText(text);
                 }
             }
         }

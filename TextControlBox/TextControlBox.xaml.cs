@@ -213,10 +213,10 @@ namespace TextControlBox
             if (CurrentLine == null || IsReadonly)
                 return;
 
-            var SplittedTextLength = text.Split(NewLineCharacter).Length;
-
             if (IgnoreSelection)
                 ClearSelection();
+
+            int SplittedTextLength = text.Contains(NewLineCharacter) ? text.NumberOfOccurences(NewLineCharacter) : 1;
 
             //Nothing is selected
             if (TextSelection == null && SplittedTextLength == 1)
