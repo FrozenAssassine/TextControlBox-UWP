@@ -1,6 +1,7 @@
 ﻿using Microsoft.Graphics.Canvas.Brushes;
 using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
+using System.Diagnostics;
 using System.Numerics;
 using TextControlBox.Text;
 using Windows.Foundation;
@@ -38,7 +39,7 @@ namespace TextControlBox.Renderer
             if (CurrentLineTextLayout == null)
                 return 0;
 
-            return CurrentLineTextLayout.GetCaretPosition(CursorPosition.CharacterPosition, false).X + XOffset;
+            return CurrentLineTextLayout.GetCaretPosition(CursorPosition.CharacterPosition < 0 ? 0 : CursorPosition.CharacterPosition, false).X + XOffset;
         }
 
         //Return the cursor Width
