@@ -68,7 +68,6 @@ namespace TextControlBox
 
         bool ColorResourcesCreated = false;
         bool NeedsTextFormatUpdate = false;
-        bool GotKeyboardInput = false;
         bool DragDropSelection = false;
         bool HasFocus = false;
 
@@ -478,35 +477,33 @@ namespace TextControlBox
             DragDropSelection = false;
             UpdateAll();
         }
-        private void EndDragDropSelection()
+        private void EndDragDropSelection(bool ClearSelectedText = true)
         {
             DragDropSelection = false;
-            ClearSelection();
-            UpdateSelection();
+            if (ClearSelectedText)
+                ClearSelection();
+
             Utils.ChangeCursor(CoreCursorType.IBeam);
             selectionrenderer.IsSelecting = false;
             UpdateCursor();
         }
         private bool DragDropOverSelection(Point CurPos)
         {
-            if (selectionrenderer.CursorIsInSelection(CursorPosition, TextSelection) ||
-                selectionrenderer.PointerIsOverSelection(CurPos, TextSelection, DrawnTextLayout))
-            {
-                Utils.ChangeCursor(CoreCursorType.UniversalNo);
-                return true;
-            }
-            else
-            {
-                Utils.ChangeCursor(CoreCursorType.IBeam);
-                return false;
-            }
+            bool res = selectionrenderer.CursorIsInSelection(CursorPosition, TextSelection) ||
+                selectionrenderer.PointerIsOverSelection(CurPos, TextSelection, DrawnTextLayout);
+
+            Utils.ChangeCursor(res ? CoreCursorType.UniversalNo : CoreCursorType.IBeam);
+            
+            return res;
         }
-        private void UpdateScrollToShowCursor()
+        private void UpdateScrollToShowCursor(bool Update = true)
         {
             if (NumberOfStartLine + RenderedLines.Count <= CursorPosition.LineNumber)
-                ScrollBottomIntoView();
+                VerticalScrollbar.Value = (CursorPosition.LineNumber - RenderedLines.Count + 1) * SingleLineHeight;
             else if (NumberOfStartLine > CursorPosition.LineNumber)
-                ScrollTopIntoView();
+                VerticalScrollbar.Value = (CursorPosition.LineNumber - 1) * SingleLineHeight;
+            if(Update)
+                UpdateAll();
         }
         private async Task<bool> IsOverTextLimit(int TextLength)
         {
@@ -575,8 +572,8 @@ namespace TextControlBox
             if (!HasFocus)
                 return;
 
-            var ctrl = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
-            var shift = Window.Current.CoreWindow.GetKeyState(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down);
+            var ctrl = Utils.IsKeyPressed(VirtualKey.Control);
+            var shift = Utils.IsKeyPressed(VirtualKey.Shift);
             if (ctrl && !shift)
             {
                 switch (e.VirtualKey)
@@ -661,10 +658,8 @@ namespace TextControlBox
                             CursorPosition = Cursor.MoveRight(CursorPosition, TotalLines, GetCurrentLine());
                         }
 
-                        UpdateScrollToShowCursor();
-                        UpdateText();
-                        UpdateCursor();
-                        UpdateSelection();
+                        UpdateScrollToShowCursor(false);
+                        UpdateAll();
                         break;
                     }
                 case VirtualKey.Down:
@@ -682,10 +677,8 @@ namespace TextControlBox
                             CursorPosition = Cursor.MoveDown(CursorPosition, TotalLines.Count);
                         }
 
-                        UpdateScrollToShowCursor();
-                        UpdateText();
-                        UpdateCursor();
-                        UpdateSelection();
+                        UpdateScrollToShowCursor(false);
+                        UpdateAll();
                         break;
                     }
                 case VirtualKey.Up:
@@ -703,10 +696,8 @@ namespace TextControlBox
                             CursorPosition = Cursor.MoveUp(CursorPosition);
                         }
 
-                        UpdateScrollToShowCursor();
-                        UpdateText();
-                        UpdateCursor();
-                        UpdateSelection();
+                        UpdateScrollToShowCursor(false);
+                        UpdateAll();
                         break;
                     }
                 case VirtualKey.Escape:
@@ -746,16 +737,13 @@ namespace TextControlBox
                     }
                     else
                     {
-
                         selectionrenderer.SelectionStartPosition = Selection.StartPosition;
                         CursorPosition = selectionrenderer.SelectionEndPosition = Selection.EndPosition;
                         selectionrenderer.HasSelection = true;
                         selectionrenderer.IsSelecting = false;
                     }
                 }
-                UpdateText();
-                UpdateSelection();
-                UpdateCursor();
+                UpdateAll();
             }
         }
         private void EditContext_TextUpdating(CoreTextEditContext sender, CoreTextTextUpdatingEventArgs args)
@@ -768,15 +756,10 @@ namespace TextControlBox
                 return;
 
             //Prevent key-entering if control key is pressed 
-            var ctrl = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
-            var menu = Window.Current.CoreWindow.GetKeyState(VirtualKey.Menu).HasFlag(CoreVirtualKeyStates.Down);
+            var ctrl = Utils.IsKeyPressed(VirtualKey.Control);
+            var menu = Utils.IsKeyPressed(VirtualKey.Menu);
             if (ctrl && !menu || menu && !ctrl)
                 return;
-
-            if (!GotKeyboardInput)
-            {
-                GotKeyboardInput = true;
-            }
 
             AddCharacter(args.Text);
         }
@@ -833,15 +816,20 @@ namespace TextControlBox
         }
         private void Canvas_Selection_PointerMoved(object sender, PointerRoutedEventArgs e)
         {
+            var point = e.GetCurrentPoint(Canvas_Selection);
             //Drag drop text -> move the cursor to get the insertion point
             if (DragDropSelection)
             {
-                DragDropOverSelection(e.GetCurrentPoint(sender as UIElement).Position);
-                UpdateCursorVariable(e.GetCurrentPoint(Canvas_Selection).Position);
+                DragDropOverSelection(point.Position);
+                UpdateCursorVariable(point.Position);
                 UpdateCursor();
             }
+            else if (point.Properties.IsLeftButtonPressed)
+            {
+                selectionrenderer.IsSelecting = true;
+            }
 
-            if (selectionrenderer.IsSelecting)
+            if (selectionrenderer.IsSelecting && !DragDropSelection)
             {
                 UpdateCursorVariable(e.GetCurrentPoint(Canvas_Selection).Position);
                 UpdateCursor();
@@ -856,7 +844,7 @@ namespace TextControlBox
             bool LeftButtonPressed = e.GetCurrentPoint(sender as UIElement).Properties.IsLeftButtonPressed;
             bool RightButtonPressed = e.GetCurrentPoint(sender as UIElement).Properties.IsRightButtonPressed;
 
-            if (LeftButtonPressed)
+            if (LeftButtonPressed && !Utils.IsKeyPressed(VirtualKey.Shift))
                 PointerClickCount++;
 
             if (PointerClickCount == 3)
@@ -882,12 +870,11 @@ namespace TextControlBox
                     {
                         ContextFlyout.ShowAt(sender as FrameworkElement, new FlyoutShowOptions { Position = PointerPosition });
                     }
-                    else
-                        return;
+                    else return;
                 }
 
                 //Shift + click = set selection
-                if (Window.Current.CoreWindow.GetKeyState(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down) && LeftButtonPressed)
+                if (Utils.IsKeyPressed(VirtualKey.Shift) && LeftButtonPressed)
                 {
                     UpdateCursorVariable(PointerPosition);
 
@@ -895,6 +882,7 @@ namespace TextControlBox
                     selectionrenderer.HasSelection = true;
                     selectionrenderer.IsSelecting = false;
                     UpdateSelection();
+                    UpdateCursor();
                     return;
                 }
 
@@ -907,6 +895,7 @@ namespace TextControlBox
                     {
                         if (selectionrenderer.PointerIsOverSelection(PointerPosition, TextSelection, DrawnTextLayout) && !DragDropSelection)
                         {
+                            Debug.WriteLine("DragDropSelection");
                             PointerClickCount = 0;
                             DragDropSelection = true;
                             Utils.ChangeCursor(CoreCursorType.UniversalNo);
@@ -915,7 +904,7 @@ namespace TextControlBox
                         //End the selection by pressing on it
                         if (DragDropSelection && DragDropOverSelection(PointerPosition))
                         {
-                            EndDragDropSelection();
+                            EndDragDropSelection(true);
                         }
                     }
 
@@ -923,7 +912,7 @@ namespace TextControlBox
                     selectionrenderer.SelectionStartPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
                     if (selectionrenderer.HasSelection)
                     {
-                        ClearSelection();
+                        ForceClearSelection();
                     }
                     else
                     {
@@ -943,18 +932,16 @@ namespace TextControlBox
         }
         private void Canvas_Selection_PointerWheelChanged(object sender, PointerRoutedEventArgs e)
         {
-            var ctrl = Window.Current.CoreWindow.GetKeyState(VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down);
-            var shift = Window.Current.CoreWindow.GetKeyState(VirtualKey.Shift).HasFlag(CoreVirtualKeyStates.Down);
             var delta = e.GetCurrentPoint(this).Properties.MouseWheelDelta;
 
             //Zoom using mousewheel
-            if (ctrl)
+            if (Utils.IsKeyPressed(VirtualKey.Shift))
             {
                 _ZoomFactor += delta / 20;
                 UpdateZoom();
             }
             //Scroll horizontal using mousewheel
-            else if (shift)
+            else if (Utils.IsKeyPressed(VirtualKey.Shift))
             {
                 HorizontalScroll -= delta * HorizontalScrollSensitivity;
             }
