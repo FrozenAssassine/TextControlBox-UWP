@@ -4,6 +4,7 @@ using Microsoft.Graphics.Canvas.Text;
 using System.Collections.Generic;
 using TextControlBox.Text;
 using Windows.Foundation;
+using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 
@@ -91,6 +92,9 @@ namespace TextControlBox.Helper
         {
             Window.Current.CoreWindow.PointerCursor = new CoreCursor(CursorType, 0);
         }
-
+        public static bool IsKeyPressed(VirtualKey key)
+        {
+            return Window.Current.CoreWindow.GetKeyState(key).HasFlag(CoreVirtualKeyStates.Down);
+        }
     }
 }
