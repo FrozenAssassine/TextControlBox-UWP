@@ -183,7 +183,7 @@ namespace TextControlBox.Text
             }
             else if (WholeTextSelected(Selection, TotalLines))
             {
-                ReplaceLines(TotalLines, SplittedText);
+                ReplaceLines(TotalLines, 0, TotalLines.Count, SplittedText);
                 return new CursorPosition(ListHelper.GetLine(TotalLines, -1).Length, TotalLines.Count - 1);
             }
             else
@@ -528,56 +528,11 @@ namespace TextControlBox.Text
 
                 //Endline
                 Line CurrentLine = ListHelper.GetLine(TotalLines, EndLine);
-                StringBuilder.Append(EndIndex == CurrentLine.Length ? CurrentLine.Content : CurrentLine.Content.Remove(EndIndex));
+                StringBuilder.Append(EndIndex >= CurrentLine.Length ? CurrentLine.Content : CurrentLine.Content.Remove(EndIndex));
             }
             return StringBuilder.ToString();
         }
     
-        /// <summary>
-        /// All lines in TotalLines, starting by 0 to the length of TotalLines, get replaced with the lines in SplittedText 
-        /// </summary>
-        /// <param name="TotalLines"></param>
-        /// <param name="SplittedText"></param>
-        public static void ReplaceLines(PooledList<Line> TotalLines, string[] SplittedText)
-        {
-            if (SplittedText.Length == 0)
-            {
-                ListHelper.Clear(TotalLines);
-            }
-            else
-            {
-                //TotalLines has more items than replace has items
-                if (TotalLines.Count >= SplittedText.Length)
-                {
-                    //Replace the existing with new content
-                    for (int i = 0; i < SplittedText.Length; i++)
-                    {
-                        TotalLines[i].Content = SplittedText[i];
-                    }
-
-                    ListHelper.RemoveRange(TotalLines, SplittedText.Length, TotalLines.Count - SplittedText.Length);
-                }
-                //TotalLines has less items than replace has items
-                else if (TotalLines.Count < SplittedText.Length)
-                {
-                    //Replace as many as possible
-                    for (int i = 0; i < TotalLines.Count; i++)
-                    {
-                        TotalLines[i].Content = SplittedText[i];
-                    }
-                    //Add the missing one
-                    using (var LinesToAdd = new PooledList<Line>(TotalLines))
-                    {
-                        for (int i = TotalLines.Count; i < SplittedText.Length; i++)
-                            LinesToAdd.Add(new Line(SplittedText[i]));
-
-                        TotalLines.AddRange(LinesToAdd);
-                    }
-                }
-                TotalLines.TrimExcess();
-            }
-        }
-
         /// <summary>
         /// Replaces the lines in TotalLines, starting by Start replacing Count number of items, with the string in SplittedText
         /// All lines that can be replaced get replaced all lines that are needed additionally get added
@@ -586,7 +541,7 @@ namespace TextControlBox.Text
         /// <param name="Start"></param>
         /// <param name="Count"></param>
         /// <param name="SplittedText"></param>
-        public static void ReplaceLines2(PooledList<Line> TotalLines, int Start, int Count, string[] SplittedText)
+        public static void ReplaceLines(PooledList<Line> TotalLines, int Start, int Count, string[] SplittedText)
         {
             if (SplittedText.Length == 0)
             {
@@ -596,8 +551,9 @@ namespace TextControlBox.Text
             {
                 //delete items from Start to Count
                 //Insert SplittedText at Start
+                PooledList<Line> linesToReplace =
+                    Start + Count == TotalLines.Count ? TotalLines : ListHelper.GetLines(TotalLines, Start, Count);
 
-                var linesToReplace = ListHelper.GetLines(TotalLines, Start, Count);
                 if (linesToReplace.Count >= SplittedText.Length)
                 {
                     for (int i = 0; i < linesToReplace.Count; i++)

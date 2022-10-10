@@ -21,10 +21,8 @@ namespace TextControlBox.Text
             if (Position < 0)
                 Position = 0;
 
-            if (Position >= Content.Length)
+            if (Position >= Content.Length || Length <= 0)
                 Content += Value;
-            else if (Length <= 0)
-                AddToEnd(Value);
             else
                 Content = Content.Insert(Position, Value);
         }
