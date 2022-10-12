@@ -45,8 +45,11 @@ namespace TextControlBox.Text
                 }
             }
 
-            var lines = ListHelper.GetStringLinesFromString(item.UndoText, NewLineCharacter);
-            Selection.ReplaceLines(TotalLines, item.StartLine, item.Count, lines);
+            var lines = ListHelper.GetLinesFromString(item.UndoText, NewLineCharacter);
+            //var lines = ListHelper.GetStringLinesFromString(item.UndoText, NewLineCharacter);
+            ListHelper.RemoveRange(TotalLines, item.StartLine, item.Count);
+            ListHelper.InsertRange(TotalLines, lines, item.StartLine);
+            //Selection.ReplaceLines(TotalLines, item.StartLine, item.Count, lines);
             return item.Selection;
         }
         private TextSelection DoNewLineUndo(PooledList<Line> TotalLines, UndoRedoItem item, string NewLineCharacter)
@@ -71,14 +74,16 @@ namespace TextControlBox.Text
         {
             if (item.Selection == null)
             {
-                var lines = ListHelper.GetLinesFromString(item.RedoText, NewLineCharacter);
+                var linesRedo = ListHelper.GetLinesFromString(item.RedoText, NewLineCharacter);
+                var linesUndo = ListHelper.GetStringLinesFromString(item.UndoText, NewLineCharacter).Length;
 
                 if (item.IsDeletion)
                     ListHelper.RemoveRange(TotalLines, item.StartLine, item.Count);
                 else
                 {
-                    ListHelper.RemoveRange(TotalLines, item.StartLine, item.Count);
-                    ListHelper.InsertRange(TotalLines, lines, item.StartLine);
+                    Debug.WriteLine(item.Count + ":" + item.StartLine + ":" + linesUndo);
+                    ListHelper.RemoveRange(TotalLines, item.StartLine, linesUndo);
+                    ListHelper.InsertRange(TotalLines, linesRedo, item.StartLine);
                 }
                 return null;
             }

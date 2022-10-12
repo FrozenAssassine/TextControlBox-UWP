@@ -116,34 +116,22 @@ namespace TextControlBox
             FlyoutHelper = new FlyoutHelper(this);
             inputPane = InputPane.GetForCurrentView();
 
-
             //Events:
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             Window.Current.CoreWindow.PointerMoved += CoreWindow_PointerMoved;
             Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
             InitialiseOnStart();
         }
-
         private void InitialiseOnStart()
         {
-            Canvas_LineNumber.ClearColor = Color.FromArgb(50, 80, 80, 80); ;
+            Canvas_LineNumber.ClearColor = Color.FromArgb(50, 80, 80, 80);
 
             UpdateZoom();
             if (TotalLines.Count == 0)
                 TotalLines.Add(new Line());
         }
-        private void CreateColorResources(ICanvasResourceCreatorWithDpi resourceCreator)
-        {
-            if (ColorResourcesCreated)
-                return;
 
-            TextColorBrush = new CanvasSolidColorBrush(resourceCreator, TextColor);
-            CursorColorBrush = new CanvasSolidColorBrush(resourceCreator, CursorColor);
-            LineNumberColorBrush = new CanvasSolidColorBrush(resourceCreator, LineNumberColor);
-            LineHighlighterBrush = new CanvasSolidColorBrush(resourceCreator, LineHighlighterColor);
-            ColorResourcesCreated = true;
-        }
-
+        #region Update functions
         private void UpdateAll()
         {
             UpdateText();
@@ -206,7 +194,9 @@ namespace TextControlBox
             UpdateCurrentLineTextLayout();
             CursorPosition.CharacterPosition = CursorRenderer.GetCharacterPositionFromPoint(GetCurrentLine(), CurrentLineTextLayout, Point, (float)-HorizontalScroll);
         }
+        #endregion
 
+        #region Textediting
         private void AddCharacter(string text, bool IgnoreSelection = false, bool ExcecutePrevUndoToo = false)
         {
             if (CurrentLine == null || IsReadonly)
@@ -215,8 +205,7 @@ namespace TextControlBox
             if (IgnoreSelection)
                 ClearSelection();
 
-            int SplittedTextLength = text.Contains(NewLineCharacter) ? text.NumberOfOccurences(NewLineCharacter) : 1;
-
+            int SplittedTextLength = text.Contains(NewLineCharacter) ? text.NumberOfOccurences(NewLineCharacter) + 1 : 1;
             //Nothing is selected
             if (TextSelection == null && SplittedTextLength == 1)
             {
@@ -408,7 +397,9 @@ namespace TextControlBox
             UpdateAll();
             Internal_TextChanged();
         }
+        #endregion
 
+        #region Random functions
         private Line GetCurrentLine()
         {
             return ListHelper.GetLine(TotalLines, CursorPosition.LineNumber);
@@ -505,15 +496,6 @@ namespace TextControlBox
             if(Update)
                 UpdateAll();
         }
-        private async Task<bool> IsOverTextLimit(int TextLength)
-        {
-            if (TextLength > 100000000)
-            {
-                await new MessageDialog("Current textlimit is 100 million characters, but your file has " + TextLength + " characters").ShowAsync();
-                return true;
-            }
-            return false;
-        }
         private int GetCurPosInLine()
         {
             if (CursorPosition.CharacterPosition > CurrentLine.Length)
@@ -549,23 +531,20 @@ namespace TextControlBox
             inputPane.TryHide();
             Utils.ChangeCursor(CoreCursorType.Arrow);
         }
-        private void UpdateSyntaxHighlighting()
+        private void CreateColorResources(ICanvasResourceCreatorWithDpi resourceCreator)
         {
-            if (_CodeLanguage == null || !SyntaxHighlighting)
+            if (ColorResourcesCreated)
                 return;
 
-            var Highlights = _CodeLanguage.Highlights;
-            for (int i = 0; i < Highlights.Count; i++)
-            {
-                var matches = Regex.Matches(RenderedText, Highlights[i].Pattern);
-                for (int j = 0; j < matches.Count; j++)
-                {
-                    DrawnTextLayout.SetColor(matches[j].Index, matches[j].Length, Highlights[i].Color);
-                }
-            }
+            TextColorBrush = new CanvasSolidColorBrush(resourceCreator, TextColor);
+            CursorColorBrush = new CanvasSolidColorBrush(resourceCreator, CursorColor);
+            LineNumberColorBrush = new CanvasSolidColorBrush(resourceCreator, LineNumberColor);
+            LineHighlighterBrush = new CanvasSolidColorBrush(resourceCreator, LineHighlighterColor);
+            ColorResourcesCreated = true;
         }
+        #endregion
 
-
+        #region Events
         //Handle keyinputs
         private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs e)
         {
@@ -1072,7 +1051,7 @@ namespace TextControlBox
 
             //Create the textlayout --> apply the Syntaxhighlighting --> render it
             DrawnTextLayout = TextRenderer.CreateTextResource(sender, DrawnTextLayout, TextFormat, RenderedText, new Size { Height = sender.Size.Height, Width = this.ActualWidth }, ZoomedFontSize);
-            UpdateSyntaxHighlighting();
+            SyntaxHighlightingRenderer.UpdateSyntaxHighlighting(DrawnTextLayout, _CodeLanguage, SyntaxHighlighting, RenderedText);
             args.DrawingSession.DrawTextLayout(DrawnTextLayout, (float)-HorizontalScroll, SingleLineHeight, TextColorBrush);
 
             Canvas_LineNumber.Invalidate();
@@ -1256,8 +1235,9 @@ namespace TextControlBox
             UpdateCursorVariable(e.GetPosition(Canvas_Text));
             UpdateCursor();
         }
+        #endregion
 
-
+        #region Public functions and properties
         //Functions:
         /// <summary>
         /// Select the line specified by the index
@@ -1285,7 +1265,7 @@ namespace TextControlBox
         /// <param name="text">The text to load</param>
         public async void LoadText(string text)
         {
-            if (await IsOverTextLimit(text.Length))
+            if (await Utils.IsOverTextLimit(text.Length))
                 return;
 
             ListHelper.Clear(TotalLines);
@@ -1313,7 +1293,7 @@ namespace TextControlBox
         /// <param name="text">The text to load</param>
         public async void SetText(string text)
         {
-            if (await IsOverTextLimit(text.Length))
+            if (await Utils.IsOverTextLimit(text.Length))
                 return;
 
             selectionrenderer.ClearSelection();
@@ -1344,7 +1324,7 @@ namespace TextControlBox
             if (dataPackageView.Contains(StandardDataFormats.Text))
             {
                 string Text = LineEndings.CleanLineEndings(await dataPackageView.GetTextAsync(), LineEnding);
-                if (await IsOverTextLimit(Text.Length))
+                if (await Utils.IsOverTextLimit(Text.Length))
                     return;
 
                 AddCharacter(Text);
@@ -1676,7 +1656,6 @@ namespace TextControlBox
             SetSelection(selstart, sellenght);
             return true;
         }
-
         //Properties:
         public bool SyntaxHighlighting { get; set; } = true;
         public CodeLanguage CustomCodeLanguage
@@ -1685,7 +1664,7 @@ namespace TextControlBox
             set
             {
                 _CodeLanguage = value;
-                UpdateSyntaxHighlighting();
+                SyntaxHighlightingRenderer.UpdateSyntaxHighlighting(DrawnTextLayout, _CodeLanguage, SyntaxHighlighting, RenderedText);
                 UpdateText();
             }
         }
@@ -1695,7 +1674,7 @@ namespace TextControlBox
             set
             {
                 _CodeLanguage = CodeLanguageHelper.GetCodeLanguage(value);
-                UpdateSyntaxHighlighting();
+                SyntaxHighlightingRenderer.UpdateSyntaxHighlighting(DrawnTextLayout, _CodeLanguage, SyntaxHighlighting, RenderedText);
                 UpdateText();
             }
         }
@@ -1788,7 +1767,9 @@ namespace TextControlBox
         public double HorizontalScrollSensitivity { get => _HorizontalScrollSensitivity; set => _HorizontalScrollSensitivity = value < 1 ? 1 : value; }
         public double VerticalScroll { get => VerticalScrollbar.Value; set => VerticalScrollbar.Value = value < 1 ? 1 : value; }
         public double HorizontalScroll { get => HorizontalScrollbar.Value; set => HorizontalScrollbar.Value = value < 1 ? 1 : value; }
+        #endregion
 
+        #region Public events
         //Events:
         public delegate void TextChangedEvent(TextControlBox sender, string Text);
         public event TextChangedEvent TextChanged;
@@ -1800,6 +1781,7 @@ namespace TextControlBox
         public new event GotFocusEvent GotFocus;
         public delegate void LostFocusEvent(TextControlBox sender);
         public new event LostFocusEvent LostFocus;
+        #endregion
     }
 
     public class ScrollBarPosition

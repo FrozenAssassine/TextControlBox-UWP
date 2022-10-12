@@ -1,11 +1,14 @@
 ﻿using Collections.Pooled;
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using TextControlBox.Text;
 using Windows.Foundation;
 using Windows.System;
 using Windows.UI.Core;
+using Windows.UI.Popups;
 using Windows.UI.Xaml;
 
 namespace TextControlBox.Helper
@@ -95,6 +98,15 @@ namespace TextControlBox.Helper
         public static bool IsKeyPressed(VirtualKey key)
         {
             return Window.Current.CoreWindow.GetKeyState(key).HasFlag(CoreVirtualKeyStates.Down);
+        }
+        public static async Task<bool> IsOverTextLimit(int TextLength)
+        {
+            if (TextLength > 100000000)
+            {
+                await new MessageDialog("Current textlimit is 100 million characters, but your file has " + TextLength + " characters").ShowAsync();
+                return true;
+            }
+            return false;
         }
     }
 }
