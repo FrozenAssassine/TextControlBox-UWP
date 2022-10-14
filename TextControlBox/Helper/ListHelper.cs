@@ -45,7 +45,6 @@ namespace TextControlBox.Helper
         {
             TotalLines.Clear();
             TotalLines.TrimExcess();
-            //GC.Collect();
 
             if (AddNewLine)
             {
@@ -97,7 +96,7 @@ namespace TextControlBox.Helper
 
         public static void Insert(PooledList<Line> TotalLines, Line Line, int Position)
         {
-            if (Position >= TotalLines.Count)
+            if (Position >= TotalLines.Count || Position == -1)
                 TotalLines.Add(Line);
             else
                 TotalLines.Insert(Position, Line);
@@ -116,7 +115,6 @@ namespace TextControlBox.Helper
             var res = CheckValues(TotalLines, Index, Count);
             TotalLines.RemoveRange(res.Index, res.Count);
             TotalLines.TrimExcess();
-            //GC.Collect();
         }
         public static void DeleteAt(PooledList<Line> TotalLines, int Index)
         {
@@ -125,7 +123,6 @@ namespace TextControlBox.Helper
 
             TotalLines.RemoveAt(Index);
             TotalLines.TrimExcess();
-            //GC.Collect();
         }
     }
 }

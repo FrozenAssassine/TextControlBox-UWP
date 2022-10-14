@@ -41,7 +41,7 @@ namespace TextControlBox_TestApp
             bool ControlKey = Window.Current.CoreWindow.GetKeyState(Windows.System.VirtualKey.Control).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
             if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.R)
             {
-                TextControlBox.SetText(GenerateContent());
+                TextControlBox.LoadText(GenerateContent());
             }
             if(ControlKey && args.VirtualKey == Windows.System.VirtualKey.D)
             {

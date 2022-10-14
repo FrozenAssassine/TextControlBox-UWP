@@ -10,6 +10,7 @@ namespace TextControlBox.Text
     {
         private Stack<UndoRedoItem> UndoStack = new Stack<UndoRedoItem>();
         private Stack<UndoRedoItem> RedoStack = new Stack<UndoRedoItem>();
+
         private bool HasRedone = false;
 
         private void RecordRedo(UndoRedoItem item)
@@ -21,169 +22,43 @@ namespace TextControlBox.Text
             UndoStack.Push(item);
         }
 
-        private TextSelection DoSingleLineUndo(PooledList<Line> TotalLines, UndoRedoItem item)
-        {
-            ListHelper.GetLine(TotalLines, item.StartLine).SetText(item.UndoText);
-            return null;
-        }
-        private TextSelection DoMultilineUndo(PooledList<Line> TotalLines, UndoRedoItem item, string NewLineCharacter)
-        {
-            if (item.Selection != null)
-            {
-                var sel = Selection.OrderTextSelection(item.Selection);
-                if (item.IsDeletion && sel.StartPosition.LineNumber < sel.EndPosition.LineNumber)
-                {
-                    var splitted = item.UndoText.Split(NewLineCharacter);
-                    var line = splitted[splitted.Length - 1];
-
-                    //If lines are selected from start to finish, selected Count has to be smaller, because no line will stay after deleting the selection
-                    if (sel.StartPosition.CharacterPosition == 0 &&
-                        sel.EndPosition.CharacterPosition == line.Length)
-                    {
-                        item.Count -= 1;
-                    }
-                }
-            }
-
-            var lines = ListHelper.GetLinesFromString(item.UndoText, NewLineCharacter);
-            //var lines = ListHelper.GetStringLinesFromString(item.UndoText, NewLineCharacter);
-            ListHelper.RemoveRange(TotalLines, item.StartLine, item.Count);
-            ListHelper.InsertRange(TotalLines, lines, item.StartLine);
-            //Selection.ReplaceLines(TotalLines, item.StartLine, item.Count, lines);
-            return item.Selection;
-        }
-        private TextSelection DoNewLineUndo(PooledList<Line> TotalLines, UndoRedoItem item, string NewLineCharacter)
-        {
-            var lines = ListHelper.GetLinesFromString(item.UndoText, NewLineCharacter);
-
-            if (item.StartLine + item.Count > TotalLines.Count)
-                item.Count = TotalLines.Count - item.StartLine;
-
-            ListHelper.RemoveRange(TotalLines, item.StartLine, 3);
-            ListHelper.InsertRange(TotalLines, lines, item.StartLine);
-
-            return item.Selection;
-        }
-
-        private TextSelection DoSingleLineRedo(PooledList<Line> TotalLines, UndoRedoItem item)
-        {
-            ListHelper.GetLine(TotalLines, item.StartLine).SetText(item.UndoText);
-            return null;
-        }
-        private TextSelection DoMultilineRedo(PooledList<Line> TotalLines, UndoRedoItem item, string NewLineCharacter)
-        {
-            if (item.Selection == null)
-            {
-                var linesRedo = ListHelper.GetLinesFromString(item.RedoText, NewLineCharacter);
-                var linesUndo = ListHelper.GetStringLinesFromString(item.UndoText, NewLineCharacter).Length;
-
-                if (item.IsDeletion)
-                    ListHelper.RemoveRange(TotalLines, item.StartLine, item.Count);
-                else
-                {
-                    Debug.WriteLine(item.Count + ":" + item.StartLine + ":" + linesUndo);
-                    ListHelper.RemoveRange(TotalLines, item.StartLine, linesUndo);
-                    ListHelper.InsertRange(TotalLines, linesRedo, item.StartLine);
-                }
-                return null;
-            }
-            else
-            {
-                if (item.IsDeletion)
-                    Selection.Remove(item.Selection, TotalLines);
-                else
-                    Selection.Replace(item.Selection, TotalLines, item.RedoText == "" ? item.UndoText : item.RedoText, NewLineCharacter);
-                return null;
-            }
-        }
-        private TextSelection DoNewLineRedo(PooledList<Line> TotalLines, UndoRedoItem item, string NewLineCharacter)
-        {
-            if (item.Selection == null)
-            {
-                //Delete always two lines as default
-                ListHelper.RemoveRange(TotalLines, item.StartLine, 1);
-                if (!item.IsDeletion)
-                {
-                    var lines = ListHelper.GetLinesFromString(item.RedoText, NewLineCharacter);
-                    ListHelper.InsertRange(TotalLines, lines, item.StartLine);
-                }
-            }
-            else
-            {
-                return DoMultilineRedo(TotalLines, item, NewLineCharacter);
-            }
-            return null;
-        }
-
-        public void RecordSingleLineUndo(string LineText, int StartLine, bool IsDeletion)
+        private void AddUndoItem(TextSelection selection, int startLine, string undoText, string redoText, int undoCount, int redoCount)
         {
             UndoStack.Push(new UndoRedoItem
             {
-                Count = LineText.Length,
-                StartLine = StartLine,
-                IsDeletion = IsDeletion,
-                UndoText = LineText,
-                Selection = null,
-                UndoRedoType = UndoRedoType.SingleLineEdit
+                RedoText = redoText,
+                UndoText = undoText,
+                Selection = selection,
+                StartLine = startLine,
+                UndoCount = undoCount,
+                RedoCount = redoCount,
             });
         }
-        public void RecordMultiLineUndo(PooledList<Line> TotalLines, int StartLine, int Count, string RedoText, TextSelection TextSelection, string NewLineCharacter, bool IsDeletion, bool ChangeCount = true)
+        
+        public void RecordUndoAction(Action action, PooledList<Line> TotalLines, int startline, int undocount, int redoCount, string NewLineCharacter)
         {
-            string Text;
-            if (TextSelection == null)
-                Text = ListHelper.GetLinesAsString(TotalLines, StartLine, Count, NewLineCharacter);
-            else
-                Text = Selection.GetSelectedTextWithoutCharacterPos(TotalLines, TextSelection, NewLineCharacter);
-
-            RecordMultiLineUndo(StartLine, Count, Text, RedoText, TextSelection, IsDeletion, ChangeCount);
-        }
-        public void RecordMultiLineUndo(int StartLine, int Count, string UndoText, string RedoText, TextSelection TextSelection, bool IsDeletion, bool ChangeCount = true, bool ExcecutePrevUndoToo = false)
-        {
-            UndoStack.Push(new UndoRedoItem
-            {
-                StartLine = TextSelection == null ? StartLine : Selection.GetMin(TextSelection).LineNumber,
-                Count = ChangeCount ? TextSelection == null ? 1 : Count : Count,
-                UndoText = UndoText,
-                Selection = TextSelection,
-                UndoRedoType = UndoRedoType.MultilineEdit,
-                IsDeletion = IsDeletion,
-                RedoText = RedoText,
-                ExcecutePrevUndoToo = ExcecutePrevUndoToo,
-            });
-        }
-        public void RecordNewLineUndo(int StartLine, int Count, string UndoText, string RedoText, TextSelection TextSelection)
-        {
-            UndoStack.Push(new UndoRedoItem
-            {
-                StartLine = TextSelection == null ? StartLine : Selection.GetMin(TextSelection).LineNumber,
-                Count = Count,
-                UndoText = UndoText,
-                Selection = TextSelection,
-                UndoRedoType = UndoRedoType.NewLineEdit,
-                IsDeletion = false,
-                RedoText = RedoText
-            });
-        }
-
-        //Use for multiline record
-        public void RecordUndo(Action action, PooledList<Line> TotalLines, TextSelection Selection, int StartLine, int Count, string NewLineCharacter, bool IsDeletion, bool ChangeCount = true)
-        {
-            string UndoText = ListHelper.GetLinesAsString(TotalLines, StartLine, Count, NewLineCharacter);
+            var linesBefore = ListHelper.GetLinesAsString(TotalLines, startline, undocount, NewLineCharacter);
             action.Invoke();
-            string RedoText = ListHelper.GetLinesAsString(TotalLines, StartLine, Count, NewLineCharacter);
+            var linesAfter = ListHelper.GetLinesAsString(TotalLines, startline, redoCount, NewLineCharacter);
 
-            RecordMultiLineUndo(StartLine, Count, UndoText, RedoText, Selection, IsDeletion, ChangeCount);
+            AddUndoItem(null, startline, linesBefore, linesAfter, undocount, redoCount);
         }
-        //Use for single line record
-        public void RecordUndo(Action action, PooledList<Line> TotalLines, int StartLine, string NewLineCharacter, bool IsDeletion, bool ChangeCount = true)
+        public void RecordUndoAction(Action action, PooledList<Line> TotalLines, TextSelection selection, int NumberOfAddedLines, string NewLineCharacter)
         {
-            string UndoText = ListHelper.GetLine(TotalLines, StartLine).Content;
+            var orderedSel = Selection.OrderTextSelection(selection);
+            var linesBefore = ListHelper.GetLinesAsString(TotalLines, orderedSel.StartPosition.LineNumber, orderedSel.EndPosition.LineNumber - orderedSel.StartPosition.LineNumber + 1, NewLineCharacter);
             action.Invoke();
-            string RedoText = ListHelper.GetLine(TotalLines, StartLine).Content;
+            var linesAfter = ListHelper.GetLinesAsString(TotalLines, orderedSel.StartPosition.LineNumber, NumberOfAddedLines, NewLineCharacter);
 
-            RecordMultiLineUndo(StartLine, 1, UndoText, RedoText, null, IsDeletion, ChangeCount);
+            AddUndoItem(
+                selection,
+                orderedSel.StartPosition.LineNumber,
+                linesBefore,
+                linesAfter,
+                orderedSel.EndPosition.LineNumber - orderedSel.StartPosition.LineNumber + 1,
+                NumberOfAddedLines
+                );
         }
-
 
         /// <summary>
         /// Excecutes the undo and apply the changes to the text
@@ -200,28 +75,17 @@ namespace TextControlBox.Text
             {
                 HasRedone = false;
                 RedoStack.Clear();
+                Debug.WriteLine("Cleared Redo");
             }
 
             UndoRedoItem item = UndoStack.Pop();
-            if (!item.ExcecutePrevUndoToo)
-                RecordRedo(item);
+            RecordRedo(item);
 
-            if (item.UndoRedoType == UndoRedoType.SingleLineEdit)
-                return DoSingleLineUndo(TotalLines, item);
-            else if (item.UndoRedoType == UndoRedoType.NewLineEdit)
-                return DoNewLineUndo(TotalLines, item, NewLineCharacter);
-            else
-            {
-                var res = DoMultilineUndo(TotalLines, item, NewLineCharacter);
-                if (item.ExcecutePrevUndoToo)
-                {
-                    var NewItem = UndoStack.Pop();
-                    RecordRedo(NewItem);
-                    RecordRedo(item);
-                    return DoMultilineUndo(TotalLines, NewItem, NewLineCharacter);
-                }
-                return res;
-            }
+            TotalLines.RemoveRange(item.StartLine, item.RedoCount);
+            if(item.UndoCount > 0)
+                TotalLines.InsertRange(item.StartLine, ListHelper.GetLinesFromString(item.UndoText, NewLineCharacter));
+            
+            return item.Selection;
         }
 
         /// <summary>
@@ -236,28 +100,16 @@ namespace TextControlBox.Text
                 return null;
 
             UndoRedoItem item = RedoStack.Pop();
-            if (!item.ExcecutePrevUndoToo)
-            {
-                RecordUndo(item);
-                HasRedone = true;
-            }
+            RecordUndo(item);
+            HasRedone = true;
 
-            if (item.UndoRedoType == UndoRedoType.SingleLineEdit)
-                return DoSingleLineRedo(TotalLines, item);
-            else if (item.UndoRedoType == UndoRedoType.NewLineEdit)
-                return DoNewLineRedo(TotalLines, item, NewLineCharacter);
-            else
-            {
-                var res = DoMultilineRedo(TotalLines, item, NewLineCharacter);
-                if (item.ExcecutePrevUndoToo)
-                {
-                    var NewItem = RedoStack.Pop();
-                    RecordUndo(NewItem);
-                    RecordUndo(item);
-                    return DoMultilineRedo(TotalLines, NewItem, NewLineCharacter);
-                }
-                return res;
-            }
+            TotalLines.RemoveRange(item.StartLine, item.UndoCount);
+            if (item.RedoCount > 0)
+                TotalLines.InsertRange(item.StartLine, ListHelper.GetLinesFromString(item.RedoText, NewLineCharacter));
+            
+            Debug.WriteLine(item.StartLine + ":" + item.UndoCount);
+
+            return item.Selection;         
         }
 
         /// <summary>
@@ -282,19 +134,13 @@ namespace TextControlBox.Text
         public bool CanRedo { get => RedoStack.Count > 0; }
     }
 
-    public enum UndoRedoType
-    {
-        SingleLineEdit, MultilineEdit, NewLineEdit
-    }
     public struct UndoRedoItem
     {
-        public bool IsDeletion { get; set; }
         public int StartLine { get; set; }
-        public int Count { get; set; }
         public string UndoText { get; set; }
         public string RedoText { get; set; }
+        public int UndoCount { get; set; }
+        public int RedoCount { get; set; }
         public TextSelection Selection { get; set; }
-        public UndoRedoType UndoRedoType { get; set; }
-        public bool ExcecutePrevUndoToo { get; set; }
     }
 }
