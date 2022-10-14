@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TextControlBox.Helper;
+using Windows.UI;
 
 namespace TextControlBox.Renderer
 {
@@ -27,5 +28,16 @@ namespace TextControlBox.Renderer
             }
         }
 
+    }
+    public class SyntaxHighlights
+    {
+        public SyntaxHighlights(string Pattern, Windows.UI.Color Color)
+        {
+            this.Pattern = Pattern;
+            this.Color = Color;
+        }
+
+        public string Pattern { get; set; }
+        public Color Color { get; set; }
     }
 }

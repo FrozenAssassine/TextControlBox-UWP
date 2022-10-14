@@ -1,4 +1,5 @@
 ﻿using TextControlBox.Helper;
+using TextControlBox.Renderer;
 using Windows.UI;
 
 namespace TextControlBox.Languages

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using TextControlBox.Languages;
+using TextControlBox.Renderer;
 
 namespace TextControlBox.Helper
 {
