@@ -46,6 +46,14 @@ namespace TextControlBox.Text
         public void RecordUndoAction(Action action, PooledList<Line> TotalLines, TextSelection selection, int NumberOfAddedLines, string NewLineCharacter)
         {
             var orderedSel = Selection.OrderTextSelection(selection);
+
+            //Check whether the selected lines are selected from start to end
+            if (!(orderedSel.EndPosition.CharacterPosition == ListHelper.GetLine(TotalLines, orderedSel.EndPosition.LineNumber).Length &&
+                orderedSel.StartPosition.CharacterPosition == 0))
+            {
+                NumberOfAddedLines += 1;
+            }
+
             var linesBefore = ListHelper.GetLinesAsString(TotalLines, orderedSel.StartPosition.LineNumber, orderedSel.EndPosition.LineNumber - orderedSel.StartPosition.LineNumber + 1, NewLineCharacter);
             action.Invoke();
             var linesAfter = ListHelper.GetLinesAsString(TotalLines, orderedSel.StartPosition.LineNumber, NumberOfAddedLines, NewLineCharacter);

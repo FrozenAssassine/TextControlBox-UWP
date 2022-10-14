@@ -62,13 +62,13 @@ namespace TextControlBox.Text
         public static CursorPosition GetMax(CursorPosition Pos1, CursorPosition Pos2)
         {
             if (Pos1.LineNumber == Pos2.LineNumber)
-                return Pos1.CharacterPosition > Pos2.CharacterPosition ? Pos2 : Pos1;
+                return Pos1.CharacterPosition > Pos2.CharacterPosition ? Pos1 : Pos2;
             return Pos1.LineNumber > Pos2.LineNumber ? Pos1 : Pos2;
         }
         public static CursorPosition GetMin(CursorPosition Pos1, CursorPosition Pos2)
         {
             if (Pos1.LineNumber == Pos2.LineNumber)
-                return Pos1.CharacterPosition > Pos2.CharacterPosition ? Pos1 : Pos2;
+                return Pos1.CharacterPosition > Pos2.CharacterPosition ? Pos2 : Pos1;
             return Pos1.LineNumber > Pos2.LineNumber ? Pos2 : Pos1;
         }
         public static CursorPosition GetMin(TextSelection Selection)
