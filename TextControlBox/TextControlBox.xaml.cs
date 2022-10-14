@@ -10,7 +10,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using TextControlBox.Extensions;
 using TextControlBox.Helper;
 using TextControlBox.Renderer;
@@ -19,7 +18,6 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.System;
 using Windows.UI.Core;
-using Windows.UI.Popups;
 using Windows.UI.Text.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
@@ -241,11 +239,11 @@ namespace TextControlBox
             {
                 DeleteSelection();
             }
-            else if(TextSelection != null)
+            else if (TextSelection != null)
             {
                 UndoRedo.RecordUndoAction(() =>
                 {
-                        CursorPosition = Selection.Replace(TextSelection, TotalLines, text, NewLineCharacter);
+                    CursorPosition = Selection.Replace(TextSelection, TotalLines, text, NewLineCharacter);
 
                     ClearSelection();
                     UpdateSelection();
@@ -289,7 +287,7 @@ namespace TextControlBox
 
                         CursorPosition.LineNumber -= 1;
                         CursorPosition.CharacterPosition = LineOnTop.Length - CurrentLine.Length;
-                    
+
                     }, TotalLines, CursorPosition.LineNumber, 3, 2, NewLineCharacter);
                 }
             }
@@ -335,7 +333,7 @@ namespace TextControlBox
                     }, TotalLines, CursorPosition.LineNumber, 1, 1, NewLineCharacter);
                 }
             }
-            else 
+            else
             {
                 DeleteSelection();
             }
@@ -467,6 +465,14 @@ namespace TextControlBox
             if (TextSelection == null || IsReadonly)
                 return;
 
+            //Position to insert is selection start or selection end -> no need to drag
+            if (Cursor.Equals(TextSelection.StartPosition, CursorPosition) || Cursor.Equals(TextSelection.EndPosition, CursorPosition))
+            {
+                Utils.ChangeCursor(CoreCursorType.IBeam);
+                DragDropSelection = false;
+                return;
+            }
+
             string TextToInsert = SelectedText;
             CursorPosition curpos = new CursorPosition(CursorPosition);
 
@@ -497,7 +503,7 @@ namespace TextControlBox
                 selectionrenderer.PointerIsOverSelection(CurPos, TextSelection, DrawnTextLayout);
 
             Utils.ChangeCursor(res ? CoreCursorType.UniversalNo : CoreCursorType.IBeam);
-            
+
             return res;
         }
         private void UpdateScrollToShowCursor(bool Update = true)
@@ -506,7 +512,7 @@ namespace TextControlBox
                 VerticalScrollbar.Value = (CursorPosition.LineNumber - RenderedLines.Count + 1) * SingleLineHeight;
             else if (NumberOfStartLine > CursorPosition.LineNumber)
                 VerticalScrollbar.Value = (CursorPosition.LineNumber - 1) * SingleLineHeight;
-            if(Update)
+            if (Update)
                 UpdateAll();
         }
         private int GetCurPosInLine()
@@ -630,7 +636,7 @@ namespace TextControlBox
                                 CursorPosition = Selection.GetMin(TextSelection);
                             else
                                 CursorPosition = Cursor.MoveLeft(CursorPosition, TotalLines, CurrentLine);
-                            
+
                             ClearSelectionIfNeeded();
                         }
 
@@ -645,19 +651,19 @@ namespace TextControlBox
                         if (shift)
                         {
                             StartSelectionIfNeeded();
-                            
+
                             selectionrenderer.IsSelecting = true;
                             CursorPosition = selectionrenderer.SelectionEndPosition = Cursor.MoveRight(selectionrenderer.SelectionEndPosition, TotalLines, CurrentLine);
                             selectionrenderer.IsSelecting = false;
                         }
                         else
-                        {   
+                        {
                             //Move the cursor to the end of the selection
                             if (selectionrenderer.HasSelection && TextSelection != null)
                                 CursorPosition = Selection.GetMax(TextSelection);
                             else
                                 CursorPosition = Cursor.MoveRight(CursorPosition, TotalLines, GetCurrentLine());
-                                
+
                             ClearSelectionIfNeeded();
                         }
 
@@ -716,7 +722,7 @@ namespace TextControlBox
                     ScrollPageDown();
                     break;
                 case VirtualKey.End:
-                    { 
+                    {
                         if (shift)
                         {
                             selectionrenderer.HasSelection = true;
@@ -736,8 +742,8 @@ namespace TextControlBox
                         if (shift)
                         {
                             selectionrenderer.HasSelection = true;
-                            
-                            if(selectionrenderer.SelectionStartPosition == null)
+
+                            if (selectionrenderer.SelectionStartPosition == null)
                                 selectionrenderer.SelectionStartPosition = new CursorPosition(CursorPosition);
                             selectionrenderer.SelectionEndPosition = Cursor.MoveToLineStart(CursorPosition);
                             UpdateSelection();
@@ -895,7 +901,12 @@ namespace TextControlBox
                 //Show the contextflyout
                 if (RightButtonPressed)
                 {
-                    UpdateCursorVariable(PointerPosition);
+                    if (!selectionrenderer.PointerIsOverSelection(PointerPosition, TextSelection, DrawnTextLayout))
+                    {
+                        ForceClearSelection();
+                        UpdateCursorVariable(PointerPosition);
+                    }
+
                     if (!ContextFlyoutDisabled && ContextFlyout != null)
                     {
                         ContextFlyout.ShowAt(sender as FrameworkElement, new FlyoutShowOptions { Position = PointerPosition });
@@ -1361,7 +1372,7 @@ namespace TextControlBox
                 }
 
             }, TotalLines, 0, TotalLines.Count, lines.Length, NewLineCharacter);
-            
+
             UpdateAll();
         }
         public async void Paste()
@@ -1701,7 +1712,7 @@ namespace TextControlBox
             SetSelection(selstart, sellenght);
             return true;
         }
-        
+
         //Properties:
         public bool SyntaxHighlighting { get; set; } = true;
         public CodeLanguage CustomCodeLanguage

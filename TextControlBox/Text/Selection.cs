@@ -1,6 +1,5 @@
 ﻿using Collections.Pooled;
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using TextControlBox.Helper;
@@ -54,9 +53,9 @@ namespace TextControlBox.Text
         {
             if (Selection == null)
                 return false;
-
-            return Utils.CursorPositionsAreEqual(Selection.StartPosition, new CursorPosition(0, 0)) && 
-                Utils.CursorPositionsAreEqual(Selection.EndPosition, new CursorPosition(ListHelper.GetLine(TotalLines, -1).Length, TotalLines.Count-1));               
+            var sel = OrderTextSelection(Selection);
+            return Utils.CursorPositionsAreEqual(sel.StartPosition, new CursorPosition(0, 0)) &&
+                Utils.CursorPositionsAreEqual(sel.EndPosition, new CursorPosition(ListHelper.GetLine(TotalLines, -1).Length, TotalLines.Count - 1));
         }
 
         public static CursorPosition GetMax(CursorPosition Pos1, CursorPosition Pos2)
@@ -523,7 +522,7 @@ namespace TextControlBox.Text
                 StringBuilder.Append(ListHelper.GetLine(TotalLines, StartLine).Content.Substring(StartIndex) + NewLineCharacter);
 
                 //Other lines
-                if(EndLine - StartLine > 1)
+                if (EndLine - StartLine > 1)
                     StringBuilder.Append(ListHelper.GetLinesAsString(TotalLines, StartLine + 1, EndLine - StartLine - 1, NewLineCharacter) + NewLineCharacter);
 
                 //Endline
@@ -532,7 +531,7 @@ namespace TextControlBox.Text
             }
             return StringBuilder.ToString();
         }
-    
+
         /// <summary>
         /// Replaces the lines in TotalLines, starting by Start replacing Count number of items, with the string in SplittedText
         /// All lines that can be replaced get replaced all lines that are needed additionally get added

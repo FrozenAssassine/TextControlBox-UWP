@@ -1,5 +1,4 @@
 ﻿using Collections.Pooled;
-using System.Collections.Generic;
 using System.Diagnostics;
 using TextControlBox.Text;
 

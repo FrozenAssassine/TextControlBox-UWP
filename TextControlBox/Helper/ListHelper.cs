@@ -1,7 +1,4 @@
 ﻿using Collections.Pooled;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using TextControlBox.Text;
 
@@ -48,7 +45,7 @@ namespace TextControlBox.Helper
 
             if (AddNewLine)
             {
-                TotalLines.Add(new Line());            
+                TotalLines.Add(new Line());
             }
         }
 

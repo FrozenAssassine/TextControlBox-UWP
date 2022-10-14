@@ -1,6 +1,4 @@
 ﻿using Collections.Pooled;
-using System.Collections.Generic;
-using System.Diagnostics;
 using TextControlBox.Extensions;
 using TextControlBox.Helper;
 
@@ -27,7 +25,7 @@ namespace TextControlBox.Text
             {
                 var OrderedSelection = Selection.OrderTextSelection(TextSelection);
                 var Lines = Selection.GetPointerToSelectedLines(TotalLines, OrderedSelection);
-                
+
                 TextSelection tempSel = new TextSelection(OrderedSelection);
                 tempSel.StartPosition.CharacterPosition = 0;
                 tempSel.EndPosition.CharacterPosition = ListHelper.GetLine(TotalLines, TextSelection.EndPosition.LineNumber).Length + TabCharacter.Length;

@@ -1,7 +1,6 @@
 ﻿using Collections.Pooled;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using TextControlBox.Helper;
 
 namespace TextControlBox.Text
@@ -34,7 +33,7 @@ namespace TextControlBox.Text
                 RedoCount = redoCount,
             });
         }
-        
+
         public void RecordUndoAction(Action action, PooledList<Line> TotalLines, int startline, int undocount, int redoCount, string NewLineCharacter)
         {
             var linesBefore = ListHelper.GetLinesAsString(TotalLines, startline, undocount, NewLineCharacter);
@@ -49,7 +48,7 @@ namespace TextControlBox.Text
 
             //Check whether the selected lines are selected from start to end
             if (!(orderedSel.EndPosition.CharacterPosition == ListHelper.GetLine(TotalLines, orderedSel.EndPosition.LineNumber).Length &&
-                orderedSel.StartPosition.CharacterPosition == 0))
+                orderedSel.StartPosition.CharacterPosition == 0) || Selection.WholeTextSelected(selection, TotalLines))
             {
                 NumberOfAddedLines += 1;
             }
@@ -89,9 +88,9 @@ namespace TextControlBox.Text
             RecordRedo(item);
 
             TotalLines.RemoveRange(item.StartLine, item.RedoCount);
-            if(item.UndoCount > 0)
+            if (item.UndoCount > 0)
                 TotalLines.InsertRange(item.StartLine, ListHelper.GetLinesFromString(item.UndoText, NewLineCharacter));
-            
+
             return item.Selection;
         }
 
@@ -113,8 +112,8 @@ namespace TextControlBox.Text
             TotalLines.RemoveRange(item.StartLine, item.UndoCount);
             if (item.RedoCount > 0)
                 TotalLines.InsertRange(item.StartLine, ListHelper.GetLinesFromString(item.RedoText, NewLineCharacter));
-            
-            return item.Selection;         
+
+            return item.Selection;
         }
 
         /// <summary>

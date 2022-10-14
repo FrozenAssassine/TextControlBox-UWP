@@ -1,5 +1,4 @@
 ﻿using Collections.Pooled;
-using System.Collections.Generic;
 using TextControlBox.Helper;
 using Windows.UI.Core;
 using Windows.UI.Xaml;

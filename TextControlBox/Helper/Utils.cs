@@ -2,7 +2,6 @@
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using TextControlBox.Text;
 using Windows.Foundation;
