@@ -75,7 +75,6 @@ namespace TextControlBox.Text
             {
                 HasRedone = false;
                 RedoStack.Clear();
-                Debug.WriteLine("Cleared Redo");
             }
 
             UndoRedoItem item = UndoStack.Pop();
@@ -107,8 +106,6 @@ namespace TextControlBox.Text
             if (item.RedoCount > 0)
                 TotalLines.InsertRange(item.StartLine, ListHelper.GetLinesFromString(item.RedoText, NewLineCharacter));
             
-            Debug.WriteLine(item.StartLine + ":" + item.UndoCount);
-
             return item.Selection;         
         }
 

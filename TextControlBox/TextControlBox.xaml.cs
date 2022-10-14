@@ -625,8 +625,13 @@ namespace TextControlBox
                         }
                         else
                         {
+                            //Move the cursor to the start of the selection
+                            if (selectionrenderer.HasSelection)
+                                CursorPosition = Selection.GetMin(TextSelection);
+                            else
+                                CursorPosition = Cursor.MoveLeft(CursorPosition, TotalLines, CurrentLine);
+                            
                             ClearSelectionIfNeeded();
-                            CursorPosition = Cursor.MoveLeft(CursorPosition, TotalLines, CurrentLine);
                         }
 
                         UpdateScrollToShowCursor();
@@ -645,9 +650,14 @@ namespace TextControlBox
                             selectionrenderer.IsSelecting = false;
                         }
                         else
-                        {
+                        {   
+                            //Move the cursor to the end of the selection
+                            if (selectionrenderer.HasSelection)
+                                CursorPosition = Selection.GetMax(TextSelection);
+                            else
+                                CursorPosition = Cursor.MoveRight(CursorPosition, TotalLines, GetCurrentLine());
+                                
                             ClearSelectionIfNeeded();
-                            CursorPosition = Cursor.MoveRight(CursorPosition, TotalLines, GetCurrentLine());
                         }
 
                         UpdateScrollToShowCursor(false);
@@ -1826,17 +1836,6 @@ namespace TextControlBox
 
         public double ValueX { get; set; }
         public double ValueY { get; set; }
-    }
-    public class SyntaxHighlights
-    {
-        public SyntaxHighlights(string Pattern, Windows.UI.Color Color)
-        {
-            this.Pattern = Pattern;
-            this.Color = Color;
-        }
-
-        public string Pattern { get; set; }
-        public Color Color { get; set; }
     }
     public class CursorSize
     {
