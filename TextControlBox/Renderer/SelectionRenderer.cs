@@ -182,6 +182,34 @@ namespace TextControlBox.Renderer
             HasSelection = false;
             IsSelecting = false;
             SelectionEndPosition = null;
+            SelectionStartPosition = null;
+        }
+
+        public void SetSelection(TextSelection selection)
+        {
+            SetSelection(selection.StartPosition, selection.EndPosition);
+        }
+        public void SetSelection(CursorPosition StartPosition, CursorPosition EndPosition)
+        {
+            IsSelecting = true;
+            SelectionStartPosition = StartPosition;
+            SelectionEndPosition = EndPosition;
+            IsSelecting = false;
+            HasSelection = true;
+        }
+        public void SetSelectionStart(CursorPosition StartPosition)
+        {
+            IsSelecting = true;
+            SelectionStartPosition = StartPosition;
+            IsSelecting = false;
+            HasSelection = true;
+        }
+        public void SetSelectionEnd(CursorPosition EndPosition)
+        {
+            IsSelecting = true;
+            SelectionEndPosition = EndPosition;
+            IsSelecting = false;
+            HasSelection = true;
         }
     }
 }
