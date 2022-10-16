@@ -2,6 +2,7 @@
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using TextControlBox.Text;
 using Windows.Foundation;
@@ -106,6 +107,15 @@ namespace TextControlBox.Helper
                 return true;
             }
             return false;
+        }
+        public static void Benchmark(Action action, string Text)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            action.Invoke();
+            sw.Stop();
+
+            Debug.WriteLine(Text + " took " + sw.ElapsedMilliseconds + "::" + sw.ElapsedTicks);
         }
     }
 }

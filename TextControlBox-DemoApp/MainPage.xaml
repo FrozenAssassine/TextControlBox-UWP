@@ -1,0 +1,90 @@
+﻿<Page
+    x:Class="TextControlBox_DemoApp.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:TextControlBox_DemoApp"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls" xmlns:animatedvisuals="using:Microsoft.UI.Xaml.Controls.AnimatedVisuals" xmlns:textcontrolbox="using:TextControlBox"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
+    NavigationCacheMode="Enabled">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+        <Grid x:Name="Titlebar" Background="Transparent" Grid.Row="0" Height="30" Margin="0,0,170,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="LeftPaddingColumn" Width="0"/>
+                <ColumnDefinition/>
+                <ColumnDefinition x:Name="RightPaddingColumn" Width="0"/>
+            </Grid.ColumnDefinitions>
+            <Image Source="Assets/StoreLogo.png" 
+                   Grid.Column="1"
+                   HorizontalAlignment="Left"
+                   Width="16" Height="16"
+                   Margin="8,0,0,0"/>
+            <TextBlock x:Name="titleDisplay"
+                       Text="Hello" 
+                       Style="{StaticResource CaptionTextBlockStyle}" 
+                       Grid.Column="1"
+                       VerticalAlignment="Center"
+                       Margin="28,0,0,0"/>
+        </Grid>
+      
+        <muxc:MenuBar Margin="0,2,0,0" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Top">
+            <muxc:MenuBarItem Title="File">
+                <MenuFlyoutItem Text="New" Click="NewFile_Click"/>
+                <MenuFlyoutItem Text="Open" Click="OpenFile_Click"/>
+                <MenuFlyoutItem Text="Save" Click="SaveFile_Click"/>
+                <MenuFlyoutItem Text="Save as" Click="SaveFileAs_Click"/>
+                <MenuFlyoutItem Text="Exit" Click="ExitApp_Click"/>
+            </muxc:MenuBarItem>
+
+            <muxc:MenuBarItem Title="Edit">
+                <MenuFlyoutItem Text="Undo" Click="Undo_Click"/>
+                <MenuFlyoutItem Text="Redo" Click="Redo_Click"/>
+                <MenuFlyoutItem Text="Cut" Click="Cut_Click"/>
+                <MenuFlyoutItem Text="Copy" Click="Copy_Click"/>
+                <MenuFlyoutItem Text="Paste" Click="Paste_Click"/>
+                <MenuFlyoutItem Text="Select All" Click="SelectAll_Click"/>
+            </muxc:MenuBarItem>
+
+            <muxc:MenuBarItem Title="Advanced">
+                <MenuFlyoutItem Text="Duplicate line" Click="DuplicateLine_Click"/>
+                <MenuFlyoutSubItem Text="Language">
+                    <MenuFlyoutItem Text="C#" Tag="0" Click="Language_Click"/>
+                    <MenuFlyoutItem Text="Gcode" Tag="1" Click="Language_Click"/>
+                    <MenuFlyoutItem Text="Html" Tag="2" Click="Language_Click"/>
+                    <MenuFlyoutItem Text="None" Tag="3" Click="Language_Click"/>
+                </MenuFlyoutSubItem>
+            </muxc:MenuBarItem>
+        </muxc:MenuBar>
+        <!--<Button Margin="0,7,10,0" BorderThickness="0" Padding="0" Grid.Row="1" Width="30" Height="30" Background="Transparent" HorizontalAlignment="Right" x:Name="SettingsButton" VerticalAlignment="Top" PointerEntered="SettingsButton_PointerEntered" PointerExited="SettingsButton_PointerExited">
+            <muxc:AnimatedIcon Width="16" Height="16" x:Name="SettingAnimatedIcon" >
+                <muxc:AnimatedIcon.Source>
+                    <animatedvisuals:AnimatedSettingsVisualSource/>
+                </muxc:AnimatedIcon.Source>
+                <muxc:AnimatedIcon.FallbackIconSource>
+                    <muxc:SymbolIconSource Symbol="Setting"/>
+                </muxc:AnimatedIcon.FallbackIconSource>
+            </muxc:AnimatedIcon>
+        </Button>-->
+        <textcontrolbox:TextControlBox  x:Name="textbox" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+            CodeLanguage="Csharp" TextChanged="textbox_TextChanged" SelectionChanged="textbox_SelectionChanged" ZoomChanged="textbox_ZoomChanged"                               
+        />
+        <Grid Grid.Row="3" Height="30" x:Name="infoBar">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,0,10,0">
+                <TextBlock x:Name="Infobar_Cursor" HorizontalAlignment="Right" VerticalAlignment="Center" TextAlignment="Right" MinWidth="120" ></TextBlock>
+                <TextBlock x:Name="Infobar_Zoom" HorizontalAlignment="Right" VerticalAlignment="Center" TextAlignment="Right" MinWidth="120"></TextBlock>
+                <TextBlock x:Name="Infobar_Encoding" HorizontalAlignment="Right" VerticalAlignment="Center" TextAlignment="Right" MinWidth="120"></TextBlock>
+                <TextBlock x:Name="Infobar_LineEnding" HorizontalAlignment="Right" VerticalAlignment="Center" TextAlignment="Right" MinWidth="120"></TextBlock>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Page>

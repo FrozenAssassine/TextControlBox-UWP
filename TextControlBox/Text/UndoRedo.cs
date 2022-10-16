@@ -1,6 +1,7 @@
 ﻿using Collections.Pooled;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using TextControlBox.Helper;
 
 namespace TextControlBox.Text
@@ -87,9 +88,10 @@ namespace TextControlBox.Text
             UndoRedoItem item = UndoStack.Pop();
             RecordRedo(item);
 
-            TotalLines.RemoveRange(item.StartLine, item.RedoCount);
+
+            ListHelper.RemoveRange(TotalLines, item.StartLine, item.RedoCount);
             if (item.UndoCount > 0)
-                TotalLines.InsertRange(item.StartLine, ListHelper.GetLinesFromString(item.UndoText, NewLineCharacter));
+                ListHelper.InsertRange(TotalLines, ListHelper.GetLinesFromString(item.UndoText, NewLineCharacter), item.StartLine);
 
             return item.Selection;
         }
@@ -109,9 +111,9 @@ namespace TextControlBox.Text
             RecordUndo(item);
             HasRedone = true;
 
-            TotalLines.RemoveRange(item.StartLine, item.UndoCount);
+            ListHelper.RemoveRange(TotalLines, item.StartLine, item.UndoCount);    
             if (item.RedoCount > 0)
-                TotalLines.InsertRange(item.StartLine, ListHelper.GetLinesFromString(item.RedoText, NewLineCharacter));
+                ListHelper.InsertRange(TotalLines, ListHelper.GetLinesFromString(item.RedoText, NewLineCharacter), item.StartLine);
 
             return item.Selection;
         }

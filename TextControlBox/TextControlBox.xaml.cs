@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using TextControlBox.Extensions;
 using TextControlBox.Helper;
 using TextControlBox.Renderer;
@@ -92,6 +93,8 @@ namespace TextControlBox
         //Store the lines in Lists
         private PooledList<Line> TotalLines = new PooledList<Line>();
         private List<Line> RenderedLines = new List<Line>();
+        StringBuilder LineNumberContent = new StringBuilder();
+        StringBuilder TextToRender = new StringBuilder();
 
         //Classes
         private readonly SelectionRenderer selectionrenderer;
@@ -122,7 +125,7 @@ namespace TextControlBox
         }
         private void InitialiseOnStart()
         {
-            Canvas_LineNumber.ClearColor = Color.FromArgb(50, 80, 80, 80);
+            Canvas_LineNumber.ClearColor = Color.FromArgb(0, 0, 0, 0);
 
             UpdateZoom();
             if (TotalLines.Count == 0)
@@ -212,8 +215,9 @@ namespace TextControlBox
 
             if (IgnoreSelection)
                 ClearSelection();
+            int SplittedTextLength = 0;
 
-            int SplittedTextLength = text.Contains(NewLineCharacter) ? text.NumberOfOccurences(NewLineCharacter) + 1 : 1;
+            SplittedTextLength = text.Contains(NewLineCharacter) ? text.NumberOfOccurences(NewLineCharacter) + 1 : 1;
 
             if (TextSelection == null && SplittedTextLength == 1)
             {
@@ -978,9 +982,9 @@ namespace TextControlBox
                 UpdateZoom();
             }
             //Scroll horizontal using mousewheel
-            else if (Utils.IsKeyPressed(VirtualKey.Shift))
+            else if (e.GetCurrentPoint(this).Properties.IsHorizontalMouseWheel)
             {
-                HorizontalScroll -= delta * HorizontalScrollSensitivity;
+                HorizontalScroll += delta * HorizontalScrollSensitivity;
             }
             //Scroll vertical using mousewheel
             else
@@ -1057,9 +1061,8 @@ namespace TextControlBox
 
             //Clear the rendered lines, to fill them with new lines
             RenderedLines.Clear();
-            RenderedLines.TrimExcess();
             //Create resources and layouts:
-            if (NeedsTextFormatUpdate || TextFormat == null)
+            if (NeedsTextFormatUpdate || TextFormat == null || LineNumberTextFormat == null)
             {
                 if (_ShowLineNumbers)
                     LineNumberTextFormat = TextRenderer.CreateLinenumberTextFormat(ZoomedFontSize, FontFamily);
@@ -1076,29 +1079,26 @@ namespace TextControlBox
             VerticalScrollbar.Maximum = ((TotalLines.Count + 1) * SingleLineHeight - Scroll.ActualHeight);
             VerticalScrollbar.ViewportSize = sender.ActualHeight;
 
-            //Get all the lines, which needs to be rendered, from the list
-            StringBuilder LineNumberContent = new StringBuilder();
-            StringBuilder TextToRender = new StringBuilder();
-            for (int i = NumberOfStartLine; i < NumberOfStartLine + NumberOfLinesToBeRendered; i++)
+            //Get all the lines, that need to be rendered, from the list
+            int CountMax = NumberOfStartLine + NumberOfLinesToBeRendered > TotalLines.Count ? TotalLines.Count : NumberOfStartLine + NumberOfLinesToBeRendered;
+            for (int i = NumberOfStartLine; i < CountMax; i++)
             {
-                if (i < TotalLines.Count)
-                {
-                    Line item = TotalLines[i];
-                    RenderedLines.Add(item);
-                    TextToRender.AppendLine(item.Content);
-                    if (_ShowLineNumbers)
-                        LineNumberContent.AppendLine((i + 1).ToString());
-                }
+                Line item = TotalLines[i];
+                RenderedLines.Add(item);
+                TextToRender.Append(item.Content + "\n");
+                if (_ShowLineNumbers)
+                    LineNumberContent.Append((i + 1) + "\n");
             }
 
             if (_ShowLineNumbers)
                 LineNumberTextToRender = LineNumberContent.ToString();
-
             RenderedText = TextToRender.ToString();
+
             //Clear the StringBuilder:
             TextToRender.Clear();
+            LineNumberContent.Clear();
 
-            //Get text from longest line in whole text
+            //Get length of longest line in whole text
             Size LineLength = Utils.MeasureLineLenght(CanvasDevice.GetSharedDevice(), ListHelper.GetLine(TotalLines, Utils.GetLongestLineIndex(TotalLines)), TextFormat);
 
             //Measure horizontal Width of longest line and apply to scrollbar
@@ -1112,7 +1112,8 @@ namespace TextControlBox
             SyntaxHighlightingRenderer.UpdateSyntaxHighlighting(DrawnTextLayout, _CodeLanguage, SyntaxHighlighting, RenderedText);
             args.DrawingSession.DrawTextLayout(DrawnTextLayout, (float)-HorizontalScroll, SingleLineHeight, TextColorBrush);
 
-            Canvas_LineNumber.Invalidate();
+            if (_ShowLineNumbers)
+                Canvas_LineNumber.Invalidate();
         }
         private void Canvas_Selection_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
@@ -1337,6 +1338,7 @@ namespace TextControlBox
 
             //Split the lines using the current LineEnding
             var lines = text.Split(NewLineCharacter);
+            TotalLines.Capacity = lines.Length;
             for (int i = 0; i < lines.Length; i++)
             {
                 TotalLines.Add(new Line(lines[i]));
@@ -1365,6 +1367,8 @@ namespace TextControlBox
                 ListHelper.Clear(TotalLines);
                 RenderedLines.Clear();
                 RenderedLines.TrimExcess();
+
+                TotalLines.Capacity = lines.Length;
 
                 for (int i = 0; i < lines.Length; i++)
                 {
@@ -1407,7 +1411,7 @@ namespace TextControlBox
         }
         public string GetText()
         {
-            return String.Join(NewLineCharacter, TotalLines.Select(item => item.Content));
+            return string.Join(NewLineCharacter, TotalLines.Select(item => item.Content));
         }
         public void SetSelection(int start, int length)
         {
@@ -1431,7 +1435,7 @@ namespace TextControlBox
             CursorPosition = selectionrenderer.SelectionEndPosition;
             UpdateSelection();
         }
-        public void ClearSelection(string sender = "")
+        public void ClearSelection()
         {
             ForceClearSelection();
         }
