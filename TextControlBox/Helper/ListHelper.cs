@@ -113,6 +113,7 @@ namespace TextControlBox.Helper
             TotalLines.RemoveRange(res.Index, res.Count);
             TotalLines.TrimExcess();
         }
+        
         public static void DeleteAt(PooledList<Line> TotalLines, int Index)
         {
             if (Index >= TotalLines.Count)
