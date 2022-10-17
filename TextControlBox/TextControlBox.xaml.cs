@@ -91,8 +91,9 @@ namespace TextControlBox
         CoreTextEditContext EditContext;
 
         //Store the lines in Lists
-        private PooledList<Line> TotalLines = new PooledList<Line>();
+        private PooledList<Line> TotalLines = new PooledList<Line>(10, true);
         private List<Line> RenderedLines = new List<Line>();
+        private int NumberOfRenderedLines = 0;
         StringBuilder LineNumberContent = new StringBuilder();
         StringBuilder TextToRender = new StringBuilder();
 
@@ -162,9 +163,9 @@ namespace TextControlBox
 
             int Line = CursorPosition.LineNumber;
             //Check whether the current line is outside the bounds of the visible area
-            if (Line < NumberOfStartLine || Line >= NumberOfStartLine + RenderedLines.Count)
+            if (Line < NumberOfStartLine || Line >= NumberOfStartLine + NumberOfRenderedLines)
             {
-                VerticalScroll = (Line - RenderedLines.Count / 2) * SingleLineHeight;
+                VerticalScroll = (Line - NumberOfRenderedLines / 2) * SingleLineHeight;
             }
             UpdateAll();
         }
@@ -190,7 +191,7 @@ namespace TextControlBox
         }
         private void UpdateCursorVariable(Point Point)
         {
-            CursorPosition.LineNumber = CursorRenderer.GetCursorLineFromPoint(Point, SingleLineHeight, RenderedLines.Count, NumberOfStartLine);
+            CursorPosition.LineNumber = CursorRenderer.GetCursorLineFromPoint(Point, SingleLineHeight, NumberOfRenderedLines, NumberOfStartLine);
 
             UpdateCurrentLineTextLayout();
             CursorPosition.CharacterPosition = CursorRenderer.GetCharacterPositionFromPoint(GetCurrentLine(), CurrentLineTextLayout, Point, (float)-HorizontalScroll);
@@ -404,7 +405,7 @@ namespace TextControlBox
             CursorPosition.LineNumber += 1;
             CursorPosition.CharacterPosition = 0;
 
-            if (TextSelection == null && CursorPosition.LineNumber == RenderedLines.Count + NumberOfStartLine)
+            if (TextSelection == null && CursorPosition.LineNumber == NumberOfRenderedLines + NumberOfStartLine)
                 ScrollOneLineDown();
             else
                 UpdateScrollToShowCursor();
@@ -512,8 +513,8 @@ namespace TextControlBox
         }
         private void UpdateScrollToShowCursor(bool Update = true)
         {
-            if (NumberOfStartLine + RenderedLines.Count <= CursorPosition.LineNumber)
-                VerticalScrollbar.Value = (CursorPosition.LineNumber - RenderedLines.Count + 1) * SingleLineHeight;
+            if (NumberOfStartLine + NumberOfRenderedLines <= CursorPosition.LineNumber)
+                VerticalScrollbar.Value = (CursorPosition.LineNumber - NumberOfRenderedLines + 1) * SingleLineHeight;
             else if (NumberOfStartLine > CursorPosition.LineNumber)
                 VerticalScrollbar.Value = (CursorPosition.LineNumber - 1) * SingleLineHeight;
             if (Update)
@@ -1003,6 +1004,7 @@ namespace TextControlBox
         }
         private void Canvas_LineNumber_PointerMoved(object sender, PointerRoutedEventArgs e)
         {
+            Debug.WriteLine("Start...");
             if (selectionrenderer.IsSelecting)
             {
                 var CurPoint = e.GetCurrentPoint(sender as UIElement).Position;
@@ -1017,7 +1019,7 @@ namespace TextControlBox
                 }
 
                 //Select the last line completely
-                if (CurPoint.Y / SingleLineHeight > RenderedLines.Count)
+                if (CurPoint.Y / SingleLineHeight > NumberOfRenderedLines)
                 {
                     CurPoint.X = Utils.MeasureLineLenght(CanvasDevice.GetSharedDevice(), CurrentLine, TextFormat).Width + 100;
                 }
@@ -1031,9 +1033,10 @@ namespace TextControlBox
         }
         private void Canvas_LineNumber_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
-            selectionrenderer.IsSelecting = true;
             //Select the line where the cursor is over
-            SelectLine(CursorRenderer.GetCursorLineFromPoint(e.GetCurrentPoint(sender as UIElement).Position, SingleLineHeight, RenderedLines.Count, NumberOfStartLine));
+            SelectLine(CursorRenderer.GetCursorLineFromPoint(e.GetCurrentPoint(sender as UIElement).Position, SingleLineHeight, NumberOfRenderedLines, NumberOfStartLine));
+
+            selectionrenderer.IsSelecting = true;
         }
         //Change the cursor when entering/leaving the control
         private void UserControl_PointerEntered(object sender, PointerRoutedEventArgs e)
@@ -1080,14 +1083,14 @@ namespace TextControlBox
             VerticalScrollbar.ViewportSize = sender.ActualHeight;
 
             //Get all the lines, that need to be rendered, from the list
-            int CountMax = NumberOfStartLine + NumberOfLinesToBeRendered > TotalLines.Count ? TotalLines.Count : NumberOfStartLine + NumberOfLinesToBeRendered;
-            for (int i = NumberOfStartLine; i < CountMax; i++)
+            NumberOfRenderedLines = NumberOfStartLine + NumberOfLinesToBeRendered > TotalLines.Count ? TotalLines.Count : NumberOfStartLine + NumberOfLinesToBeRendered;
+            for (int i = NumberOfStartLine; i < NumberOfRenderedLines; i++)
             {
                 Line item = TotalLines[i];
                 RenderedLines.Add(item);
-                TextToRender.Append(item.Content + "\n");
+                TextToRender.AppendLine(item.Content);
                 if (_ShowLineNumbers)
-                    LineNumberContent.Append((i + 1) + "\n");
+                    LineNumberContent.AppendLine((i + 1).ToString());
             }
 
             if (_ShowLineNumbers)
@@ -1128,7 +1131,7 @@ namespace TextControlBox
 
             if (selectionrenderer.HasSelection)
             {
-                TextSelection = selectionrenderer.DrawSelection(DrawnTextLayout, RenderedLines, args, (float)-HorizontalScroll, SingleLineHeight / 4, NumberOfStartLine, RenderedLines.Count, ZoomedFontSize);
+                TextSelection = selectionrenderer.DrawSelection(DrawnTextLayout, RenderedLines, args, (float)-HorizontalScroll, SingleLineHeight / 4, NumberOfStartLine, NumberOfRenderedLines, ZoomedFontSize);
             }
 
             if (TextSelection != null && !Selection.Equals(OldTextSelection, TextSelection))
@@ -1154,7 +1157,7 @@ namespace TextControlBox
             float RenderPosY = (float)((CursorPosition.LineNumber - NumberOfStartLine) * SingleLineHeight) + SingleLineHeight / 4;
 
             //Out of display-region:
-            if (RenderPosY > RenderedLines.Count * SingleLineHeight || RenderPosY < 0)
+            if (RenderPosY > NumberOfRenderedLines * SingleLineHeight || RenderPosY < 0)
                 return;
 
             UpdateCurrentLineTextLayout();
@@ -1293,6 +1296,19 @@ namespace TextControlBox
 
             UpdateCursorVariable(e.GetPosition(Canvas_Text));
             UpdateCursor();
+        }
+
+        private void UserControl_Unloaded(object sender, RoutedEventArgs e)
+        {
+            EditContext.NotifyFocusLeave();
+            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+            Window.Current.CoreWindow.PointerMoved -= CoreWindow_PointerMoved;
+            Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
+            TotalLines.Dispose();
+            RenderedLines = null;
+            LineNumberTextToRender = RenderedText = null;
+            LineNumberContent = TextToRender = null;
+            UndoRedo.NullAll();
         }
         #endregion
 
@@ -1472,7 +1488,7 @@ namespace TextControlBox
         public void ScrollLineToCenter(int line)
         {
             //Check whether the current line is outside the bounds of the visible area
-            if (line < NumberOfStartLine || line >= NumberOfStartLine + RenderedLines.Count)
+            if (line < NumberOfStartLine || line >= NumberOfStartLine + NumberOfRenderedLines)
             {
                 ScrollLineIntoView(line);
             }
@@ -1489,7 +1505,7 @@ namespace TextControlBox
         }
         public void ScrollLineIntoView(int line)
         {
-            VerticalScroll = (line - RenderedLines.Count / 2) * SingleLineHeight;
+            VerticalScroll = (line - NumberOfRenderedLines / 2) * SingleLineHeight;
             UpdateAll();
         }
         public void ScrollTopIntoView()
@@ -1499,24 +1515,24 @@ namespace TextControlBox
         }
         public void ScrollBottomIntoView()
         {
-            VerticalScroll = (CursorPosition.LineNumber - RenderedLines.Count + 1) * SingleLineHeight;
+            VerticalScroll = (CursorPosition.LineNumber - NumberOfRenderedLines + 1) * SingleLineHeight;
             UpdateAll();
         }
         public void ScrollPageUp()
         {
-            CursorPosition.LineNumber -= RenderedLines.Count;
+            CursorPosition.LineNumber -= NumberOfRenderedLines;
             if (CursorPosition.LineNumber < 0)
                 CursorPosition.LineNumber = 0;
 
-            VerticalScroll -= RenderedLines.Count * SingleLineHeight;
+            VerticalScroll -= NumberOfRenderedLines * SingleLineHeight;
             UpdateAll();
         }
         public void ScrollPageDown()
         {
-            CursorPosition.LineNumber += RenderedLines.Count;
+            CursorPosition.LineNumber += NumberOfRenderedLines;
             if (CursorPosition.LineNumber > TotalLines.Count - 1)
                 CursorPosition.LineNumber = TotalLines.Count - 1;
-            VerticalScroll += RenderedLines.Count * SingleLineHeight;
+            VerticalScroll += NumberOfRenderedLines * SingleLineHeight;
             UpdateAll();
         }
         public string GetLineContent(int line)
@@ -1843,6 +1859,7 @@ namespace TextControlBox
         public delegate void LostFocusEvent(TextControlBox sender);
         public new event LostFocusEvent LostFocus;
         #endregion
+
     }
     public class ScrollBarPosition
     {

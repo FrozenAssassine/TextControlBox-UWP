@@ -2,6 +2,7 @@
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using TextControlBox.Text;
 using Windows.Foundation;
 using Windows.UI;
@@ -88,15 +89,21 @@ namespace TextControlBox.Renderer
                     for (int i = 0; i < SelectionStartPosition.LineNumber - UnrenderedLinesToRenderStart; i++)
                     {
                         if (i >= NumberOfRenderedLines) //Out of range of the List (do nothing)
+                        {
+                            Debug.WriteLine("Out of range1");
                             break;
+                        }
                         SelStartIndex += RenderedLines[i].Length + 2;
                     }
                     SelStartIndex += CharacterPosStart;
 
                     for (int i = 0; i < SelectionEndPosition.LineNumber - UnrenderedLinesToRenderStart; i++)
                     {
-                        if (i >= NumberOfRenderedLines) //Out of range of the List (do nothing)
+                        if (i >= NumberOfRenderedLines)
+                        {
+                            Debug.WriteLine("Out of range2");
                             break;
+                        } //Out of range of the List (do nothing)
                         SelEndIndex += RenderedLines[i].Length + 2;
                     }
                     SelEndIndex += CharacterPosEnd;

@@ -129,6 +129,12 @@ namespace TextControlBox.Text
             RedoStack.TrimExcess();
         }
 
+        public void NullAll()
+        {
+            UndoStack = null;
+            RedoStack = null;
+        }
+
         /// <summary>
         /// Gets if the undo stack contains actions
         /// </summary>
