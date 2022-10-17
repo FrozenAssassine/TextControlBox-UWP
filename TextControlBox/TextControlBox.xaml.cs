@@ -1004,7 +1004,6 @@ namespace TextControlBox
         }
         private void Canvas_LineNumber_PointerMoved(object sender, PointerRoutedEventArgs e)
         {
-            Debug.WriteLine("Start...");
             if (selectionrenderer.IsSelecting)
             {
                 var CurPoint = e.GetCurrentPoint(sender as UIElement).Position;
