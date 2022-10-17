@@ -8,8 +8,8 @@
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400"
-    Unloaded="UserControl_Unloaded"
     AllowFocusOnInteraction="True" 
+    Unloaded="UserControl_Unloaded"
     PointerWheelChanged="Canvas_Selection_PointerWheelChanged" PointerEntered="UserControl_PointerEntered" PointerExited="UserControl_PointerExited" AllowDrop="True" Drop="UserControl_Drop" DragOver="UserControl_DragOver">
 
     <Grid x:Name="MainGrid">

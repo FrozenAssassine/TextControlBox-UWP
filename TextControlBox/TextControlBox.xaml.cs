@@ -68,7 +68,7 @@ namespace TextControlBox
         bool ColorResourcesCreated = false;
         bool NeedsTextFormatUpdate = false;
         bool DragDropSelection = false;
-        bool HasFocus = false;
+        bool HasFocus = true;
 
         CanvasTextFormat TextFormat = null;
         CanvasTextLayout DrawnTextLayout = null;
@@ -91,8 +91,8 @@ namespace TextControlBox
         CoreTextEditContext EditContext;
 
         //Store the lines in Lists
-        private PooledList<Line> TotalLines = new PooledList<Line>(10, true);
-        private List<Line> RenderedLines = new List<Line>();
+        private PooledList<Line> TotalLines = new PooledList<Line>(0);
+        private List<Line> RenderedLines = new List<Line>(0);
         private int NumberOfRenderedLines = 0;
         StringBuilder LineNumberContent = new StringBuilder();
         StringBuilder TextToRender = new StringBuilder();
@@ -123,14 +123,6 @@ namespace TextControlBox
             Window.Current.CoreWindow.PointerMoved += CoreWindow_PointerMoved;
             Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
             InitialiseOnStart();
-        }
-        private void InitialiseOnStart()
-        {
-            Canvas_LineNumber.ClearColor = Color.FromArgb(0, 0, 0, 0);
-
-            UpdateZoom();
-            if (TotalLines.Count == 0)
-                TotalLines.Add(new Line());
         }
 
         #region Update functions
@@ -416,6 +408,14 @@ namespace TextControlBox
         #endregion
 
         #region Random functions
+        private void InitialiseOnStart()
+        {
+            Canvas_LineNumber.ClearColor = Color.FromArgb(0, 0, 0, 0);
+
+            UpdateZoom();
+            if (TotalLines.Count == 0)
+                TotalLines.Add(new Line());
+        }
         private Line GetCurrentLine()
         {
             return ListHelper.GetLine(TotalLines, CursorPosition.LineNumber);
@@ -1061,8 +1061,6 @@ namespace TextControlBox
             //TEMPORARY:
             EditContext.NotifyFocusEnter();
 
-            //Clear the rendered lines, to fill them with new lines
-            RenderedLines.Clear();
             //Create resources and layouts:
             if (NeedsTextFormatUpdate || TextFormat == null || LineNumberTextFormat == null)
             {
@@ -1082,8 +1080,14 @@ namespace TextControlBox
             VerticalScrollbar.ViewportSize = sender.ActualHeight;
 
             //Get all the lines, that need to be rendered, from the list
-            NumberOfRenderedLines = NumberOfStartLine + NumberOfLinesToBeRendered > TotalLines.Count ? TotalLines.Count : NumberOfStartLine + NumberOfLinesToBeRendered;
-            for (int i = NumberOfStartLine; i < NumberOfRenderedLines; i++)
+            int count = NumberOfLinesToBeRendered > TotalLines.Count ? TotalLines.Count : NumberOfLinesToBeRendered;
+
+            //Clear rendered lines, to fill it with new lines
+            RenderedLines.Clear();
+            if(count != RenderedLines.Count)
+                RenderedLines.Capacity = count;
+
+            for (int i = NumberOfStartLine; i < NumberOfStartLine + count; i++)
             {
                 Line item = TotalLines[i];
                 RenderedLines.Add(item);
@@ -1091,6 +1095,7 @@ namespace TextControlBox
                 if (_ShowLineNumbers)
                     LineNumberContent.AppendLine((i + 1).ToString());
             }
+            NumberOfRenderedLines = RenderedLines.Count;
 
             if (_ShowLineNumbers)
                 LineNumberTextToRender = LineNumberContent.ToString();
@@ -1173,6 +1178,7 @@ namespace TextControlBox
                 CursorSize,
                 args,
                 CursorColorBrush);
+
 
             if (_ShowLineHighlighter && SelectionIsNull())
             {
@@ -1296,13 +1302,17 @@ namespace TextControlBox
             UpdateCursorVariable(e.GetPosition(Canvas_Text));
             UpdateCursor();
         }
-
         private void UserControl_Unloaded(object sender, RoutedEventArgs e)
         {
-            EditContext.NotifyFocusLeave();
+            EditContext.NotifyFocusLeave(); //inform the IME to not send any more text
+            //Unsubscribe from events:
             Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
             Window.Current.CoreWindow.PointerMoved -= CoreWindow_PointerMoved;
             Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
+            EditContext.TextUpdating -= EditContext_TextUpdating;
+            EditContext.FocusRemoved -= EditContext_FocusRemoved;
+
+            //Dispose and null larger objects
             TotalLines.Dispose();
             RenderedLines = null;
             LineNumberTextToRender = RenderedText = null;
@@ -1334,7 +1344,7 @@ namespace TextControlBox
             UpdateCursor();
         }
         /// <summary>
-        /// Load text to the textbox everything in it will reset. Use this to load text on application start
+        /// Load text to the textbox everything will reset. Use this to load text on application start
         /// </summary>
         /// <param name="text">The text to load</param>
         public async void LoadText(string text)
@@ -1342,7 +1352,7 @@ namespace TextControlBox
             if (await Utils.IsOverTextLimit(text.Length))
                 return;
 
-            ListHelper.Clear(TotalLines);
+            ListHelper.Clear(TotalLines, text == "");
             RenderedLines.Clear();
             RenderedLines.TrimExcess();
             selectionrenderer.ClearSelection();
@@ -1350,6 +1360,13 @@ namespace TextControlBox
 
             //Get the LineEnding
             LineEnding = LineEndings.FindLineEnding(text);
+
+            if(text == "")
+            {
+                TotalLines.Add(new Line());
+                UpdateAll();
+                return;
+            }
 
             //Split the lines using the current LineEnding
             var lines = text.Split(NewLineCharacter);
@@ -1359,7 +1376,6 @@ namespace TextControlBox
                 TotalLines.Add(new Line(lines[i]));
             }
 
-            Internal_TextChanged(text);
             UpdateAll();
         }
         /// <summary>
@@ -1373,18 +1389,25 @@ namespace TextControlBox
 
             selectionrenderer.ClearSelection();
 
-            text = LineEndings.CleanLineEndings(text, _LineEnding);
-            var lines = text.Split(NewLineCharacter);
+            string[] lines = null;            
+            if(text != "")
+                lines = text.Split(NewLineCharacter);
 
             UndoRedo.RecordUndoAction(() =>
             {
                 //Clear the lists
-                ListHelper.Clear(TotalLines);
+                ListHelper.Clear(TotalLines, text == "");
                 RenderedLines.Clear();
                 RenderedLines.TrimExcess();
 
-                TotalLines.Capacity = lines.Length;
+                if (text == "")
+                {
+                    UpdateAll();
+                    return;
+                }
 
+                text = LineEndings.CleanLineEndings(text, _LineEnding);
+                TotalLines.Capacity = lines.Length;
                 for (int i = 0; i < lines.Length; i++)
                 {
                     TotalLines.Add(new Line(lines[i]));
@@ -1795,7 +1818,7 @@ namespace TextControlBox
             set { _ShowLineHighlighter = value; UpdateCursor(); }
         }
         public int ZoomFactor { get => _ZoomFactor; set { _ZoomFactor = value; UpdateZoom(); } } //%
-        public bool IsReadonly { get; set; } = false;
+        public bool IsReadonly { get => EditContext.IsReadOnly; set => EditContext.IsReadOnly = value; }
         [Description("Change the size of the cursor. Use null for the default size")]
         public CursorSize CursorSize { get => _CursorSize; set { _CursorSize = value; UpdateCursor(); } }
         public new MenuFlyout ContextFlyout
@@ -1858,7 +1881,6 @@ namespace TextControlBox
         public delegate void LostFocusEvent(TextControlBox sender);
         public new event LostFocusEvent LostFocus;
         #endregion
-
     }
     public class ScrollBarPosition
     {

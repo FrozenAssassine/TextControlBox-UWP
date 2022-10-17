@@ -89,21 +89,16 @@ namespace TextControlBox.Renderer
                     for (int i = 0; i < SelectionStartPosition.LineNumber - UnrenderedLinesToRenderStart; i++)
                     {
                         if (i >= NumberOfRenderedLines) //Out of range of the List (do nothing)
-                        {
-                            Debug.WriteLine("Out of range1");
                             break;
-                        }
                         SelStartIndex += RenderedLines[i].Length + 2;
                     }
                     SelStartIndex += CharacterPosStart;
 
                     for (int i = 0; i < SelectionEndPosition.LineNumber - UnrenderedLinesToRenderStart; i++)
                     {
-                        if (i >= NumberOfRenderedLines)
-                        {
-                            Debug.WriteLine("Out of range2");
+                        if (i >= NumberOfRenderedLines) //Out of range of the List (do nothing)
                             break;
-                        } //Out of range of the List (do nothing)
+                        
                         SelEndIndex += RenderedLines[i].Length + 2;
                     }
                     SelEndIndex += CharacterPosEnd;
