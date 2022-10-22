@@ -491,7 +491,7 @@ namespace TextControlBox.Text
             //return the current line, if no text is selected:
             if (TextSelection == null)
             {
-                return ListHelper.GetLine(TotalLines, CurrentLineIndex).Content;
+                return ListHelper.GetLine(TotalLines, CurrentLineIndex).Content + NewLineCharacter;
             }
 
             int StartLine = Math.Min(TextSelection.StartPosition.LineNumber, TextSelection.EndPosition.LineNumber);

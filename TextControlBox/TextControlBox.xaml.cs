@@ -225,16 +225,15 @@ namespace TextControlBox
                 UpdateSelection();
             }, TotalLines, TextSelection, 0, NewLineCharacter);
         }
-        private void AddCharacter(string text, bool IgnoreSelection = false, bool ExcecutePrevUndoToo = false)
+        private void AddCharacter(string text, bool IgnoreSelection = false)
         {
             if (CurrentLine == null || IsReadonly)
                 return;
 
             if (IgnoreSelection)
                 ClearSelection();
-            int SplittedTextLength = 0;
 
-            SplittedTextLength = text.Contains(NewLineCharacter) ? text.NumberOfOccurences(NewLineCharacter) + 1 : 1;
+            int SplittedTextLength = text.Contains(NewLineCharacter) ? text.NumberOfOccurences(NewLineCharacter) + 1 : 1;
 
             if (TextSelection == null && SplittedTextLength == 1)
             {
@@ -517,7 +516,7 @@ namespace TextControlBox
 
             CursorPosition = curpos;
 
-            AddCharacter(TextToInsert, false, true);
+            AddCharacter(TextToInsert, false);
 
             Utils.ChangeCursor(CoreCursorType.IBeam);
             DragDropSelection = false;
@@ -1441,11 +1440,11 @@ namespace TextControlBox
             DataPackageView dataPackageView = Clipboard.GetContent();
             if (dataPackageView.Contains(StandardDataFormats.Text))
             {
-                string Text = LineEndings.CleanLineEndings(await dataPackageView.GetTextAsync(), LineEnding);
+                string Text = await dataPackageView.GetTextAsync();
                 if (await Utils.IsOverTextLimit(Text.Length))
                     return;
 
-                AddCharacter(Text);
+                AddCharacter(LineEndings.CleanLineEndings(Text, LineEnding));
                 ClearSelection();
                 UpdateCursor();
             }
@@ -1974,7 +1973,6 @@ namespace TextControlBox
                 if (TextSelection != null && Selection.WholeTextSelected(TextSelection, TotalLines))
                     return GetText();
 
-                Debug.WriteLine("GetSelectedText");
                 return Selection.GetSelectedText(TotalLines, TextSelection, CursorPosition.LineNumber, NewLineCharacter);
             }
             set
