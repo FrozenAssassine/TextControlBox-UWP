@@ -1104,13 +1104,13 @@ namespace TextControlBox
 
             CreateColorResources(args.DrawingSession);
 
-            //Calculate number of lines that needs to be rendered
-            int NumberOfLinesToBeRendered = (int)(sender.ActualHeight / SingleLineHeight);
-            NumberOfStartLine = (int)(VerticalScroll / SingleLineHeight);
-
             //Measure textposition and apply the value to the scrollbar
             VerticalScrollbar.Maximum = ((TotalLines.Count + 1) * SingleLineHeight - Scroll.ActualHeight);
             VerticalScrollbar.ViewportSize = sender.ActualHeight;
+
+            //Calculate number of lines that needs to be rendered
+            int NumberOfLinesToBeRendered = (int)(sender.ActualHeight / SingleLineHeight);
+            NumberOfStartLine = (int)(VerticalScroll / SingleLineHeight);
 
             //Get all the lines, that need to be rendered, from the list
             int count = NumberOfLinesToBeRendered + NumberOfStartLine > TotalLines.Count ? TotalLines.Count : NumberOfLinesToBeRendered + NumberOfStartLine;
@@ -1900,7 +1900,7 @@ namespace TextControlBox
             {
                 _RequestedTheme = value;
                 _AppTheme = Utils.ConvertTheme(value);
-                Debug.WriteLine(_AppTheme);
+                UpdateText();
                 if (UseDefaultDesign)
                 {
                     Design = _AppTheme == ApplicationTheme.Light ? LightDesign : DarkDesign;
@@ -1914,10 +1914,14 @@ namespace TextControlBox
             {
                 if (value != null)
                 {
+                    UseDefaultDesign = false;
                     _Design = value;
                 }
                 else
+                {
+                    UseDefaultDesign = true;
                     _Design = _AppTheme == ApplicationTheme.Dark ? DarkDesign : LightDesign;
+                }
 
                 //Debug.WriteLine(Design.TextColor + "::" + RequestedTheme + ":" + UseDefaultDesign);
 
