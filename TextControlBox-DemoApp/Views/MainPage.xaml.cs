@@ -24,8 +24,9 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using static System.Net.Mime.MediaTypeNames;
 using Windows.Storage.Streams;
+using Newtonsoft.Json.Linq;
 
-namespace TextControlBox_DemoApp
+namespace TextControlBox_DemoApp.Views
 {
     /// <summary>
     /// Eine leere Seite, die eigenständig verwendet oder zu der innerhalb eines Rahmens navigiert werden kann.
@@ -35,6 +36,7 @@ namespace TextControlBox_DemoApp
         private bool UnsavedChanges = false;
         private StorageFile OpenedFile = null;
         private CoreApplicationViewTitleBar coreTitleBar;
+        private Encoding CurrentEncoding = Encoding.UTF8;
 
         public MainPage()
         {
@@ -46,6 +48,16 @@ namespace TextControlBox_DemoApp
             Infobar_LineEnding.Text = textbox.LineEnding.ToString();
         }
 
+        private void ApplySettings()
+        {
+            textbox.FontFamily = new FontFamily(AppSettings.GetSettings("fontFamily") ?? "Consolas");
+            textbox.FontSize = AppSettings.GetSettingsAsInt("fontSize", 18);
+
+            if (Window.Current.Content is FrameworkElement rootElement)
+            {
+                textbox.RequestedTheme = rootElement.RequestedTheme = (ElementTheme)Enum.Parse(typeof(ElementTheme), AppSettings.GetSettingsAsInt("theme", 0).ToString());
+            }
+        }
         private void CustomTitleBar()
         {
             // Hide default title bar.
@@ -70,6 +82,9 @@ namespace TextControlBox_DemoApp
         }
         private async Task<bool> CheckUnsavedChanges()
         {
+            if (!UnsavedChanges)
+                return false;
+
             var SaveDialog = new ContentDialog
             {
                 Title = "Save file?",
@@ -101,20 +116,45 @@ namespace TextControlBox_DemoApp
                 using (var stream = (await file.OpenReadAsync()).AsStreamForRead())
                 {
                     //Detect the encoding:
-                    var reader = new StreamReader(stream, true);
-                    reader.Peek();
-                    encoding = reader.CurrentEncoding;
+                    using (var reader = new StreamReader(stream, true))
+                    {
+                        reader.Peek();
+                        encoding = reader.CurrentEncoding;
 
-                    byte[] buffer = new byte[stream.Length];
-                    stream.Read(buffer, 0, buffer.Length);
+                        byte[] buffer = new byte[stream.Length];
+                        stream.Read(buffer, 0, buffer.Length);
 
-                    reader.Dispose();
-                    return (encoding.GetString(buffer, 0, buffer.Length), encoding, true);
+                        Debug.WriteLine("TRY: " + encoding.GetString(buffer, 0, buffer.Length));
+                        return (encoding.GetString(buffer, 0, buffer.Length), encoding, true);
+                    }
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Debug.WriteLine(ex.Message);
                 return ("", Encoding.Default, false);
+            }
+        }
+        public async Task<bool> WriteTextToFileAsync(StorageFile file, string text, Encoding encoding)
+        {
+            try
+            {
+                if (file == null)
+                    return false;
+
+                using (var stream = await file.OpenStreamForWriteAsync())
+                {
+                    using (var writer = new StreamWriter(stream, encoding))
+                    {
+                        writer.Write(text);
+                        return true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+                return false;
             }
         }
         private async Task<bool> SaveFile(bool ForceSaveNew = false)
@@ -129,7 +169,7 @@ namespace TextControlBox_DemoApp
                 if (file != null)
                 {
                     CachedFileManager.DeferUpdates(file);
-                    await FileIO.WriteTextAsync(file, file.Name);
+                    await WriteTextToFileAsync(OpenedFile, textbox.GetText(), CurrentEncoding);
                     Windows.Storage.Provider.FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(file);
 
                     if (status == Windows.Storage.Provider.FileUpdateStatus.Complete)
@@ -142,10 +182,17 @@ namespace TextControlBox_DemoApp
             }
             else
             {
-                await FileIO.WriteTextAsync(OpenedFile, textbox.GetText());
+                await WriteTextToFileAsync(OpenedFile, textbox.GetText(), CurrentEncoding);
                 return true;
             }
             return false;
+        }
+
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            ApplySettings();
+            CustomTitleBar();
+            base.OnNavigatedTo(e);
         }
 
         //Titlebar events:
@@ -182,7 +229,8 @@ namespace TextControlBox_DemoApp
                 OpenedFile = file;
                 UpdateTitle();
                 var res = await ReadTextFromFileAsync(file);
-                Infobar_Encoding.Text = res.encoding.EncodingName;
+                CurrentEncoding = res.encoding;
+                Infobar_Encoding.Text = CurrentEncoding.EncodingName;
                 
                 textbox.LoadText(res.Text);
                 Infobar_LineEnding.Text = textbox.LineEnding.ToString();
@@ -201,7 +249,7 @@ namespace TextControlBox_DemoApp
         }
         private async void SaveFile_Click(object sender, RoutedEventArgs e)
         {
-            await SaveFile();
+            await SaveFile(false);
         }
         private async void SaveFileAs_Click(object sender, RoutedEventArgs e)
         {
@@ -239,22 +287,36 @@ namespace TextControlBox_DemoApp
         {
             if (sender is MenuFlyoutItem item)
             {
-                textbox.CodeLanguage = (TextControlBox.Helper.CodeLanguages)Enum.Parse(typeof(TextControlBox.Helper.CodeLanguages), item.Tag.ToString() ?? "0");
+                if (item.Tag.ToString() == "")
+                    textbox.CodeLanguage = null;
+                else 
+                    textbox.SelectCodeLanguageById(item.Tag.ToString());
             }
         }
         private void DuplicateLine_Click(object sender, RoutedEventArgs e)
         {
             textbox.DuplicateLine(textbox.CurrentLineIndex);
         }
-        
+        private void Settings_Click(object sender, RoutedEventArgs e)
+        {
+            this.Frame.Navigate(typeof(SettingsPage));
+        }
+
         private void textbox_ZoomChanged(TextControlBox.TextControlBox sender, int ZoomFactor)
         {
             Infobar_Zoom.Text = ZoomFactor + "%";
         }
         private void textbox_SelectionChanged(TextControlBox.TextControlBox sender, TextControlBox.Text.SelectionChangedEventHandler args)
         {
-            Infobar_Cursor.Text = "Ln: " + args.LineNumber + ", Col:" + args.CharacterPositionInLine;
+            Infobar_Cursor.Text = "Ln: " + (args.LineNumber + 1) + ", Col:" + args.CharacterPositionInLine;
         }
 
+        private void Page_ActualThemeChanged(FrameworkElement sender, object args)
+        {
+            if (Window.Current.Content is FrameworkElement rootElement)
+            {
+                textbox.RequestedTheme = rootElement.RequestedTheme;
+            }
+        }
     }
 }

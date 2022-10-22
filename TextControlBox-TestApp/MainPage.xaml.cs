@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Text;
+using TextControlBox;
 using TextControlBox.Helper;
 using Windows.Storage;
 using Windows.Storage.Pickers;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media;
 
 namespace TextControlBox_TestApp
 {
@@ -16,15 +19,25 @@ namespace TextControlBox_TestApp
             this.InitializeComponent();
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
 
-            //Set the Syntaxhighlighting-language to Csharp
-            TextControlBox.CodeLanguage = CodeLanguages.Csharp;
-            //Open a test file
-            //OpenFile();
-            TextControlBox.LoadText(GenerateContent());
-            TextControlBox.FontSize = 42;
-            //GC.Collect();
+            TextControlBox.FontSize = 20;
+            Load();
+
+            /*TextControlBox.Design = new TextControlBoxDesign
+            {
+                Background = new SolidColorBrush(Color.FromArgb(255, 59, 46, 69)),
+                CursorColor = Color.FromArgb(255, 255, 100, 255),
+                LineHighlighterColor = Color.FromArgb(255, 79, 66, 89),
+                LineNumberBackground = Color.FromArgb(255, 59, 46, 69),
+                LineNumberColor = Color.FromArgb(255, 93, 2, 163),
+                TextColor = Color.FromArgb(255, 144, 0, 255),
+                SelectionColor = Color.FromArgb(100, 144, 0, 255)
+            };*/
         }
-        
+        private async void Load()
+        {
+            await TextControlBox.LoadCodeLanguageFromJson(@"C:\Users\juliu\AppData\Local\Packages\eddf928a-4bfe-466c-abd5-7e21961b1874_nh3p3v8ffjhmr\LocalState\CSharp.json");
+            //TextControlBox.SelectCodeLanguageById("CSharp");
+        }
         private string GenerateContent()
         {
             int Limit = 10;
@@ -43,9 +56,21 @@ namespace TextControlBox_TestApp
             {
                 TextControlBox.LoadText(GenerateContent());
             }
-            if(ControlKey && args.VirtualKey == Windows.System.VirtualKey.D)
+            if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.E)
             {
-                TextControlBox.DuplicateLine(TextControlBox.CurrentLineIndex);
+                Load();
+            }
+            if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.D)
+            {
+                TextControlBox.RequestedTheme = TextControlBox.RequestedTheme == ElementTheme.Dark ? 
+                    ElementTheme.Light : TextControlBox.RequestedTheme == ElementTheme.Default ? ElementTheme.Light : ElementTheme.Dark;
+                
+                //TextControlBox.DuplicateLine(TextControlBox.CurrentLineIndex);
+            }
+            if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.L)
+            {
+                TextControlBox.CleanUp();
+                //TextControlBox.DuplicateLine(TextControlBox.CurrentLineIndex);
             }
             if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.O)
             {

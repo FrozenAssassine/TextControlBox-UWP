@@ -1,0 +1,49 @@
+﻿{
+  "Highlights": [
+    {
+      //-/+ floating numbers
+      "Pattern": "([+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?",
+      "ColorDark": "#ff00ff",
+      "ColorLight": "#ff00ff"
+    },
+    {
+      //null, true, false
+      "Pattern": "(null|true|false)",
+      "ColorDark": "#0099ff",
+      "ColorLight": "#00AADD"
+    },
+    {
+      //Brackets
+      "Pattern": "(,|{|}|\\[|\\])",
+      "ColorDark": "#646464",
+      "ColorLight": "#969696"
+    },
+    {
+      //strings: ""
+      "Pattern": "\"[^\\n]*?\"",
+      "ColorDark": "#00FF00",
+      "ColorLight": "#00CA00"
+    },
+    {
+      //strings: ''
+      "Pattern": "'[^\\n]*?'",
+      "ColorDark": "#00FF00",
+      "ColorLight": "#00CA00"
+    },
+    {
+      //Comment multiline /**/
+      "Pattern": "/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/",
+      "ColorDark": "#646464",
+      "ColorLight": "#888888"
+    },
+    {
+      //Comment singleline //
+      "Pattern": "//(.*?)\\r?\\n",
+      "ColorDark": "#646464",
+      "ColorLight": "#888888"
+    }
+  ],
+  "Name": "Json",
+  "Description": "Syntax highlighting for Json language",
+  "Author": "Julius Kirsch"
+}
