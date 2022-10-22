@@ -117,5 +117,20 @@ namespace TextControlBox.Helper
 
             Debug.WriteLine(Text + " took " + sw.ElapsedMilliseconds + "::" + sw.ElapsedTicks);
         }
+
+        public static ApplicationTheme ConvertTheme(ElementTheme Theme)
+        {
+            switch (Theme)
+            {
+                case ElementTheme.Light: return ApplicationTheme.Light;
+                case ElementTheme.Dark: return ApplicationTheme.Dark;
+                case ElementTheme.Default:
+                    var DefaultTheme = new Windows.UI.ViewManagement.UISettings();
+                    return DefaultTheme.GetColorValue(Windows.UI.ViewManagement.UIColorType.Background).ToString() == "#FF000000" 
+                        ? ApplicationTheme.Dark : ApplicationTheme.Light;
+
+                default: return ApplicationTheme.Light;
+            }
+        }
     }
 }

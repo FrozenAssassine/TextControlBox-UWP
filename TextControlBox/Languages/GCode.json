@@ -1,0 +1,61 @@
+﻿{
+  "Highlights": [
+    {
+      //Axis Y
+      "Pattern": "Y+(?=[+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?",
+      "ColorDark": "#00ff00",
+      "ColorLight": "#00ff00"
+    },
+    {
+      //Axis X
+      "Pattern": "X+(?=[+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?",
+      "ColorDark": "#ff0000",
+      "ColorLight": "#ff0000"
+    },
+    {
+      //Axis Z
+      "Pattern": "Z+(?=[+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?",
+      "ColorDark": "#0077ff",
+      "ColorLight": "#0077ff"
+    },
+    {
+      //Axis A
+      "Pattern": "A+(?=[+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?",
+      "ColorDark": "#ff00ff",
+      "ColorLight": "#ff00ff"
+    },
+    {
+      //Feedrate E | F
+      "Pattern": "(E|F)+(?=[+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?",
+      "ColorDark": "#ffAA00",
+      "ColorLight": "#ffAA00"
+    },
+    {
+      //Extruder
+      "Pattern": "(S|T)+(?=[+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?",
+      "ColorDark": "#ffff00",
+      "ColorLight": "#ffff00"
+    },
+    {
+      //-/+ floating numbers
+      "Pattern": "([+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?",
+      "ColorDark": "#990099",
+      "ColorLight": "#ff00ff"
+    },
+    {
+      //G0 - G999 & M0 - M999
+      "Pattern": "[G|M]+[0-999].*?[\\s|\\n]",
+      "ColorDark": "#00ffff",
+      "ColorLight": "#00aaaa"
+    },
+    {
+      //Comments
+      "Pattern": "(;|\/\/|\brem\b).*",
+      "ColorDark": "#888888",
+      "ColorLight": "#888888"
+    }
+  ],
+  "Name": "GCode",
+  "Description": "Syntaxhighlighting for GCode language",
+  "Author": "Julius Kirsch"
+}

@@ -162,8 +162,8 @@ namespace TextControlBox.Text
                 if (StartPosition == 0 && EndPosition == ListHelper.GetLine(TotalLines, EndLine).Length)
                     Start_Line.Content = "";
 
-                string TextTo = Start_Line.Content == "" ? "" : Start_Line.Content.Substring(0, StartPosition);
-                string TextFrom = Start_Line.Content == "" ? "" : Start_Line.Content.Substring(EndPosition);
+                string TextTo = Start_Line.Content == "" ? "" : StartPosition >= Start_Line.Length ? Start_Line.Content : Start_Line.Content.Substring(0, StartPosition);
+                string TextFrom = Start_Line.Content == "" ? "" : EndPosition >= Start_Line.Length ? Start_Line.Content : Start_Line.Content.Substring(EndPosition);
 
                 using (PooledList<Line> Lines = new PooledList<Line>(SplittedText.Length))
                 {

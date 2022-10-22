@@ -7,7 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Runtime;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -16,7 +18,9 @@ using TextControlBox.Helper;
 using TextControlBox.Renderer;
 using TextControlBox.Text;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.ApplicationModel.Resources.Core;
 using Windows.Foundation;
+using Windows.Storage.Streams;
 using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Text.Core;
@@ -34,17 +38,13 @@ namespace TextControlBox
     {
         private CursorSize _CursorSize = null;
         private FontFamily _FontFamily = new FontFamily("Consolas");
-        private Color _SelectionColor = Color.FromArgb(100, 0, 100, 255);
-        private Color _TextColor = Color.FromArgb(255, 255, 255, 255);
-        private Color _CursorColor = Color.FromArgb(255, 255, 255, 255);
-        private Color _LineHighlighterColor = Color.FromArgb(50, 0, 0, 0);
-        private Color _LineNumberColor = Color.FromArgb(255, 150, 150, 150);
+        private bool UseDefaultDesign = true;
+        private TextControlBoxDesign _Design { get; set; }
         private string NewLineCharacter = "\r\n";
         private string TabCharacter = "\t";
         private InputPane inputPane;
         private bool _ShowLineNumbers = true;
         private CodeLanguage _CodeLanguage = null;
-        private CodeLanguages _CodeLanguages = CodeLanguages.None;
         private LineEnding _LineEnding = LineEnding.CRLF;
         private bool _ShowLineHighlighter = true;
         private int _FontSize = 18;
@@ -58,7 +58,26 @@ namespace TextControlBox
         private int OldZoomFactor = 0;
         private int NumberOfStartLine = 0;
         private float OldHorizontalScrollValue = 0;
-
+        private ElementTheme _RequestedTheme = ElementTheme.Default;
+        private ApplicationTheme _AppTheme = ApplicationTheme.Light;
+        private TextControlBoxDesign LightDesign = new TextControlBoxDesign(
+            new SolidColorBrush(Color.FromArgb(255, 255, 255, 255)),
+            Color.FromArgb(255, 50, 50, 50),
+            Color.FromArgb(100, 0, 100, 255),
+            Color.FromArgb(255, 0, 0, 0),
+            Color.FromArgb(50, 200, 200, 200),
+            Color.FromArgb(255, 180, 180, 180),
+            Color.FromArgb(0, 0, 0, 0)
+            );
+        private TextControlBoxDesign DarkDesign = new TextControlBoxDesign(
+            new SolidColorBrush(Color.FromArgb(255, 30, 30, 30)),
+            Color.FromArgb(255, 255, 255, 255),
+            Color.FromArgb(100, 0, 100, 255),
+            Color.FromArgb(255, 255, 255, 255),
+            Color.FromArgb(50, 100, 100, 100),
+            Color.FromArgb(255, 100, 100, 100),
+            Color.FromArgb(0, 0, 0, 0)
+            );
         //Colors:
         CanvasSolidColorBrush TextColorBrush;
         CanvasSolidColorBrush CursorColorBrush;
@@ -101,10 +120,14 @@ namespace TextControlBox
         private readonly SelectionRenderer selectionrenderer;
         private readonly UndoRedo UndoRedo = new UndoRedo();
         private readonly FlyoutHelper FlyoutHelper;
-
+        
         public TextControlBox()
         {
             this.InitializeComponent();
+            AddLanguagesToBuffer();
+
+            RequestedTheme = ElementTheme.Default;
+
             CoreTextServicesManager manager = CoreTextServicesManager.GetForCurrentView();
             EditContext = manager.CreateEditContext();
             EditContext.InputPaneDisplayPolicy = CoreTextInputPaneDisplayPolicy.Manual;
@@ -114,7 +137,7 @@ namespace TextControlBox
             EditContext.TextUpdating += EditContext_TextUpdating;
             EditContext.FocusRemoved += EditContext_FocusRemoved;
             //Classes & Variables:
-            selectionrenderer = new SelectionRenderer(SelectionColor);
+            selectionrenderer = new SelectionRenderer(_Design.SelectionColor);
             FlyoutHelper = new FlyoutHelper(this);
             inputPane = InputPane.GetForCurrentView();
 
@@ -122,6 +145,7 @@ namespace TextControlBox
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             Window.Current.CoreWindow.PointerMoved += CoreWindow_PointerMoved;
             Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
+
             InitialiseOnStart();
         }
 
@@ -410,11 +434,18 @@ namespace TextControlBox
         #region Random functions
         private void InitialiseOnStart()
         {
-            Canvas_LineNumber.ClearColor = Color.FromArgb(0, 0, 0, 0);
-
             UpdateZoom();
             if (TotalLines.Count == 0)
                 TotalLines.Add(new Line());
+        }
+        private void AddLanguagesToBuffer()
+        {
+            var files = Directory.GetFiles("TextControlBox/Languages");
+            for (int i = 0; i < files.Length; i++)
+            {
+                var codeLanguage = SyntaxHighlightingRenderer.GetCodeLanguageFromJson(File.ReadAllText(files[i]));
+                CodeLanguageBuffer.Add(codeLanguage.Name, codeLanguage);
+            }
         }
         private Line GetCurrentLine()
         {
@@ -560,10 +591,12 @@ namespace TextControlBox
             if (ColorResourcesCreated)
                 return;
 
-            TextColorBrush = new CanvasSolidColorBrush(resourceCreator, TextColor);
-            CursorColorBrush = new CanvasSolidColorBrush(resourceCreator, CursorColor);
-            LineNumberColorBrush = new CanvasSolidColorBrush(resourceCreator, LineNumberColor);
-            LineHighlighterBrush = new CanvasSolidColorBrush(resourceCreator, LineHighlighterColor);
+            Canvas_LineNumber.ClearColor = _Design.LineNumberBackground;
+            MainGrid.Background = _Design.Background;
+            TextColorBrush = new CanvasSolidColorBrush(resourceCreator, _Design.TextColor);
+            CursorColorBrush = new CanvasSolidColorBrush(resourceCreator, _Design.CursorColor);
+            LineNumberColorBrush = new CanvasSolidColorBrush(resourceCreator, _Design.LineNumberColor);
+            LineHighlighterBrush = new CanvasSolidColorBrush(resourceCreator, _Design.LineHighlighterColor);
             ColorResourcesCreated = true;
         }
         #endregion
@@ -1080,20 +1113,22 @@ namespace TextControlBox
             VerticalScrollbar.ViewportSize = sender.ActualHeight;
 
             //Get all the lines, that need to be rendered, from the list
-            int count = NumberOfLinesToBeRendered > TotalLines.Count ? TotalLines.Count : NumberOfLinesToBeRendered;
+            int count = NumberOfLinesToBeRendered + NumberOfStartLine > TotalLines.Count ? TotalLines.Count : NumberOfLinesToBeRendered + NumberOfStartLine;
 
             //Clear rendered lines, to fill it with new lines
             RenderedLines.Clear();
-            if(count != RenderedLines.Count)
-                RenderedLines.Capacity = count;
 
-            for (int i = NumberOfStartLine; i < NumberOfStartLine + count; i++)
+            for (int i = NumberOfStartLine; i < count; i++)
             {
-                Line item = TotalLines[i];
-                RenderedLines.Add(item);
-                TextToRender.AppendLine(item.Content);
-                if (_ShowLineNumbers)
-                    LineNumberContent.AppendLine((i + 1).ToString());
+                if (i < TotalLines.Count)
+                {
+                    Line item = TotalLines[i];
+
+                    RenderedLines.Add(item);
+                    TextToRender.AppendLine(item.Content);
+                    if (_ShowLineNumbers)
+                        LineNumberContent.AppendLine((i + 1).ToString());
+                }
             }
             NumberOfRenderedLines = RenderedLines.Count;
 
@@ -1116,7 +1151,7 @@ namespace TextControlBox
 
             //Create the textlayout --> apply the Syntaxhighlighting --> render it
             DrawnTextLayout = TextRenderer.CreateTextResource(sender, DrawnTextLayout, TextFormat, RenderedText, new Size { Height = sender.Size.Height, Width = this.ActualWidth }, ZoomedFontSize);
-            SyntaxHighlightingRenderer.UpdateSyntaxHighlighting(DrawnTextLayout, _CodeLanguage, SyntaxHighlighting, RenderedText);
+            SyntaxHighlightingRenderer.UpdateSyntaxHighlighting(DrawnTextLayout, _AppTheme, _CodeLanguage, SyntaxHighlighting, RenderedText);
             args.DrawingSession.DrawTextLayout(DrawnTextLayout, (float)-HorizontalScroll, SingleLineHeight, TextColorBrush);
 
             if (_ShowLineNumbers)
@@ -1193,7 +1228,7 @@ namespace TextControlBox
         }
         private void Canvas_LineNumber_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
-            if (LineNumberTextToRender.Length == 0)
+            if (LineNumberTextToRender == null || LineNumberTextToRender.Length == 0)
                 return;
 
             if (_ShowLineNumbers)
@@ -1302,23 +1337,6 @@ namespace TextControlBox
             UpdateCursorVariable(e.GetPosition(Canvas_Text));
             UpdateCursor();
         }
-        private void UserControl_Unloaded(object sender, RoutedEventArgs e)
-        {
-            EditContext.NotifyFocusLeave(); //inform the IME to not send any more text
-            //Unsubscribe from events:
-            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
-            Window.Current.CoreWindow.PointerMoved -= CoreWindow_PointerMoved;
-            Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
-            EditContext.TextUpdating -= EditContext_TextUpdating;
-            EditContext.FocusRemoved -= EditContext_FocusRemoved;
-
-            //Dispose and null larger objects
-            TotalLines.Dispose();
-            RenderedLines = null;
-            LineNumberTextToRender = RenderedText = null;
-            LineNumberContent = TextToRender = null;
-            UndoRedo.NullAll();
-        }
         #endregion
 
         #region Public functions and properties
@@ -1363,17 +1381,19 @@ namespace TextControlBox
 
             if(text == "")
             {
-                TotalLines.Add(new Line());
                 UpdateAll();
                 return;
             }
 
             //Split the lines using the current LineEnding
             var lines = text.Split(NewLineCharacter);
-            TotalLines.Capacity = lines.Length;
-            for (int i = 0; i < lines.Length; i++)
+            using (PooledList<Line> LinesToAdd = new PooledList<Line>(lines.Length))
             {
-                TotalLines.Add(new Line(lines[i]));
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    LinesToAdd.Add(new Line(lines[i]));
+                }
+                TotalLines.AddRange(LinesToAdd);
             }
 
             UpdateAll();
@@ -1407,7 +1427,6 @@ namespace TextControlBox
                 }
 
                 text = LineEndings.CleanLineEndings(text, _LineEnding);
-                TotalLines.Capacity = lines.Length;
                 for (int i = 0; i < lines.Length; i++)
                 {
                     TotalLines.Add(new Line(lines[i]));
@@ -1434,7 +1453,7 @@ namespace TextControlBox
         public void Copy()
         {
             DataPackage dataPackage = new DataPackage();
-            dataPackage.SetText(LineEndings.CleanLineEndings(SelectedText, LineEnding));
+            dataPackage.SetText(SelectedText);// LineEndings.CleanLineEndings(SelectedText, LineEnding));
             dataPackage.RequestedOperation = DataPackageOperation.Copy;
             Clipboard.SetContent(dataPackage);
         }
@@ -1449,7 +1468,15 @@ namespace TextControlBox
         }
         public string GetText()
         {
-            return string.Join(NewLineCharacter, TotalLines.Select(item => item.Content));
+            try
+            {
+                return string.Join(NewLineCharacter, TotalLines.Select(item => item.Content));
+            }
+            catch(System.OutOfMemoryException)
+            {
+                CleanUp();
+                return GetText();
+            }
         }
         public void SetSelection(int start, int length)
         {
@@ -1463,6 +1490,15 @@ namespace TextControlBox
 
             UpdateSelection();
             UpdateCursor();
+}
+        public void CleanUp()
+        {
+            GCSettings.LargeObjectHeapCompactionMode =
+              GCLargeObjectHeapCompactionMode.CompactOnce;
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
         }
         public void SelectAll()
         {
@@ -1754,26 +1790,86 @@ namespace TextControlBox
             SetSelection(selstart, sellenght);
             return true;
         }
+        /// <summary>
+        /// Change the current Codelanguage in the textbox to another with the given Identifier 
+        /// </summary>
+        /// <param name="Identifier"></param>
+        /// <returns></returns>
+        public bool SelectCodeLanguageById(string Identifier)
+        {
+            if (CodeLanguageBuffer.ContainsKey(Identifier))
+            {
+                CodeLanguage = CodeLanguageBuffer.GetValueOrDefault(Identifier);
+                return true;
+            }
+            return false;
+        }
+        /// <summary>
+        /// Load a Codelanguage from a json file and apply it to the textbox
+        /// </summary>
+        /// <param name="Path">The path to the json file</param>
+        /// <returns>JsonLoadMessage.Success if successful</returns>
+        public async Task<JsonLoadMessage> LoadCodeLanguageFromJson(string Path)
+        {
+            var res = await SyntaxHighlightingRenderer.LoadFromFile(Path);
+            CodeLanguage = res.CodeLanguage;
+            return res.JsonLoadMessage;
+        }
+        /// <summary>
+        /// Get the Codelanguage from a given json file and return it
+        /// </summary>
+        /// <param name="Path">The path to the json file</param>
+        /// <returns></returns>
+        public async Task<JsonLoadResult> GetCodeLanguageFromJson(string Path)
+        {
+            return await SyntaxHighlightingRenderer.LoadFromFile(Path);
+        }
+        /// <summary>
+        /// Load a Codelanguage from a json file and add it to the internal buffer of languages using the Identifier
+        /// </summary>
+        /// <param name="Path">The path to the json file</param>
+        /// <param name="Identifier">The Identifier to the current language</param>
+        /// <returns>JsonLoadMessage.Success if successful</returns>
+        public async Task<JsonLoadMessage> LoadCodeLanguageFromJsonToBuffer(string Path, string Identifier)
+        {
+            var res = await SyntaxHighlightingRenderer.LoadFromFile(Path);
+            return res.JsonLoadMessage;
+        }
+        /// <summary>
+        /// Remove a Codelanguage by it's Identifier from the local buffer
+        /// </summary>
+        /// <param name="Identifier"></param>
+        /// <returns></returns>
+        public bool RemoveCodeLanguageFromBuffer(string Identifier)
+        {
+            return CodeLanguageBuffer.Remove(Identifier);
+        }
+        public void Unload()
+        {
+            EditContext.NotifyFocusLeave(); //inform the IME to not send any more text
+            //Unsubscribe from events:
+            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+            Window.Current.CoreWindow.PointerMoved -= CoreWindow_PointerMoved;
+            Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
+            EditContext.TextUpdating -= EditContext_TextUpdating;
+            EditContext.FocusRemoved -= EditContext_FocusRemoved;
+
+            //Dispose and null larger objects
+            TotalLines.Dispose();
+            RenderedLines = null;
+            LineNumberTextToRender = RenderedText = null;
+            LineNumberContent = TextToRender = null;
+            UndoRedo.NullAll();
+        }
 
         //Properties:
         public bool SyntaxHighlighting { get; set; } = true;
-        public CodeLanguage CustomCodeLanguage
+        public CodeLanguage CodeLanguage
         {
             get => _CodeLanguage;
             set
             {
                 _CodeLanguage = value;
-                SyntaxHighlightingRenderer.UpdateSyntaxHighlighting(DrawnTextLayout, _CodeLanguage, SyntaxHighlighting, RenderedText);
-                UpdateText();
-            }
-        }
-        public CodeLanguages CodeLanguage
-        {
-            get => _CodeLanguages;
-            set
-            {
-                _CodeLanguage = CodeLanguageHelper.GetCodeLanguage(value);
-                SyntaxHighlightingRenderer.UpdateSyntaxHighlighting(DrawnTextLayout, _CodeLanguage, SyntaxHighlighting, RenderedText);
                 UpdateText();
             }
         }
@@ -1797,12 +1893,39 @@ namespace TextControlBox
         public new int FontSize { get => _FontSize; set { _FontSize = value; UpdateZoom(); } }
         public float RenderedFontSize { get => ZoomedFontSize; }
         public string Text { get => GetText(); set { SetText(value); } }
-        public Color TextColor { get => _TextColor; set { _TextColor = value; ColorResourcesCreated = false; UpdateAll(); } }
-        public Color SelectionColor { get => _SelectionColor; set { _SelectionColor = value; UpdateAll(); } }
-        public Color CursorColor { get => _CursorColor; set { _CursorColor = value; ColorResourcesCreated = false; UpdateAll(); } }
-        public Color LineNumberColor { get => _LineNumberColor; set { _LineNumberColor = value; ColorResourcesCreated = false; UpdateAll(); } }
-        public Color LineHighlighterColor { get => _LineHighlighterColor; set { _LineHighlighterColor = value; ColorResourcesCreated = false; UpdateAll(); } }
-        public Color LineNumberBackground { get => Canvas_LineNumber.ClearColor; set { Canvas_LineNumber.ClearColor = value; UpdateAll(); } }
+        public new ElementTheme RequestedTheme
+        {
+            get => _RequestedTheme;
+            set
+            {
+                _RequestedTheme = value;
+                _AppTheme = Utils.ConvertTheme(value);
+                Debug.WriteLine(_AppTheme);
+                if (UseDefaultDesign)
+                {
+                    Design = _AppTheme == ApplicationTheme.Light ? LightDesign : DarkDesign;
+                }
+            }
+        }
+        public TextControlBoxDesign Design
+        {
+            get => UseDefaultDesign ? null : _Design;
+            set
+            {
+                if (value != null)
+                {
+                    _Design = value;
+                }
+                else
+                    _Design = _AppTheme == ApplicationTheme.Dark ? DarkDesign : LightDesign;
+
+                //Debug.WriteLine(Design.TextColor + "::" + RequestedTheme + ":" + UseDefaultDesign);
+
+                this.Background = _Design.Background;
+                ColorResourcesCreated = false;
+                UpdateAll();
+            }
+        }
         public bool ShowLineNumbers
         {
             get => _ShowLineNumbers;
@@ -1847,6 +1970,7 @@ namespace TextControlBox
                 if (TextSelection != null && Selection.WholeTextSelected(TextSelection, TotalLines))
                     return GetText();
 
+                Debug.WriteLine("GetSelectedText");
                 return Selection.GetSelectedText(TotalLines, TextSelection, CursorPosition.LineNumber, NewLineCharacter);
             }
             set
@@ -1866,6 +1990,7 @@ namespace TextControlBox
         public double HorizontalScrollSensitivity { get => _HorizontalScrollSensitivity; set => _HorizontalScrollSensitivity = value < 1 ? 1 : value; }
         public double VerticalScroll { get => VerticalScrollbar.Value; set => VerticalScrollbar.Value = value < 1 ? 1 : value; }
         public double HorizontalScroll { get => HorizontalScrollbar.Value; set => HorizontalScrollbar.Value = value < 1 ? 1 : value; }
+        public Dictionary<string, CodeLanguage> CodeLanguageBuffer = new Dictionary<string, CodeLanguage>();
         #endregion
 
         #region Public events
@@ -1881,6 +2006,41 @@ namespace TextControlBox
         public delegate void LostFocusEvent(TextControlBox sender);
         public new event LostFocusEvent LostFocus;
         #endregion
+    }
+    public class TextControlBoxDesign
+    {
+        public TextControlBoxDesign()
+        {
+
+        }
+        public TextControlBoxDesign(TextControlBoxDesign Design)
+        {
+            this.Background = Design.Background;
+            this.TextColor = Design.TextColor;
+            this.SelectionColor = Design.SelectionColor;
+            this.CursorColor = Design.CursorColor;
+            this.LineHighlighterColor = Design.LineHighlighterColor;
+            this.LineNumberColor = Design.LineNumberColor;
+            this.LineNumberBackground = Design.LineNumberBackground;
+        }
+
+        public TextControlBoxDesign(Brush Background, Color TextColor, Color SelectionColor, Color CursorColor, Color LineHighlighterColor, Color LineNumberColor, Color LineNumberBackground)
+        {
+            this.Background = Background;
+            this.TextColor = TextColor;
+            this.SelectionColor = SelectionColor;
+            this.CursorColor = CursorColor;
+            this.LineHighlighterColor = LineHighlighterColor;
+            this.LineNumberColor = LineNumberColor;
+            this.LineNumberBackground = LineNumberBackground;
+        }
+        public Brush Background { get; set; }
+        public Color TextColor { get; set; }
+        public Color SelectionColor { get; set; }
+        public Color CursorColor { get; set; }
+        public Color LineHighlighterColor { get; set; }
+        public Color LineNumberColor { get; set; }
+        public Color LineNumberBackground { get; set; }
     }
     public class ScrollBarPosition
     {
