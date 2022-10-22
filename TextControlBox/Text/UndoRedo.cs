@@ -115,7 +115,7 @@ namespace TextControlBox.Text
             if (item.RedoCount > 0)
                 ListHelper.InsertRange(TotalLines, ListHelper.GetLinesFromString(item.RedoText, NewLineCharacter), item.StartLine);
 
-            return item.Selection;
+            return null;
         }
 
         /// <summary>

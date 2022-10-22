@@ -23,9 +23,9 @@ namespace TextControlBox.Helper
                 Index = TotalLines.Count - 1 < 0 ? 0 : TotalLines.Count - 1;
                 Count = 0;
             }
-            if (Index + Count - 1 >= TotalLines.Count)
+            if (Index + Count >= TotalLines.Count)
             {
-                int difference = TotalLines.Count - Index - 1;
+                int difference = TotalLines.Count - Index;
                 if (difference >= 0)
                     Count = difference;
             }
