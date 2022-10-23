@@ -122,6 +122,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Extensions\ColorExtension.cs" />
+    <Compile Include="Extensions\PointExtension.cs" />
     <Compile Include="Helper\Extensions.cs" />
     <Compile Include="Helper\FlyoutHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -177,6 +178,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Languages\Batch.json" />
+    <None Include="Languages\Cpp.json" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
