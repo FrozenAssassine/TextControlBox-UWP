@@ -838,12 +838,14 @@ namespace TextControlBox
         //Pointer-events:
         private void CoreWindow_PointerMoved(CoreWindow sender, PointerEventArgs args)
         {
+            var point = args.CurrentPoint.Position.Subtract(Canvas_LineNumber.Width - 7, +4);
+
             if (selectionrenderer.IsSelecting)
             {
                 double CanvasWidth = Math.Round(this.ActualWidth, 2);
                 double CanvasHeight = Math.Round(this.ActualHeight, 2);
-                double CurPosX = Math.Round(args.CurrentPoint.Position.X, 2);
-                double CurPosY = Math.Round(args.CurrentPoint.Position.Y, 2);
+                double CurPosX = Math.Round(point.X, 2);
+                double CurPosY = Math.Round(point.Y, 2);
 
                 if (CurPosY > CanvasHeight - 50)
                 {
@@ -859,14 +861,37 @@ namespace TextControlBox
                 //Horizontal
                 if (CurPosX > CanvasWidth - 100)
                 {
-                    HorizontalScroll += (CurPosX > CanvasWidth + 30 ? 20 : (CanvasWidth - CurPosX) / 150);
+                    int value = (int)Math.Abs(CanvasWidth - CurPosX - 100) / 20;
+                    value = value < 5 ? 5 : value;
+                    HorizontalScrollbar.Value += value;
+
                     UpdateAll();
                 }
                 else if (CurPosX < 100)
                 {
-                    HorizontalScroll += CurPosX < -30 ? -20 : -(100 - CurPosX) / 10;
-                    UpdateAll();
+                    //UpdateAll();
                 }
+            }
+
+            //Drag drop text -> move the cursor to get the insertion point
+            if (DragDropSelection)
+            {
+                DragDropOverSelection(point);
+                UpdateCursorVariable(point);
+                UpdateCursor();
+            }
+            else if (args.CurrentPoint.Properties.IsLeftButtonPressed)
+            {
+                selectionrenderer.IsSelecting = true;
+            }
+
+            if (selectionrenderer.IsSelecting && !DragDropSelection)
+            {
+                UpdateCursorVariable(point);
+                UpdateCursor();
+
+                selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
+                UpdateSelection();
             }
         }
         private void Canvas_Selection_PointerReleased(object sender, PointerRoutedEventArgs e)
@@ -1899,11 +1924,14 @@ namespace TextControlBox
             {
                 _RequestedTheme = value;
                 _AppTheme = Utils.ConvertTheme(value);
-                UpdateText();
                 if (UseDefaultDesign)
                 {
-                    Design = _AppTheme == ApplicationTheme.Light ? LightDesign : DarkDesign;
+                    _Design = _AppTheme == ApplicationTheme.Light ? LightDesign : DarkDesign;
                 }
+
+                this.Background = _Design.Background;
+                ColorResourcesCreated = false;
+                UpdateAll();
             }
         }
         public TextControlBoxDesign Design

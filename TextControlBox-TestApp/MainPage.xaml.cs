@@ -33,10 +33,9 @@ namespace TextControlBox_TestApp
                 SelectionColor = Color.FromArgb(100, 144, 0, 255)
             };*/
         }
-        private async void Load()
+        private void Load()
         {
-            await TextControlBox.LoadCodeLanguageFromJson(@"C:\Users\juliu\AppData\Local\Packages\eddf928a-4bfe-466c-abd5-7e21961b1874_nh3p3v8ffjhmr\LocalState\CSharp.json");
-            //TextControlBox.SelectCodeLanguageById("CSharp");
+            TextControlBox.SelectCodeLanguageById("CSharp");
         }
         private string GenerateContent()
         {
