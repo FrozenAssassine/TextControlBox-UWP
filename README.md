@@ -12,7 +12,7 @@
 <img src="https://img.shields.io/github/repo-size/FrozenAssassine/TextControlBox-UWP">
 </div>
 
-<h3 align="center">An UWP based textbox with Syntaxhighlighting and support for very large amount of text which is still in development and not done yet.</h3>
+<h3 align="center">A UWP based textbox with Syntaxhighlighting and support for very large amount of text which is still in development and not done yet.</h3>
 
 ## Reason why I built it
 UWP has a default Textbox and a RichTextBox. Both of them are very slow in rendering multiple thousand lines. The selection works also very slow. So I decided to create my own version of a Textbox.
