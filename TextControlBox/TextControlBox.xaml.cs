@@ -88,6 +88,7 @@ namespace TextControlBox
         bool NeedsTextFormatUpdate = false;
         bool DragDropSelection = false;
         bool HasFocus = true;
+        bool OverScrollbar = false;
 
         CanvasTextFormat TextFormat = null;
         CanvasTextLayout DrawnTextLayout = null;
@@ -145,7 +146,7 @@ namespace TextControlBox
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             Window.Current.CoreWindow.PointerMoved += CoreWindow_PointerMoved;
             Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
-
+            Window.Current.CoreWindow.PointerReleased += CoreWindow_PointerReleased;
             InitialiseOnStart();
         }
 
@@ -836,10 +837,27 @@ namespace TextControlBox
             AddCharacter(args.Text);
         }
         //Pointer-events:
+        private void CoreWindow_PointerReleased(CoreWindow sender, PointerEventArgs args)
+        {
+            var point = Utils.GetPointFromCoreWindowRelativeTo(args, Canvas_Text);
+            //End text drag/drop -> insert text at cursorposition
+            if (DragDropSelection && !DragDropOverSelection(point))
+            {
+                DoDragDropSelection();
+            }
+            else if (DragDropSelection)
+            {
+                EndDragDropSelection();
+            }
+
+            if (selectionrenderer.IsSelecting)
+                selectionrenderer.HasSelection = true;
+
+            selectionrenderer.IsSelecting = false;
+        }
         private void CoreWindow_PointerMoved(CoreWindow sender, PointerEventArgs args)
         {
-            var point = args.CurrentPoint.Position.Subtract(Canvas_LineNumber.Width - 7, +4);
-
+            var point = Utils.GetPointFromCoreWindowRelativeTo(args, Canvas_Text);
             if (selectionrenderer.IsSelecting)
             {
                 double CanvasWidth = Math.Round(this.ActualWidth, 2);
@@ -880,12 +898,12 @@ namespace TextControlBox
                 UpdateCursorVariable(point);
                 UpdateCursor();
             }
-            else if (args.CurrentPoint.Properties.IsLeftButtonPressed)
+            else if (args.CurrentPoint.Properties.IsLeftButtonPressed && Utils.UIElementToRect(Canvas_Selection).Contains(args.CurrentPoint.Position))
             {
                 selectionrenderer.IsSelecting = true;
             }
 
-            if (selectionrenderer.IsSelecting && !DragDropSelection)
+            if (selectionrenderer.IsSelecting && !DragDropSelection && !OverScrollbar)
             {
                 UpdateCursorVariable(point);
                 UpdateCursor();
@@ -893,23 +911,6 @@ namespace TextControlBox
                 selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
                 UpdateSelection();
             }
-        }
-        private void Canvas_Selection_PointerReleased(object sender, PointerRoutedEventArgs e)
-        {
-            //End text drag/drop -> insert text at cursorposition
-            if (DragDropSelection && !DragDropOverSelection(e.GetCurrentPoint(sender as UIElement).Position))
-            {
-                DoDragDropSelection();
-            }
-            else if (DragDropSelection)
-            {
-                EndDragDropSelection();
-            }
-
-            if (selectionrenderer.IsSelecting)
-                selectionrenderer.HasSelection = true;
-
-            selectionrenderer.IsSelecting = false;
         }
         private void Canvas_Selection_PointerMoved(object sender, PointerRoutedEventArgs e)
         {
@@ -1300,8 +1301,7 @@ namespace TextControlBox
         private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
         {
             //Check whether the cursor is inside the bounds of the Control
-            Rect contentRect = Utils.GetElementRect(MainGrid);
-            if (contentRect.Contains(args.CurrentPoint.Position))
+            if (Utils.GetElementRect(MainGrid).Contains(args.CurrentPoint.Position))
             {
                 SetFocus();
                 Focus(FocusState.Programmatic);
@@ -1324,7 +1324,7 @@ namespace TextControlBox
         {
             Utils.ChangeCursor(CoreCursorType.IBeam);
         }
-        private void ScrollbarPointerExited(object sender, PointerRoutedEventArgs e)
+        private void Scrollbar_PointerExited(object sender, PointerRoutedEventArgs e)
         {
             Utils.ChangeCursor(CoreCursorType.IBeam);
         }
