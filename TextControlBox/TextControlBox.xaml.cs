@@ -58,6 +58,7 @@ namespace TextControlBox
         private int OldZoomFactor = 0;
         private int NumberOfStartLine = 0;
         private float OldHorizontalScrollValue = 0;
+        private float _SpaceBetweenLineNumberAndText = 30;
         private ElementTheme _RequestedTheme = ElementTheme.Default;
         private ApplicationTheme _AppTheme = ApplicationTheme.Light;
         private TextControlBoxDesign LightDesign = new TextControlBoxDesign(
@@ -1906,7 +1907,6 @@ namespace TextControlBox
                 _LineEnding = value;
             }
         }
-        private float _SpaceBetweenLineNumberAndText = 30;
         public float SpaceBetweenLineNumberAndText { get => _SpaceBetweenLineNumberAndText; set { _SpaceBetweenLineNumberAndText = value; UpdateText(); } }
         public CursorPosition CursorPosition
         {
