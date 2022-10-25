@@ -171,6 +171,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Languages\CSharp.json" />
+    <None Include="Languages\Html.json" />
     <Content Include="Languages\Json.json" />
   </ItemGroup>
   <ItemGroup>
