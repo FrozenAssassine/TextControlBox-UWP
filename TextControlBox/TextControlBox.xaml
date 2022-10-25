@@ -26,7 +26,6 @@
                     PointerEntered="Canvas_LineNumber_PointerEntered"
                     PointerExited="Canvas_LineNumber_PointerExited"
                     PointerPressed="Canvas_LineNumber_PointerPressed"
-                    PointerReleased="Canvas_Selection_PointerReleased"
                     PointerMoved="Canvas_LineNumber_PointerMoved"
                     PointerWheelChanged="Canvas_Selection_PointerWheelChanged"
                     VerticalAlignment="Stretch"/>
@@ -46,11 +45,10 @@
                         Draw="Canvas_Selection_Draw"
                         PointerPressed="Canvas_Selection_PointerPressed"
                         PointerMoved="Canvas_Selection_PointerMoved"
-                        PointerReleased="Canvas_Selection_PointerReleased"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch" />
-            <ScrollBar PointerEntered="Scrollbar_PointerEntered" PointerExited="ScrollbarPointerExited" SmallChange="10" LargeChange="100" Minimum="0" Scroll="VerticalScrollbar_Scroll" x:Name="VerticalScrollbar" Value="0" IndicatorMode="MouseIndicator" Background="Transparent" HorizontalAlignment="Right" Orientation="Vertical" VerticalAlignment="Stretch"/>
-            <ScrollBar PointerEntered="Scrollbar_PointerEntered" PointerExited="ScrollbarPointerExited" SmallChange="10" LargeChange="100" Minimum="0" Scroll="HorizontalScrollbar_Scroll" x:Name="HorizontalScrollbar" Value="0" IndicatorMode="MouseIndicator" Background="Transparent" HorizontalAlignment="Stretch" Orientation="Horizontal" VerticalAlignment="Bottom"/>
+            <ScrollBar PointerEntered="Scrollbar_PointerEntered" PointerExited="Scrollbar_PointerExited" SmallChange="10" LargeChange="100" Minimum="0" Scroll="VerticalScrollbar_Scroll" x:Name="VerticalScrollbar" Value="0" IndicatorMode="MouseIndicator" Background="Transparent" HorizontalAlignment="Right" Orientation="Vertical" VerticalAlignment="Stretch"/>
+            <ScrollBar PointerEntered="Scrollbar_PointerEntered" PointerExited="Scrollbar_PointerExited" SmallChange="10" LargeChange="100" Minimum="0" Scroll="HorizontalScrollbar_Scroll" x:Name="HorizontalScrollbar" Value="0" IndicatorMode="MouseIndicator" Background="Transparent" HorizontalAlignment="Stretch" Orientation="Horizontal" VerticalAlignment="Bottom"/>
         </Grid>
     </Grid>
 </UserControl>

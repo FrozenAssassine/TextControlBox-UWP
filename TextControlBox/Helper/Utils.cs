@@ -4,6 +4,7 @@ using Microsoft.Graphics.Canvas.Text;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using TextControlBox.Extensions;
 using TextControlBox.Text;
 using Windows.Foundation;
 using Windows.System;
@@ -131,6 +132,22 @@ namespace TextControlBox.Helper
 
                 default: return ApplicationTheme.Light;
             }
+        }
+
+        public static Rect UIElementToRect(UIElement element)
+        {
+            return new Rect { Height = element.ActualSize.Y, Width = element.ActualSize.X, Y = element.ActualOffset.Y, X = element.ActualOffset.X };
+        }
+
+        public static Point GetPointFromCoreWindowRelativeTo(PointerEventArgs args, UIElement realtive)
+        {
+            //Convert the point relative to the Canvas_Selection to get around Control position changes in the Window
+            return args.CurrentPoint.Position.Subtract(-7, +4).Subtract(GetTextboxstartingPoint(realtive));
+        }
+        
+        public static Point GetTextboxstartingPoint(UIElement realtiveTo)
+        {
+            return realtiveTo.TransformToVisual(Window.Current.Content).TransformPoint(new Point(0, 0));
         }
     }
 }
