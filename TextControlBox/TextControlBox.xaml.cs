@@ -144,6 +144,7 @@ namespace TextControlBox
             inputPane = InputPane.GetForCurrentView();
 
             //Events:
+            this.KeyDown += TextControlBox_KeyDown;
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             Window.Current.CoreWindow.PointerMoved += CoreWindow_PointerMoved;
             Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
@@ -575,6 +576,7 @@ namespace TextControlBox
             EditContext.NotifyFocusEnter();
             inputPane.TryShow();
             Utils.ChangeCursor(CoreCursorType.IBeam);
+            this.Focus(FocusState.Programmatic);
         }
         private void RemoveFocus()
         {
@@ -604,7 +606,48 @@ namespace TextControlBox
 
         #region Events
         //Handle keyinputs
-        private void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs e)
+        private void EditContext_TextUpdating(CoreTextEditContext sender, CoreTextTextUpdatingEventArgs args)
+        {
+            if (IsReadonly || args.Text == "\t")
+                return;
+
+            //Prevent key-entering if control key is pressed 
+            var ctrl = Utils.IsKeyPressed(VirtualKey.Control);
+            var menu = Utils.IsKeyPressed(VirtualKey.Menu);
+            if (ctrl && !menu || menu && !ctrl)
+                return;
+
+            AddCharacter(args.Text);
+        }
+        private void TextControlBox_KeyDown(object sender, KeyRoutedEventArgs e)
+        {
+            if (e.Key == VirtualKey.Tab)
+            {
+                TextSelection Selection;
+                if (Utils.IsKeyPressed(VirtualKey.Shift))
+                    Selection = TabKey.MoveTabBack(TotalLines, TextSelection, CursorPosition, TabCharacter, NewLineCharacter, UndoRedo);
+                else
+                    Selection = TabKey.MoveTab(TotalLines, TextSelection, CursorPosition, TabCharacter, NewLineCharacter, UndoRedo);
+
+                if (Selection != null)
+                {
+                    if (Selection.EndPosition == null)
+                    {
+                        CursorPosition = Selection.StartPosition;
+                    }
+                    else
+                    {
+                        selectionrenderer.SetSelection(Selection);
+                        CursorPosition = Selection.EndPosition;
+                    }
+                }
+                UpdateAll();                
+                
+                //mark as handled to not change focus
+                e.Handled = true;
+            }
+        }
+        private void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs e)
         {
             if (!HasFocus)
                 return;
@@ -793,49 +836,6 @@ namespace TextControlBox
                         break;
                     }
             }
-
-            //Tab-key
-            if (e.VirtualKey == VirtualKey.Tab)
-            {
-                TextSelection Selection;
-                if (shift)
-                    Selection = TabKey.MoveTabBack(TotalLines, TextSelection, CursorPosition, TabCharacter, NewLineCharacter, UndoRedo);
-                else
-                    Selection = TabKey.MoveTab(TotalLines, TextSelection, CursorPosition, TabCharacter, NewLineCharacter, UndoRedo);
-
-                if (Selection != null)
-                {
-                    if (Selection.EndPosition == null)
-                    {
-                        CursorPosition = Selection.StartPosition;
-                    }
-                    else
-                    {
-                        selectionrenderer.SelectionStartPosition = Selection.StartPosition;
-                        CursorPosition = selectionrenderer.SelectionEndPosition = Selection.EndPosition;
-                        selectionrenderer.HasSelection = true;
-                        selectionrenderer.IsSelecting = false;
-                    }
-                }
-                UpdateAll();
-            }
-        }
-        private void EditContext_TextUpdating(CoreTextEditContext sender, CoreTextTextUpdatingEventArgs args)
-        {
-            if (IsReadonly)
-                return;
-
-            //Don't allow tab -> is handled different
-            if (args.Text == "\t")
-                return;
-
-            //Prevent key-entering if control key is pressed 
-            var ctrl = Utils.IsKeyPressed(VirtualKey.Control);
-            var menu = Utils.IsKeyPressed(VirtualKey.Menu);
-            if (ctrl && !menu || menu && !ctrl)
-                return;
-
-            AddCharacter(args.Text);
         }
         //Pointer-events:
         private void CoreWindow_PointerReleased(CoreWindow sender, PointerEventArgs args)
@@ -1117,9 +1117,6 @@ namespace TextControlBox
         //Canvas event
         private void Canvas_Text_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
-            //TEMPORARY:
-            EditContext.NotifyFocusEnter();
-
             //Create resources and layouts:
             if (NeedsTextFormatUpdate || TextFormat == null || LineNumberTextFormat == null)
             {
@@ -1305,7 +1302,6 @@ namespace TextControlBox
             if (Utils.GetElementRect(MainGrid).Contains(args.CurrentPoint.Position))
             {
                 SetFocus();
-                Focus(FocusState.Programmatic);
             }
             else
             {
@@ -1873,7 +1869,7 @@ namespace TextControlBox
         {
             EditContext.NotifyFocusLeave(); //inform the IME to not send any more text
             //Unsubscribe from events:
-            Window.Current.CoreWindow.KeyDown -= CoreWindow_KeyDown;
+            this.KeyDown -= TextControlBox_KeyDown;
             Window.Current.CoreWindow.PointerMoved -= CoreWindow_PointerMoved;
             Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
             EditContext.TextUpdating -= EditContext_TextUpdating;

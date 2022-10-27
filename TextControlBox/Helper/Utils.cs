@@ -142,7 +142,7 @@ namespace TextControlBox.Helper
         public static Point GetPointFromCoreWindowRelativeTo(PointerEventArgs args, UIElement realtive)
         {
             //Convert the point relative to the Canvas_Selection to get around Control position changes in the Window
-            return args.CurrentPoint.Position.Subtract(-7, +4).Subtract(GetTextboxstartingPoint(realtive));
+            return args.CurrentPoint.Position.Subtract(-10, +10).Subtract(GetTextboxstartingPoint(realtive));
         }
         
         public static Point GetTextboxstartingPoint(UIElement realtiveTo)
