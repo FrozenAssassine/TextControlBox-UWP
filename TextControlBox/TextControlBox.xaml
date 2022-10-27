@@ -8,9 +8,13 @@
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400"
-    AllowFocusOnInteraction="True" 
-    Background="Green"
-    PointerWheelChanged="Canvas_Selection_PointerWheelChanged" PointerEntered="UserControl_PointerEntered" PointerExited="UserControl_PointerExited" AllowDrop="True" Drop="UserControl_Drop" DragOver="UserControl_DragOver">
+    TabIndex="0" IsTabStop="True" AllowFocusOnInteraction="True" IsFocusEngagementEnabled="True"
+    PointerWheelChanged="Canvas_Selection_PointerWheelChanged"
+    PointerEntered="UserControl_PointerEntered" 
+    PointerExited="UserControl_PointerExited" 
+    AllowDrop="True"
+    Drop="UserControl_Drop"
+    DragOver="UserControl_DragOver">
 
     <Grid x:Name="MainGrid">
         <Grid.ColumnDefinitions>
