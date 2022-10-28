@@ -318,5 +318,14 @@ namespace TextControlBox_DemoApp.Views
                 textbox.RequestedTheme = rootElement.RequestedTheme;
             }
         }
+
+        private void TabMode_Click(object sender, RoutedEventArgs e)
+        {
+            if(sender is MenuFlyoutItem item)
+            {
+                textbox.UseSpacesInsteadTabs = item.Tag.ToString().Equals("0");
+            }
+        }
     }
 }
+    

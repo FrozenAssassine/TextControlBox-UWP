@@ -125,6 +125,7 @@
     <Compile Include="Extensions\PointExtension.cs" />
     <Compile Include="Helper\Extensions.cs" />
     <Compile Include="Helper\FlyoutHelper.cs" />
+    <Compile Include="Helper\TabSpaceHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Helper\DebugHelper.cs" />
     <Compile Include="Helper\ListHelper.cs" />

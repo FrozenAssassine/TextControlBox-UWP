@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Text;
 
 namespace TextControlBox.Text
@@ -47,7 +48,7 @@ namespace TextControlBox.Text
             //Text = Regex.Replace(Text, "\r\n", "\n");
             //Text = Regex.Replace(Text, "\r", "\n");
             //return Regex.Replace(Text, "\n", LineEndingToString(lineEnding));
-            return Text.Replace("\r\n", "\n").Replace('\r', '\n').Replace("\n", LineEndingToString(lineEnding));
+            return Text.Replace("\r\n", "\n", StringComparison.Ordinal).Replace('\r', '\n').Replace("\n", LineEndingToString(lineEnding), StringComparison.Ordinal);
         }
     }
     public enum LineEnding
