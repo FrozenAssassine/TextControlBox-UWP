@@ -1042,7 +1042,12 @@ namespace TextControlBox
                 UpdateZoom();
             }
             //Scroll horizontal using mousewheel
-            else if (e.GetCurrentPoint(this).Properties.IsHorizontalMouseWheel || Utils.IsKeyPressed(VirtualKey.Shift))
+            else if (Utils.IsKeyPressed(VirtualKey.Shift))
+            {
+                HorizontalScroll -= delta * HorizontalScrollSensitivity;
+            }
+            //Scroll horizontal using touchpad
+            else if (e.GetCurrentPoint(this).Properties.IsHorizontalMouseWheel)
             {
                 HorizontalScroll += delta * HorizontalScrollSensitivity;
             }
