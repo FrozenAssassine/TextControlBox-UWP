@@ -89,7 +89,6 @@ namespace TextControlBox
         bool NeedsTextFormatUpdate = false;
         bool DragDropSelection = false;
         bool HasFocus = true;
-        bool OverScrollbar = false;
 
         CanvasTextFormat TextFormat = null;
         CanvasTextLayout DrawnTextLayout = null;
@@ -899,12 +898,7 @@ namespace TextControlBox
                 UpdateCursorVariable(point);
                 UpdateCursor();
             }
-            else if (args.CurrentPoint.Properties.IsLeftButtonPressed && Utils.UIElementToRect(Canvas_Selection).Contains(args.CurrentPoint.Position))
-            {
-                selectionrenderer.IsSelecting = true;
-            }
-
-            if (selectionrenderer.IsSelecting && !DragDropSelection && !OverScrollbar)
+            if (selectionrenderer.IsSelecting && !DragDropSelection)
             {
                 UpdateCursorVariable(point);
                 UpdateCursor();
