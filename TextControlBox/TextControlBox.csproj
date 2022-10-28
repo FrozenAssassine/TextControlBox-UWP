@@ -171,15 +171,15 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Languages\CSharp.json" />
-    <None Include="Languages\Html.json" />
+    <Content Include="Languages\Html.json" />
     <Content Include="Languages\Json.json" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Languages\GCode.json" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Languages\Batch.json" />
-    <None Include="Languages\Cpp.json" />
+    <Content Include="Languages\Batch.json" />
+    <Content Include="Languages\Cpp.json" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
