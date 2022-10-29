@@ -31,6 +31,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using static System.Net.Mime.MediaTypeNames;
 using Color = Windows.UI.Color;
 
 namespace TextControlBox
@@ -1366,6 +1367,195 @@ namespace TextControlBox
         }
         #endregion
 
+        //Trys running the code and clears the memory if OutOfMemoryException gets thrown
+        private async void Safe_Paste(bool HandleException = true)
+        {
+            try
+            {
+                DataPackageView dataPackageView = Clipboard.GetContent();
+                if (dataPackageView.Contains(StandardDataFormats.Text))
+                {
+                    string Text = await dataPackageView.GetTextAsync();
+                    if (await Utils.IsOverTextLimit(Text.Length))
+                        return;
+
+                    AddCharacter(stringManager.CleanUpString(Text));
+                }
+            }
+            catch (OutOfMemoryException)
+            {
+                if (HandleException)
+                {
+                    CleanUp();
+                    Safe_Paste(false);
+                    return;
+                }
+                throw new OutOfMemoryException();
+            }
+        }
+        private string Safe_Gettext(bool HandleException = true)
+        {
+            try
+            {
+                return string.Join(NewLineCharacter, TotalLines);
+            }
+            catch (OutOfMemoryException)
+            {
+                if (HandleException)
+                {
+                    CleanUp();
+                    return Safe_Gettext(false);
+                }
+                throw new OutOfMemoryException();
+            }
+        }
+        private void Safe_Cut(bool HandleException = true)
+        {
+            try
+            {
+                DataPackage dataPackage = new DataPackage();
+                dataPackage.SetText(SelectedText);
+                DeleteText(); //Delete the selected text
+                dataPackage.RequestedOperation = DataPackageOperation.Move;
+                Clipboard.SetContent(dataPackage);
+                ClearSelection();
+            }
+            catch (OutOfMemoryException)
+            {
+                if (HandleException)
+                {
+                    CleanUp();
+                    Safe_Cut(false);
+                    return;
+                }
+                throw new OutOfMemoryException();
+            }
+        }
+        private void Safe_Copy(bool HandleException = true)
+        {
+            try
+            {
+                DataPackage dataPackage = new DataPackage();
+                dataPackage.SetText(SelectedText);
+                dataPackage.RequestedOperation = DataPackageOperation.Copy;
+                Clipboard.SetContent(dataPackage);
+            }
+            catch (OutOfMemoryException)
+            {
+                if (HandleException)
+                {
+                    CleanUp();
+                    Safe_Copy(false);
+                    return;
+                }
+                throw new OutOfMemoryException();
+            }
+        }
+        private async void Safe_LoadText(string text, bool HandleException = true)
+        {
+            try
+            {
+                if (await Utils.IsOverTextLimit(text.Length))
+                    return;
+
+                ListHelper.Clear(TotalLines, text == "");
+                RenderedLines.Clear();
+                RenderedLines.TrimExcess();
+                selectionrenderer.ClearSelection();
+                undoRedo.ClearAll();
+
+                //Get the LineEnding
+                LineEnding = LineEndings.FindLineEnding(text);
+
+                if (text == "")
+                {
+                    UpdateAll();
+                    return;
+                }
+
+                //Split the lines using the current LineEnding
+                var lines = stringManager.CleanUpString(text).Split(NewLineCharacter);
+                using (PooledList<Line> LinesToAdd = new PooledList<Line>(lines.Length))
+                {
+                    for (int i = 0; i < lines.Length; i++)
+                    {
+                        LinesToAdd.Add(new Line(lines[i]));
+                    }
+                    TotalLines.AddRange(LinesToAdd);
+                }
+
+                UpdateAll();
+            }
+            catch (OutOfMemoryException)
+            {
+                if (HandleException)
+                {
+                    CleanUp();
+                    Safe_LoadText(text, false);
+                    return;
+                }
+                throw new OutOfMemoryException();
+            }
+        }
+        private async void Safe_SetText(string text, bool HandleException = true)
+        {
+            try
+            {
+                if (await Utils.IsOverTextLimit(text.Length))
+                    return;
+
+                selectionrenderer.ClearSelection();
+
+                string[] lines = null;
+                if (text != "")
+                {
+                    lines = stringManager.CleanUpString(text).Split(NewLineCharacter);
+                }
+
+                undoRedo.RecordUndoAction(() =>
+                {
+                    //Clear the lists
+                    ListHelper.Clear(TotalLines, text == "");
+                    RenderedLines.Clear();
+                    RenderedLines.TrimExcess();
+
+                    if (text == "")
+                    {
+                        UpdateAll();
+                        return;
+                    }
+
+                    for (int i = 0; i < lines.Length; i++)
+                    {
+                        TotalLines.Add(new Line(lines[i]));
+                    }
+
+                }, TotalLines, 0, TotalLines.Count, lines.Length, NewLineCharacter);
+
+                UpdateAll();
+            }
+            catch (OutOfMemoryException)
+            {
+                if (HandleException)
+                {
+                    CleanUp();
+                    Safe_SetText(text, false);
+                    return;
+                }
+                throw new OutOfMemoryException();
+            }
+        }
+
+        private void CleanUp()
+        {
+            GCSettings.LargeObjectHeapCompactionMode =
+              GCLargeObjectHeapCompactionMode.CompactOnce;
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+
         #region Public functions and properties
         //Functions:
         /// <summary>
@@ -1392,119 +1582,33 @@ namespace TextControlBox
         /// Load text to the textbox everything will reset. Use this to load text on application start
         /// </summary>
         /// <param name="text">The text to load</param>
-        public async void LoadText(string text)
+        public void LoadText(string text)
         {
-            if (await Utils.IsOverTextLimit(text.Length))
-                return;
-
-            ListHelper.Clear(TotalLines, text == "");
-            RenderedLines.Clear();
-            RenderedLines.TrimExcess();
-            selectionrenderer.ClearSelection();
-            undoRedo.ClearAll();
-
-            //Get the LineEnding
-            LineEnding = LineEndings.FindLineEnding(text);
-
-            if(text == "")
-            {
-                UpdateAll();
-                return;
-            }
-
-            //Split the lines using the current LineEnding
-            var lines = stringManager.CleanUpString(text).Split(NewLineCharacter);
-            using (PooledList<Line> LinesToAdd = new PooledList<Line>(lines.Length))
-            {
-                for (int i = 0; i < lines.Length; i++)
-                {
-                    LinesToAdd.Add(new Line(lines[i]));
-                }
-                TotalLines.AddRange(LinesToAdd);
-            }
-
-            UpdateAll();
+            Safe_LoadText(text);
         }
         /// <summary>
         /// Load new content to the textbox an undo will be recorded. Use this to change the text when the app is running
         /// </summary>
         /// <param name="text">The text to load</param>
-        public async void SetText(string text)
+        public void SetText(string text)
         {
-            if (await Utils.IsOverTextLimit(text.Length))
-                return;
-
-            selectionrenderer.ClearSelection();
-
-            string[] lines = null;            
-            if(text != "")
-            {
-                lines = stringManager.CleanUpString(text).Split(NewLineCharacter);
-            }
-
-            undoRedo.RecordUndoAction(() =>
-            {
-                //Clear the lists
-                ListHelper.Clear(TotalLines, text == "");
-                RenderedLines.Clear();
-                RenderedLines.TrimExcess();
-
-                if (text == "")
-                {
-                    UpdateAll();
-                    return;
-                }
-
-                for (int i = 0; i < lines.Length; i++)
-                {
-                    TotalLines.Add(new Line(lines[i]));
-                }
-
-            }, TotalLines, 0, TotalLines.Count, lines.Length, NewLineCharacter);
-
-            UpdateAll();
+            Safe_SetText(text);
         }
-        public async void Paste()
+        public void Paste()
         {
-            DataPackageView dataPackageView = Clipboard.GetContent();
-            if (dataPackageView.Contains(StandardDataFormats.Text))
-            {
-                string Text = await dataPackageView.GetTextAsync();
-                if (await Utils.IsOverTextLimit(Text.Length))
-                    return;
-
-                AddCharacter(stringManager.CleanUpString(Text));
-                ClearSelection();
-                UpdateCursor();
-            }
+            Safe_Paste();
         }
         public void Copy()
         {
-            DataPackage dataPackage = new DataPackage();
-            dataPackage.SetText(SelectedText);
-            dataPackage.RequestedOperation = DataPackageOperation.Copy;
-            Clipboard.SetContent(dataPackage);
+            Safe_Copy();
         }
         public void Cut()
         {
-            DataPackage dataPackage = new DataPackage();
-            dataPackage.SetText(SelectedText);
-            DeleteText(); //Delete the selected text
-            dataPackage.RequestedOperation = DataPackageOperation.Move;
-            Clipboard.SetContent(dataPackage);
-            ClearSelection();
+            Safe_Cut();
         }
         public string GetText()
         {
-            try
-            {
-                return string.Join(NewLineCharacter, TotalLines.Select(item => item.Content));
-            }
-            catch(System.OutOfMemoryException)
-            {
-                CleanUp();
-                return GetText();
-            }
+            return Safe_Gettext();
         }
         public void SetSelection(int start, int length)
         {
@@ -1519,15 +1623,6 @@ namespace TextControlBox
             UpdateSelection();
             UpdateCursor();
 }
-        public void CleanUp()
-        {
-            GCSettings.LargeObjectHeapCompactionMode =
-              GCLargeObjectHeapCompactionMode.CompactOnce;
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-        }
         public void SelectAll()
         {
             //No selection can be shown
@@ -2009,7 +2104,9 @@ namespace TextControlBox
             get
             {
                 if (TextSelection != null && Selection.WholeTextSelected(TextSelection, TotalLines))
+                {
                     return GetText();
+                }
 
                 return Selection.GetSelectedText(TotalLines, TextSelection, CursorPosition.LineNumber, NewLineCharacter);
             }

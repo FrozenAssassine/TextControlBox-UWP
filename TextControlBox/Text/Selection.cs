@@ -482,7 +482,7 @@ namespace TextControlBox.Text
                 if (StartLine + Count >= TotalLines.Count)
                     Count = TotalLines.Count - StartLine;
 
-                return string.Join(NewLineCharacter, ListHelper.GetLines(TotalLines, StartLine, Count).Select(x => x.Content));
+                return string.Join(NewLineCharacter, ListHelper.GetLines(TotalLines, StartLine, Count));
             }
         }
 

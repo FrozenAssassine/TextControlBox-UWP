@@ -68,7 +68,6 @@ namespace TextControlBox_TestApp
             }
             if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.L)
             {
-                TextControlBox.CleanUp();
                 //TextControlBox.DuplicateLine(TextControlBox.CurrentLineIndex);
             }
             if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.O)
