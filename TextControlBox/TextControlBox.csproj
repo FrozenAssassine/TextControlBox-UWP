@@ -145,6 +145,7 @@
     <Compile Include="Text\Line.cs" />
     <Compile Include="Text\LineEndings.cs" />
     <Compile Include="Text\Selection.cs" />
+    <Compile Include="Text\StringManager.cs" />
     <Compile Include="Text\TabKey.cs" />
     <Compile Include="Text\TextSelection.cs" />
     <Compile Include="Text\UndoRedo.cs" />

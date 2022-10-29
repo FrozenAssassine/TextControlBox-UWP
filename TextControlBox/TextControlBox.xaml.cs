@@ -3,6 +3,7 @@ using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Brushes;
 using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -122,26 +123,20 @@ namespace TextControlBox
         private readonly UndoRedo undoRedo = new UndoRedo();
         private readonly FlyoutHelper flyoutHelper;
         private readonly TabSpaceHelper tabSpaceHelper = new TabSpaceHelper();
+        private readonly StringManager stringManager;
         
         public TextControlBox()
         {
             this.InitializeComponent();
             AddLanguagesToBuffer();
 
-            RequestedTheme = ElementTheme.Default;
+            InitialiseTextService();
 
-            CoreTextServicesManager manager = CoreTextServicesManager.GetForCurrentView();
-            EditContext = manager.CreateEditContext();
-            EditContext.InputPaneDisplayPolicy = CoreTextInputPaneDisplayPolicy.Manual;
-            EditContext.InputScope = CoreTextInputScope.Text;
-            EditContext.TextRequested += delegate { };//Event only needs to be added -> No need to do something else
-            EditContext.SelectionRequested += delegate { };//Event only needs to be added -> No need to do something else
-            EditContext.TextUpdating += EditContext_TextUpdating;
-            EditContext.FocusRemoved += EditContext_FocusRemoved;
             //Classes & Variables:
-            selectionrenderer = new SelectionRenderer(_Design.SelectionColor);
+            selectionrenderer = new SelectionRenderer();
             flyoutHelper = new FlyoutHelper(this);
             inputPane = InputPane.GetForCurrentView();
+            stringManager = new StringManager(tabSpaceHelper);
 
             //Events:
             this.KeyDown += TextControlBox_KeyDown;
@@ -149,6 +144,11 @@ namespace TextControlBox
             Window.Current.CoreWindow.PointerMoved += CoreWindow_PointerMoved;
             Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
             Window.Current.CoreWindow.PointerReleased += CoreWindow_PointerReleased;
+
+            //set default values
+            RequestedTheme = ElementTheme.Default;
+            LineEnding = LineEnding.LF;
+
             InitialiseOnStart();
         }
 
@@ -601,6 +601,17 @@ namespace TextControlBox
             LineNumberColorBrush = new CanvasSolidColorBrush(resourceCreator, _Design.LineNumberColor);
             LineHighlighterBrush = new CanvasSolidColorBrush(resourceCreator, _Design.LineHighlighterColor);
             ColorResourcesCreated = true;
+        }
+        private void InitialiseTextService()
+        {
+            CoreTextServicesManager manager = CoreTextServicesManager.GetForCurrentView();
+            EditContext = manager.CreateEditContext();
+            EditContext.InputPaneDisplayPolicy = CoreTextInputPaneDisplayPolicy.Manual;
+            EditContext.InputScope = CoreTextInputScope.Text;
+            EditContext.TextRequested += delegate { };//Event only needs to be added -> No need to do something else
+            EditContext.SelectionRequested += delegate { };//Event only needs to be added -> No need to do something else
+            EditContext.TextUpdating += EditContext_TextUpdating;
+            EditContext.FocusRemoved += EditContext_FocusRemoved;
         }
         #endregion
 
@@ -1193,7 +1204,7 @@ namespace TextControlBox
 
             if (selectionrenderer.HasSelection)
             {
-                TextSelection = selectionrenderer.DrawSelection(DrawnTextLayout, RenderedLines, args, (float)-HorizontalScroll, SingleLineHeight / 4, NumberOfStartLine, NumberOfRenderedLines, ZoomedFontSize);
+                TextSelection = selectionrenderer.DrawSelection(DrawnTextLayout, RenderedLines, args, (float)-HorizontalScroll, SingleLineHeight / 4, NumberOfStartLine, NumberOfRenderedLines, ZoomedFontSize, _Design.SelectionColor);
             }
 
             if (TextSelection != null && !Selection.Equals(OldTextSelection, TextSelection))
@@ -1338,10 +1349,7 @@ namespace TextControlBox
 
             if (e.DataView.Contains(StandardDataFormats.Text))
             {
-                string text = await e.DataView.GetTextAsync();
-                text = LineEndings.CleanLineEndings(text, _LineEnding);
-                AddCharacter(text, true);
-                UpdateText();
+                AddCharacter(stringManager.CleanUpString(await e.DataView.GetTextAsync()), true);
             }
         }
         private void UserControl_DragOver(object sender, DragEventArgs e)
@@ -1407,7 +1415,7 @@ namespace TextControlBox
             }
 
             //Split the lines using the current LineEnding
-            var lines = text.Split(NewLineCharacter);
+            var lines = stringManager.CleanUpString(text).Split(NewLineCharacter);
             using (PooledList<Line> LinesToAdd = new PooledList<Line>(lines.Length))
             {
                 for (int i = 0; i < lines.Length; i++)
@@ -1432,7 +1440,9 @@ namespace TextControlBox
 
             string[] lines = null;            
             if(text != "")
-                lines = text.Split(NewLineCharacter);
+            {
+                lines = stringManager.CleanUpString(text).Split(NewLineCharacter);
+            }
 
             undoRedo.RecordUndoAction(() =>
             {
@@ -1447,7 +1457,6 @@ namespace TextControlBox
                     return;
                 }
 
-                text = LineEndings.CleanLineEndings(text, _LineEnding);
                 for (int i = 0; i < lines.Length; i++)
                 {
                     TotalLines.Add(new Line(lines[i]));
@@ -1466,7 +1475,7 @@ namespace TextControlBox
                 if (await Utils.IsOverTextLimit(Text.Length))
                     return;
 
-                AddCharacter(LineEndings.CleanLineEndings(Text, LineEnding));
+                AddCharacter(stringManager.CleanUpString(Text));
                 ClearSelection();
                 UpdateCursor();
             }
@@ -1474,14 +1483,14 @@ namespace TextControlBox
         public void Copy()
         {
             DataPackage dataPackage = new DataPackage();
-            dataPackage.SetText(SelectedText);// LineEndings.CleanLineEndings(SelectedText, LineEnding));
+            dataPackage.SetText(SelectedText);
             dataPackage.RequestedOperation = DataPackageOperation.Copy;
             Clipboard.SetContent(dataPackage);
         }
         public void Cut()
         {
             DataPackage dataPackage = new DataPackage();
-            dataPackage.SetText(LineEndings.CleanLineEndings(SelectedText, LineEnding));
+            dataPackage.SetText(SelectedText);
             DeleteText(); //Delete the selected text
             dataPackage.RequestedOperation = DataPackageOperation.Move;
             Clipboard.SetContent(dataPackage);
@@ -1540,7 +1549,7 @@ namespace TextControlBox
                 return;
 
             //Do the Undo
-            var sel = undoRedo.Undo(TotalLines, NewLineCharacter);
+            var sel = undoRedo.Undo(TotalLines, stringManager, NewLineCharacter);
             Internal_TextChanged();
 
             if (sel != null)
@@ -1555,7 +1564,7 @@ namespace TextControlBox
                 return;
 
             //Do the Redo
-            var sel = undoRedo.Redo(TotalLines, NewLineCharacter);
+            var sel = undoRedo.Redo(TotalLines, stringManager, NewLineCharacter);
             Internal_TextChanged();
 
             if (sel != null)
@@ -1628,7 +1637,7 @@ namespace TextControlBox
                 return false;
             undoRedo.RecordUndoAction(() =>
             {
-                ListHelper.GetLine(TotalLines, line).Content = text;
+                ListHelper.GetLine(TotalLines, line).Content = stringManager.CleanUpString(text);
             }, TotalLines, line, 1, 1, NewLineCharacter);
             UpdateText();
             return true;
@@ -1653,7 +1662,7 @@ namespace TextControlBox
 
             undoRedo.RecordUndoAction(() =>
             {
-                ListHelper.Insert(TotalLines, new Line(text), position);
+                ListHelper.Insert(TotalLines, new Line(stringManager.CleanUpString(text)), position);
             }, TotalLines, position, 1, 2, NewLineCharacter);
 
             UpdateText();
@@ -1664,15 +1673,16 @@ namespace TextControlBox
             var pos = Regex.Match(GetText(), pattern);
             return new TextSelectionPosition(pos.Index, pos.Length);
         }
-        public void SourroundSelectionWith(string value)
+        public void SurroundSelectionWith(string value)
         {
-            SourroundSelectionWith(value, value);
+            value = stringManager.CleanUpString(value);
+            SurroundSelectionWith(value, value);
         }
-        public void SourroundSelectionWith(string value1, string value2)
+        public void SurroundSelectionWith(string value1, string value2)
         {
             if (!SelectionIsNull())
             {
-                AddCharacter(value1 + SelectedText + value2);
+                AddCharacter(stringManager.CleanUpString(value1) + SelectedText + stringManager.CleanUpString(value2));
             }
         }
         public void DuplicateLine(int line)
@@ -1854,6 +1864,7 @@ namespace TextControlBox
         public async Task<JsonLoadMessage> LoadCodeLanguageFromJsonToBuffer(string Path, string Identifier)
         {
             var res = await SyntaxHighlightingRenderer.LoadFromFile(Path);
+            CodeLanguageBuffer.Add(Identifier, res.CodeLanguage);
             return res.JsonLoadMessage;
         }
         /// <summary>
@@ -1900,6 +1911,7 @@ namespace TextControlBox
             set
             {
                 NewLineCharacter = LineEndings.LineEndingToString(value);
+                stringManager.lineEnding = value;
                 _LineEnding = value;
             }
         }
@@ -2001,7 +2013,7 @@ namespace TextControlBox
             }
             set
             {
-                AddCharacter(value);
+                AddCharacter(stringManager.CleanUpString(value));
             }
         }
         public int NumberOfLines { get => TotalLines.Count; }
@@ -2016,7 +2028,7 @@ namespace TextControlBox
         public double HorizontalScrollSensitivity { get => _HorizontalScrollSensitivity; set => _HorizontalScrollSensitivity = value < 1 ? 1 : value; }
         public double VerticalScroll { get => VerticalScrollbar.Value; set => VerticalScrollbar.Value = value < 0 ? 0 : value; }
         public double HorizontalScroll { get => HorizontalScrollbar.Value; set => HorizontalScrollbar.Value = value < 0 ? 0 : value; }
-        public Dictionary<string, CodeLanguage> CodeLanguageBuffer = new Dictionary<string, CodeLanguage>();
+        public readonly Dictionary<string, CodeLanguage> CodeLanguageBuffer = new Dictionary<string, CodeLanguage>();
         public new CornerRadius CornerRadius { get => MainGrid.CornerRadius; set => MainGrid.CornerRadius = value; }
         public bool UseSpacesInsteadTabs { get => tabSpaceHelper.UseSpacesInsteadTabs; set { tabSpaceHelper.UseSpacesInsteadTabs = value; tabSpaceHelper.UpdateTabs(TotalLines); } }
         public int NumberOfSpacesForTab { get => tabSpaceHelper.NumberOfSpaces; set { tabSpaceHelper.NumberOfSpaces = value;  tabSpaceHelper.UpdateTabs(TotalLines); } }

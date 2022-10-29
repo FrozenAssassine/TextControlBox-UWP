@@ -32,6 +32,12 @@ namespace TextControlBox.Helper
                 ReplaceTabsToSpaces(TotalLines);
             else
                 ReplaceSpacesToTabs(TotalLines);
+        }         
+        public string UpdateTabs(string input)
+        {
+            if (UseSpacesInsteadTabs)
+                return Replace(input, Tab, Spaces);
+            return Replace(input, Spaces, Tab);
         }
 
         private void ReplaceSpacesToTabs(PooledList<Line> TotalLines)
@@ -50,7 +56,11 @@ namespace TextControlBox.Helper
         }
         private void Replace(Line line, string find, string replace)
         {
-            line.Content = line.Content.Replace(find, replace, StringComparison.OrdinalIgnoreCase);
+            line.Content = Replace(line.Content, find, replace);
+        }
+        public string Replace(string input, string find, string replace)
+        {
+            return input.Replace(find, replace, StringComparison.OrdinalIgnoreCase);
         }
     }
 }
