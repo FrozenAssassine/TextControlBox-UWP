@@ -1893,6 +1893,10 @@ namespace TextControlBox
             LineNumberContent = TextToRender = null;
             undoRedo.NullAll();
         }
+        public void ClearUndoRedoHistory()
+        {
+            UndoRedo.ClearAll();
+        }
 
         //Properties:
         public bool SyntaxHighlighting { get; set; } = true;
