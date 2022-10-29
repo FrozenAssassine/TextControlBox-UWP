@@ -74,7 +74,7 @@ namespace TextControlBox.Text
         /// <param name="TotalLines">A list containing all the lines of the textbox</param>
         /// <param name="NewLineCharacter">The current line-ending character either CR, LF or CRLF</param>
         /// <returns>A class containing the start and end-position of the selection</returns>
-        public TextSelection Undo(PooledList<Line> TotalLines, string NewLineCharacter)
+        public TextSelection Undo(PooledList<Line> TotalLines, StringManager StringManager, string NewLineCharacter)
         {
             if (UndoStack.Count < 1)
                 return null;
@@ -91,7 +91,7 @@ namespace TextControlBox.Text
 
             ListHelper.RemoveRange(TotalLines, item.StartLine, item.RedoCount);
             if (item.UndoCount > 0)
-                ListHelper.InsertRange(TotalLines, ListHelper.GetLinesFromString(item.UndoText, NewLineCharacter), item.StartLine);
+                ListHelper.InsertRange(TotalLines, ListHelper.GetLinesFromString(StringManager.CleanUpString(item.UndoText), NewLineCharacter), item.StartLine);
 
             return item.Selection;
         }
@@ -102,7 +102,7 @@ namespace TextControlBox.Text
         /// <param name="TotalLines">A list containing all the lines of the textbox</param>
         /// <param name="NewLineCharacter">The current line-ending character either CR, LF or CRLF</param>
         /// <returns>A class containing the start and end-position of the selection</returns>
-        public TextSelection Redo(PooledList<Line> TotalLines, string NewLineCharacter)
+        public TextSelection Redo(PooledList<Line> TotalLines, StringManager StringManager, string NewLineCharacter)
         {
             if (RedoStack.Count < 1)
                 return null;
@@ -113,7 +113,7 @@ namespace TextControlBox.Text
 
             ListHelper.RemoveRange(TotalLines, item.StartLine, item.UndoCount);    
             if (item.RedoCount > 0)
-                ListHelper.InsertRange(TotalLines, ListHelper.GetLinesFromString(item.RedoText, NewLineCharacter), item.StartLine);
+                ListHelper.InsertRange(TotalLines, ListHelper.GetLinesFromString(StringManager.CleanUpString(item.RedoText), NewLineCharacter), item.StartLine);
 
             return null;
         }

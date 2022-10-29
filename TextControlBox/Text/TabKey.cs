@@ -12,7 +12,7 @@ namespace TextControlBox.Text
             {
                 Line Line = ListHelper.GetLine(TotalLines, CursorPosition.LineNumber);
                 if (Line.Content.Contains(TabCharacter, System.StringComparison.Ordinal) && CursorPosition.CharacterPosition > 0)
-                    CursorPosition.SubtractFromCharacterPos(1);
+                    CursorPosition.SubtractFromCharacterPos(TabCharacter.Length);
 
                 UndoRedo.RecordUndoAction(() =>
                 {
@@ -36,9 +36,9 @@ namespace TextControlBox.Text
                     {
                         Line Line = Lines[i];
                         if (i == 0 && Line.Content.Contains(TabCharacter, System.StringComparison.Ordinal) && CursorPosition.CharacterPosition > 0)
-                            OrderedSelection.StartPosition.SubtractFromCharacterPos(1);
+                            OrderedSelection.StartPosition.SubtractFromCharacterPos(TabCharacter.Length);
                         else if (i == Lines.Count - 1 && Line.Content.Contains(TabCharacter, System.StringComparison.Ordinal))
-                            OrderedSelection.EndPosition.SubtractFromCharacterPos(1);
+                            OrderedSelection.EndPosition.SubtractFromCharacterPos(TabCharacter.Length);
 
                         Line.SetText(Line.Content.RemoveFirstOccurence(TabCharacter));
                     }
@@ -59,7 +59,7 @@ namespace TextControlBox.Text
                     Line.AddText(TabCharacter, CursorPosition.CharacterPosition);
                 }, TotalLines, CursorPosition.LineNumber, 1, 1, NewLineCharacter);
 
-                CursorPosition.AddToCharacterPos(1);
+                CursorPosition.AddToCharacterPos(TabCharacter.Length);
                 return new TextSelection(CursorPosition, null);
             }
             else
@@ -73,8 +73,8 @@ namespace TextControlBox.Text
                 }
                 else
                 {
-                    TextSelection.EndPosition.AddToCharacterPos(1);
-                    TextSelection.StartPosition.AddToCharacterPos(1);
+                    TextSelection.EndPosition.AddToCharacterPos(TabCharacter.Length);
+                    TextSelection.StartPosition.AddToCharacterPos(TabCharacter.Length);
 
                     TextSelection tempSel = new TextSelection(TextSelection);
                     tempSel.StartPosition.CharacterPosition = 0;

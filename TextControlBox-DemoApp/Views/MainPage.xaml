@@ -65,6 +65,10 @@
                     <MenuFlyoutItem Text="Html" Tag="Html" Click="Language_Click"/>
                     <MenuFlyoutItem Text="None" Tag="" Click="Language_Click"/>
                 </MenuFlyoutSubItem>
+                <MenuFlyoutSubItem Text="Tab-mode">
+                    <MenuFlyoutItem Text="Spaces" Tag="0" Click="TabMode_Click"/>
+                    <MenuFlyoutItem Text="Tabs" Tag="1"  Click="TabMode_Click"/>
+                </MenuFlyoutSubItem>
             </muxc:MenuBarItem>
         </muxc:MenuBar>
 

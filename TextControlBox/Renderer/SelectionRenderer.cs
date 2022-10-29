@@ -15,14 +15,8 @@ namespace TextControlBox.Renderer
         public bool IsSelecting = false;
         public CursorPosition SelectionStartPosition = null;
         public CursorPosition SelectionEndPosition = null;
-        public Color SelectionColor;
         public int SelectionLength = 0;
         public int SelectionStart = 0;
-
-        public SelectionRenderer(Color SelectionColor)
-        {
-            this.SelectionColor = SelectionColor;
-        }
 
         //Create the rect, to render
         public Rect CreateRect(Rect r, float MarginLeft = 0, float MarginTop = 0)
@@ -37,7 +31,7 @@ namespace TextControlBox.Renderer
         }
 
         //Draw the actual selection and return the cursorposition. Return -1 if no selection was drawn
-        public TextSelection DrawSelection(CanvasTextLayout TextLayout, List<Line> RenderedLines, CanvasDrawEventArgs args, float MarginLeft, float MarginTop, int UnrenderedLinesToRenderStart, int NumberOfRenderedLines, float FontSize)
+        public TextSelection DrawSelection(CanvasTextLayout TextLayout, List<Line> RenderedLines, CanvasDrawEventArgs args, float MarginLeft, float MarginTop, int UnrenderedLinesToRenderStart, int NumberOfRenderedLines, float FontSize, Color SelectionColor)
         {
             if (HasSelection && SelectionEndPosition != null && SelectionStartPosition != null)
             {

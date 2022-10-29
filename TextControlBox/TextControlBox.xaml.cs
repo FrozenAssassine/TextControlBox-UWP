@@ -3,6 +3,7 @@ using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Brushes;
 using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -41,7 +42,6 @@ namespace TextControlBox
         private bool UseDefaultDesign = true;
         private TextControlBoxDesign _Design { get; set; }
         private string NewLineCharacter = "\r\n";
-        private string TabCharacter = "\t";
         private InputPane inputPane;
         private bool _ShowLineNumbers = true;
         private CodeLanguage _CodeLanguage = null;
@@ -79,6 +79,7 @@ namespace TextControlBox
             Color.FromArgb(255, 100, 100, 100),
             Color.FromArgb(0, 0, 0, 0)
             );
+
         //Colors:
         CanvasSolidColorBrush TextColorBrush;
         CanvasSolidColorBrush CursorColorBrush;
@@ -119,28 +120,23 @@ namespace TextControlBox
 
         //Classes
         private readonly SelectionRenderer selectionrenderer;
-        private readonly UndoRedo UndoRedo = new UndoRedo();
-        private readonly FlyoutHelper FlyoutHelper;
+        private readonly UndoRedo undoRedo = new UndoRedo();
+        private readonly FlyoutHelper flyoutHelper;
+        private readonly TabSpaceHelper tabSpaceHelper = new TabSpaceHelper();
+        private readonly StringManager stringManager;
         
         public TextControlBox()
         {
             this.InitializeComponent();
             AddLanguagesToBuffer();
 
-            RequestedTheme = ElementTheme.Default;
+            InitialiseTextService();
 
-            CoreTextServicesManager manager = CoreTextServicesManager.GetForCurrentView();
-            EditContext = manager.CreateEditContext();
-            EditContext.InputPaneDisplayPolicy = CoreTextInputPaneDisplayPolicy.Manual;
-            EditContext.InputScope = CoreTextInputScope.Text;
-            EditContext.TextRequested += delegate { };//Event only needs to be added -> No need to do something else
-            EditContext.SelectionRequested += delegate { };//Event only needs to be added -> No need to do something else
-            EditContext.TextUpdating += EditContext_TextUpdating;
-            EditContext.FocusRemoved += EditContext_FocusRemoved;
             //Classes & Variables:
-            selectionrenderer = new SelectionRenderer(_Design.SelectionColor);
-            FlyoutHelper = new FlyoutHelper(this);
+            selectionrenderer = new SelectionRenderer();
+            flyoutHelper = new FlyoutHelper(this);
             inputPane = InputPane.GetForCurrentView();
+            stringManager = new StringManager(tabSpaceHelper);
 
             //Events:
             this.KeyDown += TextControlBox_KeyDown;
@@ -148,6 +144,11 @@ namespace TextControlBox
             Window.Current.CoreWindow.PointerMoved += CoreWindow_PointerMoved;
             Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
             Window.Current.CoreWindow.PointerReleased += CoreWindow_PointerReleased;
+
+            //set default values
+            RequestedTheme = ElementTheme.Default;
+            LineEnding = LineEnding.LF;
+
             InitialiseOnStart();
         }
 
@@ -219,7 +220,7 @@ namespace TextControlBox
         #region Textediting
         private void DeleteSelection()
         {
-            UndoRedo.RecordUndoAction(() =>
+            undoRedo.RecordUndoAction(() =>
             {
                 CursorPosition = Selection.Remove(TextSelection, TotalLines);
 
@@ -239,7 +240,7 @@ namespace TextControlBox
 
             if (TextSelection == null && SplittedTextLength == 1)
             {
-                UndoRedo.RecordUndoAction(() =>
+                undoRedo.RecordUndoAction(() =>
                 {
                     var CharacterPos = GetCurPosInLine();
 
@@ -252,7 +253,7 @@ namespace TextControlBox
             }
             else if (TextSelection == null && SplittedTextLength > 1)
             {
-                UndoRedo.RecordUndoAction(() =>
+                undoRedo.RecordUndoAction(() =>
                 {
                     CursorPosition = Selection.InsertText(TextSelection, CursorPosition, TotalLines, text, NewLineCharacter);
                 }, TotalLines, CursorPosition.LineNumber, 1, SplittedTextLength, NewLineCharacter);
@@ -263,7 +264,7 @@ namespace TextControlBox
             }
             else if (TextSelection != null)
             {
-                UndoRedo.RecordUndoAction(() =>
+                undoRedo.RecordUndoAction(() =>
                 {
                     CursorPosition = Selection.Replace(TextSelection, TotalLines, text, NewLineCharacter);
 
@@ -289,7 +290,7 @@ namespace TextControlBox
                 var stepsToMove = ControlIsPressed ? Cursor.CalculateStepsToMoveLeft(CurrentLine, charPos) : 1;
                 if (charPos - stepsToMove >= 0)
                 {
-                    UndoRedo.RecordUndoAction(() =>
+                    undoRedo.RecordUndoAction(() =>
                     {
                         CurrentLine.Remove(charPos - stepsToMove, stepsToMove);
                         CursorPosition.CharacterPosition -= stepsToMove;
@@ -301,7 +302,7 @@ namespace TextControlBox
                     if (CursorPosition.LineNumber <= 0)
                         return;
 
-                    UndoRedo.RecordUndoAction(() =>
+                    undoRedo.RecordUndoAction(() =>
                     {
                         Line LineOnTop = ListHelper.GetLine(TotalLines, CursorPosition.LineNumber - 1);
                         LineOnTop.AddToEnd(CurrentLine.Content);
@@ -339,7 +340,7 @@ namespace TextControlBox
                     Line LineToAdd = CursorPosition.LineNumber + 1 < TotalLines.Count ? ListHelper.GetLine(TotalLines, CursorPosition.LineNumber + 1) : null;
                     if (LineToAdd != null)
                     {
-                        UndoRedo.RecordUndoAction(() =>
+                        undoRedo.RecordUndoAction(() =>
                         {
                             CurrentLine.Content += LineToAdd.Content;
                             TotalLines.Remove(LineToAdd);
@@ -349,7 +350,7 @@ namespace TextControlBox
                 //delete text in line
                 else if (TotalLines.Count > CursorPosition.LineNumber)
                 {
-                    UndoRedo.RecordUndoAction(() =>
+                    undoRedo.RecordUndoAction(() =>
                     {
                         CurrentLine.Remove(CharacterPos, StepsToMove);
                     }, TotalLines, CursorPosition.LineNumber, 1, 1, NewLineCharacter);
@@ -381,7 +382,7 @@ namespace TextControlBox
             //If the whole text is selected
             if (Selection.WholeTextSelected(TextSelection, TotalLines))
             {
-                UndoRedo.RecordUndoAction(() =>
+                undoRedo.RecordUndoAction(() =>
                 {
                     ListHelper.Clear(TotalLines, true);
                     ListHelper.Insert(TotalLines, new Line(), -1);
@@ -398,7 +399,7 @@ namespace TextControlBox
                 Line StartLine = ListHelper.GetLine(TotalLines, StartLinePos.LineNumber);
                 Line EndLine = new Line();
 
-                UndoRedo.RecordUndoAction(() =>
+                undoRedo.RecordUndoAction(() =>
                 {
                     string[] SplittedLine = Utils.SplitAt(StartLine.Content, StartLinePos.CharacterPosition);
                     StartLine.SetText(SplittedLine[1]);
@@ -410,7 +411,7 @@ namespace TextControlBox
             }
             else //Any kind of selection
             {
-                UndoRedo.RecordUndoAction(() =>
+                undoRedo.RecordUndoAction(() =>
                 {
                     CursorPosition = Selection.Replace(TextSelection, TotalLines, NewLineCharacter, NewLineCharacter);
                     selectionrenderer.ClearSelection();
@@ -564,8 +565,8 @@ namespace TextControlBox
             if (CurPosInLine == OldHorizontalScrollValue)
                 return;
 
+            HorizontalScroll = CurPosInLine - (Canvas_Text.ActualWidth - 10);
             OldHorizontalScrollValue = CurPosInLine;
-            HorizontalScroll = CurPosInLine - (Canvas_Text.ActualWidth - 5);
         }
         private void SetFocus()
         {
@@ -601,6 +602,17 @@ namespace TextControlBox
             LineHighlighterBrush = new CanvasSolidColorBrush(resourceCreator, _Design.LineHighlighterColor);
             ColorResourcesCreated = true;
         }
+        private void InitialiseTextService()
+        {
+            CoreTextServicesManager manager = CoreTextServicesManager.GetForCurrentView();
+            EditContext = manager.CreateEditContext();
+            EditContext.InputPaneDisplayPolicy = CoreTextInputPaneDisplayPolicy.Manual;
+            EditContext.InputScope = CoreTextInputScope.Text;
+            EditContext.TextRequested += delegate { };//Event only needs to be added -> No need to do something else
+            EditContext.SelectionRequested += delegate { };//Event only needs to be added -> No need to do something else
+            EditContext.TextUpdating += EditContext_TextUpdating;
+            EditContext.FocusRemoved += EditContext_FocusRemoved;
+        }
         #endregion
 
         #region Events
@@ -624,9 +636,9 @@ namespace TextControlBox
             {
                 TextSelection Selection;
                 if (Utils.IsKeyPressed(VirtualKey.Shift))
-                    Selection = TabKey.MoveTabBack(TotalLines, TextSelection, CursorPosition, TabCharacter, NewLineCharacter, UndoRedo);
+                    Selection = TabKey.MoveTabBack(TotalLines, TextSelection, CursorPosition, tabSpaceHelper.TabCharacter, NewLineCharacter, undoRedo);
                 else
-                    Selection = TabKey.MoveTab(TotalLines, TextSelection, CursorPosition, TabCharacter, NewLineCharacter, UndoRedo);
+                    Selection = TabKey.MoveTab(TotalLines, TextSelection, CursorPosition, tabSpaceHelper.TabCharacter, NewLineCharacter, undoRedo);
 
                 if (Selection != null)
                 {
@@ -1192,7 +1204,7 @@ namespace TextControlBox
 
             if (selectionrenderer.HasSelection)
             {
-                TextSelection = selectionrenderer.DrawSelection(DrawnTextLayout, RenderedLines, args, (float)-HorizontalScroll, SingleLineHeight / 4, NumberOfStartLine, NumberOfRenderedLines, ZoomedFontSize);
+                TextSelection = selectionrenderer.DrawSelection(DrawnTextLayout, RenderedLines, args, (float)-HorizontalScroll, SingleLineHeight / 4, NumberOfStartLine, NumberOfRenderedLines, ZoomedFontSize, _Design.SelectionColor);
             }
 
             if (TextSelection != null && !Selection.Equals(OldTextSelection, TextSelection))
@@ -1337,10 +1349,7 @@ namespace TextControlBox
 
             if (e.DataView.Contains(StandardDataFormats.Text))
             {
-                string text = await e.DataView.GetTextAsync();
-                text = LineEndings.CleanLineEndings(text, _LineEnding);
-                AddCharacter(text, true);
-                UpdateText();
+                AddCharacter(stringManager.CleanUpString(await e.DataView.GetTextAsync()), true);
             }
         }
         private void UserControl_DragOver(object sender, DragEventArgs e)
@@ -1394,7 +1403,7 @@ namespace TextControlBox
             RenderedLines.Clear();
             RenderedLines.TrimExcess();
             selectionrenderer.ClearSelection();
-            UndoRedo.ClearAll();
+            undoRedo.ClearAll();
 
             //Get the LineEnding
             LineEnding = LineEndings.FindLineEnding(text);
@@ -1406,7 +1415,7 @@ namespace TextControlBox
             }
 
             //Split the lines using the current LineEnding
-            var lines = text.Split(NewLineCharacter);
+            var lines = stringManager.CleanUpString(text).Split(NewLineCharacter);
             using (PooledList<Line> LinesToAdd = new PooledList<Line>(lines.Length))
             {
                 for (int i = 0; i < lines.Length; i++)
@@ -1431,9 +1440,11 @@ namespace TextControlBox
 
             string[] lines = null;            
             if(text != "")
-                lines = text.Split(NewLineCharacter);
+            {
+                lines = stringManager.CleanUpString(text).Split(NewLineCharacter);
+            }
 
-            UndoRedo.RecordUndoAction(() =>
+            undoRedo.RecordUndoAction(() =>
             {
                 //Clear the lists
                 ListHelper.Clear(TotalLines, text == "");
@@ -1446,7 +1457,6 @@ namespace TextControlBox
                     return;
                 }
 
-                text = LineEndings.CleanLineEndings(text, _LineEnding);
                 for (int i = 0; i < lines.Length; i++)
                 {
                     TotalLines.Add(new Line(lines[i]));
@@ -1465,7 +1475,7 @@ namespace TextControlBox
                 if (await Utils.IsOverTextLimit(Text.Length))
                     return;
 
-                AddCharacter(LineEndings.CleanLineEndings(Text, LineEnding));
+                AddCharacter(stringManager.CleanUpString(Text));
                 ClearSelection();
                 UpdateCursor();
             }
@@ -1473,14 +1483,14 @@ namespace TextControlBox
         public void Copy()
         {
             DataPackage dataPackage = new DataPackage();
-            dataPackage.SetText(SelectedText);// LineEndings.CleanLineEndings(SelectedText, LineEnding));
+            dataPackage.SetText(SelectedText);
             dataPackage.RequestedOperation = DataPackageOperation.Copy;
             Clipboard.SetContent(dataPackage);
         }
         public void Cut()
         {
             DataPackage dataPackage = new DataPackage();
-            dataPackage.SetText(LineEndings.CleanLineEndings(SelectedText, LineEnding));
+            dataPackage.SetText(SelectedText);
             DeleteText(); //Delete the selected text
             dataPackage.RequestedOperation = DataPackageOperation.Move;
             Clipboard.SetContent(dataPackage);
@@ -1539,7 +1549,7 @@ namespace TextControlBox
                 return;
 
             //Do the Undo
-            var sel = UndoRedo.Undo(TotalLines, NewLineCharacter);
+            var sel = undoRedo.Undo(TotalLines, stringManager, NewLineCharacter);
             Internal_TextChanged();
 
             if (sel != null)
@@ -1554,7 +1564,7 @@ namespace TextControlBox
                 return;
 
             //Do the Redo
-            var sel = UndoRedo.Redo(TotalLines, NewLineCharacter);
+            var sel = undoRedo.Redo(TotalLines, stringManager, NewLineCharacter);
             Internal_TextChanged();
 
             if (sel != null)
@@ -1625,9 +1635,9 @@ namespace TextControlBox
         {
             if (line >= TotalLines.Count || line < 0)
                 return false;
-            UndoRedo.RecordUndoAction(() =>
+            undoRedo.RecordUndoAction(() =>
             {
-                ListHelper.GetLine(TotalLines, line).Content = text;
+                ListHelper.GetLine(TotalLines, line).Content = stringManager.CleanUpString(text);
             }, TotalLines, line, 1, 1, NewLineCharacter);
             UpdateText();
             return true;
@@ -1637,7 +1647,7 @@ namespace TextControlBox
             if (line >= TotalLines.Count || line < 0)
                 return false;
 
-            UndoRedo.RecordUndoAction(() =>
+            undoRedo.RecordUndoAction(() =>
             {
                 TotalLines.RemoveAt(line);
             }, TotalLines, line, 2, 1, NewLineCharacter);
@@ -1650,9 +1660,9 @@ namespace TextControlBox
             if (position > TotalLines.Count || position < 0)
                 return false;
 
-            UndoRedo.RecordUndoAction(() =>
+            undoRedo.RecordUndoAction(() =>
             {
-                ListHelper.Insert(TotalLines, new Line(text), position);
+                ListHelper.Insert(TotalLines, new Line(stringManager.CleanUpString(text)), position);
             }, TotalLines, position, 1, 2, NewLineCharacter);
 
             UpdateText();
@@ -1663,20 +1673,21 @@ namespace TextControlBox
             var pos = Regex.Match(GetText(), pattern);
             return new TextSelectionPosition(pos.Index, pos.Length);
         }
-        public void SourroundSelectionWith(string value)
+        public void SurroundSelectionWith(string value)
         {
-            SourroundSelectionWith(value, value);
+            value = stringManager.CleanUpString(value);
+            SurroundSelectionWith(value, value);
         }
-        public void SourroundSelectionWith(string value1, string value2)
+        public void SurroundSelectionWith(string value1, string value2)
         {
             if (!SelectionIsNull())
             {
-                AddCharacter(value1 + SelectedText + value2);
+                AddCharacter(stringManager.CleanUpString(value1) + SelectedText + stringManager.CleanUpString(value2));
             }
         }
         public void DuplicateLine(int line)
         {
-            UndoRedo.RecordUndoAction(() =>
+            undoRedo.RecordUndoAction(() =>
             {
                 var content = new Line(ListHelper.GetLine(TotalLines, line).Content);
                 ListHelper.Insert(TotalLines, content, line);
@@ -1853,6 +1864,7 @@ namespace TextControlBox
         public async Task<JsonLoadMessage> LoadCodeLanguageFromJsonToBuffer(string Path, string Identifier)
         {
             var res = await SyntaxHighlightingRenderer.LoadFromFile(Path);
+            CodeLanguageBuffer.Add(Identifier, res.CodeLanguage);
             return res.JsonLoadMessage;
         }
         /// <summary>
@@ -1879,7 +1891,7 @@ namespace TextControlBox
             RenderedLines = null;
             LineNumberTextToRender = RenderedText = null;
             LineNumberContent = TextToRender = null;
-            UndoRedo.NullAll();
+            undoRedo.NullAll();
         }
 
         //Properties:
@@ -1899,6 +1911,7 @@ namespace TextControlBox
             set
             {
                 NewLineCharacter = LineEndings.LineEndingToString(value);
+                stringManager.lineEnding = value;
                 _LineEnding = value;
             }
         }
@@ -1972,17 +1985,17 @@ namespace TextControlBox
         public CursorSize CursorSize { get => _CursorSize; set { _CursorSize = value; UpdateCursor(); } }
         public new MenuFlyout ContextFlyout
         {
-            get { return FlyoutHelper.MenuFlyout; }
+            get { return flyoutHelper.MenuFlyout; }
             set
             {
                 //Use the inbuild flyout
                 if (value == null)
                 {
-                    FlyoutHelper.CreateFlyout(this);
+                    flyoutHelper.CreateFlyout(this);
                 }
                 else //Use a custom flyout
                 {
-                    FlyoutHelper.MenuFlyout = value;
+                    flyoutHelper.MenuFlyout = value;
                 }
             }
         }
@@ -2000,7 +2013,7 @@ namespace TextControlBox
             }
             set
             {
-                AddCharacter(value);
+                AddCharacter(stringManager.CleanUpString(value));
             }
         }
         public int NumberOfLines { get => TotalLines.Count; }
@@ -2013,10 +2026,12 @@ namespace TextControlBox
         public int CharacterCount { get => Utils.CountCharacters(TotalLines); }
         public double VerticalScrollSensitivity { get => _VerticalScrollSensitivity; set => _VerticalScrollSensitivity = value < 1 ? 1 : value; }
         public double HorizontalScrollSensitivity { get => _HorizontalScrollSensitivity; set => _HorizontalScrollSensitivity = value < 1 ? 1 : value; }
-        public double VerticalScroll { get => VerticalScrollbar.Value; set => VerticalScrollbar.Value = value < 1 ? 1 : value; }
-        public double HorizontalScroll { get => HorizontalScrollbar.Value; set => HorizontalScrollbar.Value = value < 1 ? 1 : value; }
-        public Dictionary<string, CodeLanguage> CodeLanguageBuffer = new Dictionary<string, CodeLanguage>();
+        public double VerticalScroll { get => VerticalScrollbar.Value; set => VerticalScrollbar.Value = value < 0 ? 0 : value; }
+        public double HorizontalScroll { get => HorizontalScrollbar.Value; set => HorizontalScrollbar.Value = value < 0 ? 0 : value; }
+        public readonly Dictionary<string, CodeLanguage> CodeLanguageBuffer = new Dictionary<string, CodeLanguage>();
         public new CornerRadius CornerRadius { get => MainGrid.CornerRadius; set => MainGrid.CornerRadius = value; }
+        public bool UseSpacesInsteadTabs { get => tabSpaceHelper.UseSpacesInsteadTabs; set { tabSpaceHelper.UseSpacesInsteadTabs = value; tabSpaceHelper.UpdateTabs(TotalLines); } }
+        public int NumberOfSpacesForTab { get => tabSpaceHelper.NumberOfSpaces; set { tabSpaceHelper.NumberOfSpaces = value;  tabSpaceHelper.UpdateTabs(TotalLines); } }
         #endregion
 
         #region Public events
