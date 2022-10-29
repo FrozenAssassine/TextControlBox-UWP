@@ -1895,7 +1895,7 @@ namespace TextControlBox
         }
         public void ClearUndoRedoHistory()
         {
-            UndoRedo.ClearAll();
+            undoRedo.ClearAll();
         }
 
         //Properties:
