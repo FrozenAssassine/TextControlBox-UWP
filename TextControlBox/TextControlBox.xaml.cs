@@ -891,15 +891,13 @@ namespace TextControlBox
                 //Horizontal
                 if (CurPosX > CanvasWidth - 100)
                 {
-                    int value = (int)Math.Abs(CanvasWidth - CurPosX - 100) / 20;
-                    value = value < 5 ? 5 : value;
-                    HorizontalScrollbar.Value += value;
-
+                    ScrollIntoViewHorizontal();
                     UpdateAll();
                 }
                 else if (CurPosX < 100)
                 {
-                    //UpdateAll();
+                    ScrollIntoViewHorizontal();
+                    UpdateAll();
                 }
             }
 
@@ -1895,7 +1893,7 @@ namespace TextControlBox
         }
         public void ClearUndoRedoHistory()
         {
-            UndoRedo.ClearAll();
+            undoRedo.ClearAll();
         }
 
         //Properties:
