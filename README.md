@@ -128,9 +128,9 @@ The textbox is mostly done, but there are still some bugs where I'm working on.
       "ColorLight": "#dd00dd" //color in light theme
     },
   ],
-  "Name": "Batch",
-  "Description": "Syntax highlighting for Batch language",
-  "Author": "Julius Kirsch"
+  "Name": "NAME",
+  "Description": "DESCRIPTION",
+  "Author": "AUTHOR"
 }  
 ```
 
