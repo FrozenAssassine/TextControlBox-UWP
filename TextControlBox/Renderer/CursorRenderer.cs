@@ -13,6 +13,8 @@ namespace TextControlBox.Renderer
         {
             //Calculate the relative linenumber, where the pointer was pressed at
             int Linenumber = (int)(Point.Y / SingleLineHeight);
+            if (Linenumber < 0)
+                Linenumber = 0;
 
             Linenumber += NumberOfStartLine;
 
