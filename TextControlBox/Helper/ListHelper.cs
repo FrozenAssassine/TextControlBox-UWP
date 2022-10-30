@@ -72,7 +72,7 @@ namespace TextControlBox.Helper
         }
         public static string GetLinesAsString(PooledList<Line> Lines, string NewLineCharacter)
         {
-            return string.Join(NewLineCharacter, Lines);
+            return string.Join(NewLineCharacter, Lines.Select(x => x.Content));
         }
 
         public static PooledList<Line> GetLinesFromString(string content, string NewLineCharacter)

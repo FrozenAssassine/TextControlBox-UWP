@@ -10,7 +10,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextControlBox-TestApp", "T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextControlBox", "TextControlBox\TextControlBox.csproj", "{2B1B83A3-B887-4ED3-A5D5-83E2C5ABD39F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextControlBox-DemoApp", "TextControlBox-DemoApp\TextControlBox-DemoApp.csproj", "{7F9C1A7C-B123-4CAE-AB19-2826888C1CAD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TCB-Editor", "TextControlBox-DemoApp\TCB-Editor.csproj", "{7F9C1A7C-B123-4CAE-AB19-2826888C1CAD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

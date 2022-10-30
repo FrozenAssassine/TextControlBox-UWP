@@ -577,7 +577,6 @@ namespace TextControlBox
             EditContext.NotifyFocusEnter();
             inputPane.TryShow();
             Utils.ChangeCursor(CoreCursorType.IBeam);
-            this.Focus(FocusState.Programmatic);
         }
         private void RemoveFocus()
         {
@@ -1397,7 +1396,7 @@ namespace TextControlBox
         {
             try
             {
-                return string.Join(NewLineCharacter, TotalLines);
+                return string.Join(NewLineCharacter, TotalLines.Select(x => x.Content));
             }
             catch (OutOfMemoryException)
             {
