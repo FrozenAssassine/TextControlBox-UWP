@@ -27,16 +27,16 @@ namespace TextControlBox.Renderer
                 return;
 
             var Highlights = CodeLanguage.Highlights;
-            for (int i = 0; i < Highlights.Count; i++)
+            for (int i = 0; i < Highlights.Length; i++)
             {
                 var matches = Regex.Matches(RenderedText, Highlights[i].Pattern, RegexOptions.Compiled);
+                var highlight = Highlights[i];
+                var color = theme == ApplicationTheme.Light ? highlight.ColorLight_Clr : highlight.ColorDark_Clr;
+
                 for (int j = 0; j < matches.Count; j++)
                 {
-                    var highlight = Highlights[i];
                     var match = matches[j];
-
-                    DrawnTextLayout.SetColor(match.Index, match.Length, theme == ApplicationTheme.Light ? highlight.ColorLight_Clr : highlight.ColorDark_Clr);
-
+                    DrawnTextLayout.SetColor(match.Index, match.Length, color);
                     if (highlight.CodeStyle != null)
                     {
                         if (highlight.CodeStyle.Italic)
@@ -145,6 +145,6 @@ namespace TextControlBox.Renderer
         public string Name { get; set; }
         public string Description { get; set; }
         public string Author { get; set; }
-        public List<SyntaxHighlights> Highlights = new List<SyntaxHighlights>();
+        public SyntaxHighlights[] Highlights;
     }
 }
