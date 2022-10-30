@@ -126,8 +126,6 @@ namespace TextControlBox_DemoApp.Views
                         reader.Read();
                         encoding = reader.CurrentEncoding;
 
-                        Debug.WriteLine("TRY: " + encoding.EncodingName + " :" + encoding.GetString(buffer));
-
                         return (encoding.GetString(buffer, 0, buffer.Length), encoding, true);
                     }
                 }
