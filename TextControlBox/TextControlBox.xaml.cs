@@ -148,7 +148,7 @@ namespace TextControlBox
 
             //set default values
             RequestedTheme = ElementTheme.Default;
-            LineEnding = LineEnding.LF;
+            LineEnding = LineEnding.CRLF;
 
             InitialiseOnStart();
 
@@ -226,10 +226,11 @@ namespace TextControlBox
             undoRedo.RecordUndoAction(() =>
             {
                 CursorPosition = Selection.Remove(TextSelection, TotalLines);
-
                 ClearSelection();
-                UpdateSelection();
+
             }, TotalLines, TextSelection, 0, NewLineCharacter);
+            UpdateSelection();
+            UpdateCursor();
         }
         private void AddCharacter(string text, bool IgnoreSelection = false)
         {
@@ -417,8 +418,6 @@ namespace TextControlBox
                 undoRedo.RecordUndoAction(() =>
                 {
                     CursorPosition = Selection.Replace(TextSelection, TotalLines, NewLineCharacter, NewLineCharacter);
-                    selectionrenderer.ClearSelection();
-                    UpdateSelection();
                 }, TotalLines, TextSelection, 2, NewLineCharacter);
             }
 
@@ -829,7 +828,11 @@ namespace TextControlBox
                             UpdateCursor();
                         }
                         else
+                        {
                             CursorPosition = Cursor.MoveToLineEnd(CursorPosition, CurrentLine);
+                            UpdateCursor();
+                            UpdateText();
+                        }
                         break;
                     }
                 case VirtualKey.Home:
@@ -845,7 +848,11 @@ namespace TextControlBox
                             UpdateCursor();
                         }
                         else
+                        {
                             CursorPosition = Cursor.MoveToLineStart(CursorPosition);
+                            UpdateCursor();
+                            UpdateText();
+                        }
                         break;
                     }
             }
@@ -1340,7 +1347,6 @@ namespace TextControlBox
         {
             Utils.ChangeCursor(CoreCursorType.Arrow);
         }
-
         //Drag Drop text
         private async void UserControl_Drop(object sender, DragEventArgs e)
         {
@@ -1546,7 +1552,6 @@ namespace TextControlBox
                 throw new OutOfMemoryException();
             }
         }
-
         private void CleanUp()
         {
             GCSettings.LargeObjectHeapCompactionMode =
@@ -1632,6 +1637,7 @@ namespace TextControlBox
             selectionrenderer.SetSelection(new CursorPosition(0, 0), new CursorPosition(ListHelper.GetLine(TotalLines, -1).Length, TotalLines.Count - 1));
             CursorPosition = selectionrenderer.SelectionEndPosition;
             UpdateSelection();
+            UpdateCursor();
         }
         public void ClearSelection()
         {
@@ -2017,7 +2023,7 @@ namespace TextControlBox
         public CursorPosition CursorPosition
         {
             get => _CursorPosition;
-            set { _CursorPosition = new CursorPosition(value.CharacterPosition, value.LineNumber); UpdateCursor(); }
+            set { _CursorPosition = new CursorPosition(value.CharacterPosition, value.LineNumber); }
         }
         public new FontFamily FontFamily { get => _FontFamily; set { _FontFamily = value; NeedsTextFormatUpdate = true; UpdateAll(); } }
         public new int FontSize { get => _FontSize; set { _FontSize = value; UpdateZoom(); } }
