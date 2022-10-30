@@ -25,12 +25,10 @@ using System.Diagnostics;
 using static System.Net.Mime.MediaTypeNames;
 using Windows.Storage.Streams;
 using Newtonsoft.Json.Linq;
+using Windows.ApplicationModel.DataTransfer;
 
 namespace TextControlBox_DemoApp.Views
 {
-    /// <summary>
-    /// Eine leere Seite, die eigenständig verwendet oder zu der innerhalb eines Rahmens navigiert werden kann.
-    /// </summary>
     public sealed partial class MainPage : Page
     {
         private bool UnsavedChanges = false;
@@ -46,6 +44,7 @@ namespace TextControlBox_DemoApp.Views
             UpdateTitle();
 
             Infobar_LineEnding.Text = textbox.LineEnding.ToString();
+            textbox.Focus(FocusState.Programmatic);
         }
 
         private void ApplySettings()
@@ -96,15 +95,16 @@ namespace TextControlBox_DemoApp.Views
             var res = await SaveDialog.ShowAsync();
             if(res == ContentDialogResult.Primary)
                 return !await SaveFile();
-
-            return res == ContentDialogResult.Primary;
+            else if (res == ContentDialogResult.None)
+                return true;
+            return false;
         }
         private void UpdateTitle()
         {
             if (OpenedFile == null)
-                titleDisplay.Text = (UnsavedChanges ? "*" : "") + "Untitled.txt  - TextControlBox Demo";
+                titleDisplay.Text = (UnsavedChanges ? "*" : "") + "Untitled.txt  - TCB Editor";
             else
-                titleDisplay.Text = (UnsavedChanges ? "*" : "") + OpenedFile.Name + " - TextControlBox Demo";
+                titleDisplay.Text = (UnsavedChanges ? "*" : "") + OpenedFile.Name + " - TCB Editor";
         }
         public async Task<(string Text, Encoding encoding, bool Succed)> ReadTextFromFileAsync(StorageFile file, Encoding encoding = null)
         {
@@ -118,13 +118,14 @@ namespace TextControlBox_DemoApp.Views
                     //Detect the encoding:
                     using (var reader = new StreamReader(stream, true))
                     {
-                        reader.Peek();
-                        encoding = reader.CurrentEncoding;
-
                         byte[] buffer = new byte[stream.Length];
                         stream.Read(buffer, 0, buffer.Length);
 
-                        Debug.WriteLine("TRY: " + encoding.GetString(buffer, 0, buffer.Length));
+                        reader.Read();
+                        encoding = reader.CurrentEncoding;
+
+                        Debug.WriteLine("TRY: " + encoding.EncodingName + " :" + encoding.GetString(buffer));
+
                         return (encoding.GetString(buffer, 0, buffer.Length), encoding, true);
                     }
                 }
@@ -146,10 +147,14 @@ namespace TextControlBox_DemoApp.Views
                 {
                     using (var writer = new StreamWriter(stream, encoding))
                     {
-                        writer.Write(text);
+                        await writer.WriteAsync(text);
                         return true;
                     }
                 }
+            }
+            catch (IOException)
+            {
+                return await SaveFile(true);
             }
             catch (Exception ex)
             {
@@ -169,23 +174,44 @@ namespace TextControlBox_DemoApp.Views
                 if (file != null)
                 {
                     CachedFileManager.DeferUpdates(file);
-                    await WriteTextToFileAsync(OpenedFile, textbox.GetText(), CurrentEncoding);
+                    await WriteTextToFileAsync(file, textbox.GetText(), CurrentEncoding);
                     Windows.Storage.Provider.FileUpdateStatus status = await CachedFileManager.CompleteUpdatesAsync(file);
 
                     if (status == Windows.Storage.Provider.FileUpdateStatus.Complete)
                     {
                         OpenedFile = file;
                         UnsavedChanges = false;
+                        UpdateTitle();
                         return true;
                     }
                 }
             }
             else
             {
-                await WriteTextToFileAsync(OpenedFile, textbox.GetText(), CurrentEncoding);
-                return true;
+                var res = await WriteTextToFileAsync(OpenedFile, textbox.GetText(), CurrentEncoding);
+                if(res == true)
+                {
+                    UnsavedChanges = false;
+                    UpdateTitle();
+                }
+                return res;
             }
             return false;
+        }
+        private async Task OpenFile(StorageFile file)
+        {
+            if (file != null)
+            {
+                OpenedFile = file;
+                UpdateTitle();
+                var res = await ReadTextFromFileAsync(file);
+                CurrentEncoding = res.encoding;
+                Infobar_Encoding.Text = CurrentEncoding.EncodingName;
+
+                textbox.LoadText(res.Text);
+                Infobar_LineEnding.Text = textbox.LineEnding.ToString();
+                UnsavedChanges = false;
+            }
         }
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -223,19 +249,7 @@ namespace TextControlBox_DemoApp.Views
             picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.DocumentsLibrary;
             picker.FileTypeFilter.Add("*");
 
-            StorageFile file = await picker.PickSingleFileAsync();
-            if (file != null)
-            {
-                OpenedFile = file;
-                UpdateTitle();
-                var res = await ReadTextFromFileAsync(file);
-                CurrentEncoding = res.encoding;
-                Infobar_Encoding.Text = CurrentEncoding.EncodingName;
-                
-                textbox.LoadText(res.Text);
-                Infobar_LineEnding.Text = textbox.LineEnding.ToString();
-                UnsavedChanges = false;
-            }
+            await OpenFile(await picker.PickSingleFileAsync());
         }
         private async void NewFile_Click(object sender, RoutedEventArgs e)
         {
@@ -325,6 +339,26 @@ namespace TextControlBox_DemoApp.Views
             {
                 textbox.UseSpacesInsteadTabs = item.Tag.ToString().Equals("0");
             }
+        }
+
+        private async void Page_Drop(object sender, DragEventArgs e)
+        {
+            if (e.DataView.Contains(StandardDataFormats.StorageItems))
+            {
+                var files = await e.DataView.GetStorageItemsAsync();
+                if (files.Count >= 1)
+                {
+                    if (await CheckUnsavedChanges())
+                        return;
+
+                    await OpenFile(files[0] as StorageFile);
+                }
+            }
+        }
+
+        private void Page_DragEnter(object sender, DragEventArgs e)
+        {
+            e.AcceptedOperation = DataPackageOperation.Copy;
         }
     }
 }

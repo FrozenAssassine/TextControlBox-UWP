@@ -9,7 +9,8 @@
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
-    NavigationCacheMode="Enabled" ActualThemeChanged="Page_ActualThemeChanged">
+    NavigationCacheMode="Enabled" ActualThemeChanged="Page_ActualThemeChanged"
+    AllowDrop="True" Drop="Page_Drop" DragEnter="Page_DragEnter">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -30,7 +31,7 @@
                    Width="16" Height="16"
                    Margin="8,0,0,0"/>
             <TextBlock x:Name="titleDisplay"
-                       Text="Hello" 
+                       Text="" 
                        Style="{StaticResource CaptionTextBlockStyle}" 
                        Grid.Column="1"
                        VerticalAlignment="Center"
@@ -39,30 +40,79 @@
       
         <muxc:MenuBar Margin="0,2,0,0" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Top">
             <muxc:MenuBarItem Title="File">
-                <MenuFlyoutItem Text="New" Click="NewFile_Click"/>
-                <MenuFlyoutItem Text="Open" Click="OpenFile_Click"/>
-                <MenuFlyoutItem Text="Save" Click="SaveFile_Click"/>
-                <MenuFlyoutItem Text="Save as" Click="SaveFileAs_Click"/>
-                <MenuFlyoutItem Text="Exit" Click="ExitApp_Click"/>
+                <MenuFlyoutItem Text="New" Click="NewFile_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="N" Modifiers="Control"/>
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Open" Click="OpenFile_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="O" Modifiers="Control"/>
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Save" Click="SaveFile_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="S" Modifiers="Control"/>
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Save as" Click="SaveFileAs_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="S" Modifiers="Control, Shift"/>
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Exit" Click="ExitApp_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="F4" Modifiers="Menu"/>
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
             </muxc:MenuBarItem>
 
             <muxc:MenuBarItem Title="Edit">
-                <MenuFlyoutItem Text="Undo" Click="Undo_Click"/>
-                <MenuFlyoutItem Text="Redo" Click="Redo_Click"/>
-                <MenuFlyoutItem Text="Cut" Click="Cut_Click"/>
-                <MenuFlyoutItem Text="Copy" Click="Copy_Click"/>
-                <MenuFlyoutItem Text="Paste" Click="Paste_Click"/>
-                <MenuFlyoutItem Text="Select All" Click="SelectAll_Click"/>
+                <MenuFlyoutItem Text="Undo" Click="Undo_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="Z" IsEnabled="False" Modifiers="Control"/>
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Redo" Click="Redo_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="Y" IsEnabled="False" Modifiers="Control"/>
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Cut" Click="Cut_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="X" IsEnabled="False" Modifiers="Control"/>
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Copy" Click="Copy_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="C" IsEnabled="False" Modifiers="Control"/>
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Paste" Click="Paste_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="V" IsEnabled="False" Modifiers="Control"/>
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem Text="Select All" Click="SelectAll_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="A" IsEnabled="False" Modifiers="Control"/>
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
             </muxc:MenuBarItem>
 
             <muxc:MenuBarItem Title="Advanced">
-                <MenuFlyoutItem Text="Duplicate line" Click="DuplicateLine_Click"/>
+                <MenuFlyoutItem Text="Duplicate line" Click="DuplicateLine_Click">
+                    <MenuFlyoutItem.KeyboardAccelerators>
+                        <KeyboardAccelerator Key="D" Modifiers="Control"/>
+                    </MenuFlyoutItem.KeyboardAccelerators>
+                </MenuFlyoutItem>
                 <MenuFlyoutSubItem Text="Language">
                     <MenuFlyoutItem Text="C#" Tag="CSharp" Click="Language_Click"/>
                     <MenuFlyoutItem Text="Gcode" Tag="GCode" Click="Language_Click"/>
                     <MenuFlyoutItem Text="Json" Tag="Json" Click="Language_Click"/>
                     <MenuFlyoutItem Text="Batch" Tag="Batch" Click="Language_Click"/>
                     <MenuFlyoutItem Text="Html" Tag="Html" Click="Language_Click"/>
+                    <MenuFlyoutItem Text="C++" Tag="Cpp" Click="Language_Click"/>
                     <MenuFlyoutItem Text="None" Tag="" Click="Language_Click"/>
                 </MenuFlyoutSubItem>
                 <MenuFlyoutSubItem Text="Tab-mode">

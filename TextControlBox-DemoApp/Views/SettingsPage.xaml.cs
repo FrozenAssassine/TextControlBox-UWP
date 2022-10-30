@@ -74,6 +74,10 @@ namespace TextControlBox_DemoApp.Views
 
         private void CurrentView_BackRequested(object sender, BackRequestedEventArgs e)
         {
+            var currentView = SystemNavigationManager.GetForCurrentView();
+            currentView.AppViewBackButtonVisibility = AppViewBackButtonVisibility.Collapsed;
+            currentView.BackRequested -= CurrentView_BackRequested;
+
             App.TryGoBack();
         }
 
