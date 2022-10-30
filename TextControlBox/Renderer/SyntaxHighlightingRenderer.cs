@@ -1,9 +1,9 @@
 ﻿using Microsoft.Graphics.Canvas.Text;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Schema;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -13,8 +13,6 @@ using Windows.Storage;
 using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media;
 
 namespace TextControlBox.Renderer
 {
@@ -22,33 +20,31 @@ namespace TextControlBox.Renderer
     {
         public static FontWeight BoldFont = new FontWeight { Weight = 600 };
         public static FontStyle ItalicFont = FontStyle.Italic;
-        public static System.Drawing.ColorConverter ColorConverter = new System.Drawing.ColorConverter();
 
         public static void UpdateSyntaxHighlighting(CanvasTextLayout DrawnTextLayout, ApplicationTheme theme, CodeLanguage CodeLanguage, bool SyntaxHighlighting, string RenderedText)
         {
             if (CodeLanguage == null || !SyntaxHighlighting)
                 return;
-            
+
             var Highlights = CodeLanguage.Highlights;
             for (int i = 0; i < Highlights.Count; i++)
             {
-                var matches = Regex.Matches(RenderedText, Highlights[i].Pattern);
+                var matches = Regex.Matches(RenderedText, Highlights[i].Pattern, RegexOptions.Compiled);
                 for (int j = 0; j < matches.Count; j++)
                 {
                     var highlight = Highlights[i];
                     var match = matches[j];
 
-                    var color = (System.Drawing.Color)ColorConverter.ConvertFromString(theme == ApplicationTheme.Light ? highlight.ColorLight : highlight.ColorDark);
-                    DrawnTextLayout.SetColor(match.Index, match.Length, color.ToMediaColor());
+                    DrawnTextLayout.SetColor(match.Index, match.Length, theme == ApplicationTheme.Light ? highlight.ColorLight_Clr : highlight.ColorDark_Clr);
 
                     if (highlight.CodeStyle != null)
                     {
                         if (highlight.CodeStyle.Italic)
                             DrawnTextLayout.SetFontStyle(match.Index, match.Length, ItalicFont);
-                        else if (highlight.CodeStyle.Bold)
+                        if (highlight.CodeStyle.Bold)
                             DrawnTextLayout.SetFontWeight(match.Index, match.Length, BoldFont);
-                        else if(highlight.CodeStyle.Underlined)
-                            DrawnTextLayout.SetUnderline(match.Index, matches[j].Length, true);
+                        if (highlight.CodeStyle.Underlined)
+                            DrawnTextLayout.SetUnderline(match.Index, match.Length, true);
                     }
                 }
             }
@@ -100,8 +96,8 @@ namespace TextControlBox.Renderer
             this.JsonLoadMessage = Message;
             this.CodeLanguage = CodeLanguage;
         }
-        public JsonLoadMessage JsonLoadMessage { get; set;}
-        public CodeLanguage CodeLanguage { get; set;}
+        public JsonLoadMessage JsonLoadMessage { get; set; }
+        public CodeLanguage CodeLanguage { get; set; }
     }
     public enum JsonLoadMessage
     {
@@ -109,18 +105,28 @@ namespace TextControlBox.Renderer
     }
     public class SyntaxHighlights
     {
+        private readonly ColorConverter ColorConverter = new ColorConverter();
+
         public SyntaxHighlights(string Pattern, string ColorLight, string ColorDark, bool Bold = false, bool Italic = false, bool Underlined = false)
         {
             this.Pattern = Pattern;
             this.ColorDark = ColorDark;
             this.ColorLight = ColorLight;
-            if(Underlined || Italic || Bold)
+            if (Underlined || Italic || Bold)
                 this.CodeStyle = new CodeFontStyle(Underlined, Italic, Bold);
         }
         public CodeFontStyle CodeStyle { get; set; } = null;
         public string Pattern { get; set; }
-        public string ColorDark { get; set; }
-        public string ColorLight { get; set; }
+        public Windows.UI.Color ColorDark_Clr { get; private set; }
+        public Windows.UI.Color ColorLight_Clr { get; private set; }
+        public string ColorDark
+        {
+            set => ColorDark_Clr = ((System.Drawing.Color)ColorConverter.ConvertFromString(value)).ToMediaColor();
+        }
+        public string ColorLight
+        {
+            set => ColorLight_Clr = ((System.Drawing.Color)ColorConverter.ConvertFromString(value)).ToMediaColor();
+        }
     }
     public class CodeFontStyle
     {
