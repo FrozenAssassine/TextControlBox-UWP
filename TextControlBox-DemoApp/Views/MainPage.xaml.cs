@@ -40,11 +40,13 @@ namespace TextControlBox_DemoApp.Views
         {
             this.InitializeComponent();
 
-            CustomTitleBar();
             UpdateTitle();
+            CustomTitleBar();
 
+            //Update the infobar
+            textbox_ZoomChanged(textbox, 100);
+            Infobar_Encoding.Text = CurrentEncoding.EncodingName;
             Infobar_LineEnding.Text = textbox.LineEnding.ToString();
-            textbox.Focus(FocusState.Programmatic);
         }
 
         private void ApplySettings()
@@ -233,12 +235,6 @@ namespace TextControlBox_DemoApp.Views
             Titlebar.Visibility = sender.IsVisible ? Visibility.Visible : Visibility.Collapsed;
         }
 
-        private void textbox_TextChanged(TextControlBox.TextControlBox sender, string Text)
-        {
-            UnsavedChanges = true;
-            UpdateTitle();
-        }
-
         private async void OpenFile_Click(object sender, RoutedEventArgs e)
         {
             if (await CheckUnsavedChanges())
@@ -315,7 +311,19 @@ namespace TextControlBox_DemoApp.Views
         {
             this.Frame.Navigate(typeof(SettingsPage));
         }
+        private void TabMode_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuFlyoutItem item)
+            {
+                textbox.UseSpacesInsteadTabs = item.Tag.ToString().Equals("0");
+            }
+        }
 
+        private void textbox_TextChanged(TextControlBox.TextControlBox sender, string Text)
+        {
+            UnsavedChanges = true;
+            UpdateTitle();
+        }
         private void textbox_ZoomChanged(TextControlBox.TextControlBox sender, int ZoomFactor)
         {
             Infobar_Zoom.Text = ZoomFactor + "%";
@@ -332,15 +340,6 @@ namespace TextControlBox_DemoApp.Views
                 textbox.RequestedTheme = rootElement.RequestedTheme;
             }
         }
-
-        private void TabMode_Click(object sender, RoutedEventArgs e)
-        {
-            if(sender is MenuFlyoutItem item)
-            {
-                textbox.UseSpacesInsteadTabs = item.Tag.ToString().Equals("0");
-            }
-        }
-
         private async void Page_Drop(object sender, DragEventArgs e)
         {
             if (e.DataView.Contains(StandardDataFormats.StorageItems))
@@ -355,7 +354,6 @@ namespace TextControlBox_DemoApp.Views
                 }
             }
         }
-
         private void Page_DragEnter(object sender, DragEventArgs e)
         {
             e.AcceptedOperation = DataPackageOperation.Copy;

@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // Allgemeine Informationen über eine Assembly werden über die folgenden 
 // Attribute gesteuert. Ändern Sie diese Attributwerte, um die Informationen zu ändern,
 // die einer Assembly zugeordnet sind.
-[assembly: AssemblyTitle("TextControlBox-DemoApp")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("TCB Editor")]
+[assembly: AssemblyDescription("A simple but powerful text editor based on my custom made Textbox")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("TextControlBox-DemoApp")]
+[assembly: AssemblyProduct("TCB Editor")]
 [assembly: AssemblyCopyright("Copyright ©  2022")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

@@ -122,7 +122,7 @@
             </muxc:MenuBarItem>
         </muxc:MenuBar>
 
-        <textcontrolbox:TextControlBox x:Name="textbox" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+        <textcontrolbox:TextControlBox LineEnding="CRLF" x:Name="textbox" Grid.Row="2" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
             TextChanged="textbox_TextChanged" SelectionChanged="textbox_SelectionChanged" ZoomChanged="textbox_ZoomChanged"                               
         />
         <Button Click="Settings_Click" Margin="0,7,10,0" BorderThickness="0" Padding="0" Grid.Row="1" Width="30" Height="30" Background="Transparent" HorizontalAlignment="Right" x:Name="SettingsButton" VerticalAlignment="Top">

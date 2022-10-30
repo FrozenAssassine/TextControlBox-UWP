@@ -17,6 +17,7 @@ using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using Windows.UI.Core;
+using Windows.ApplicationModel;
 
 // Die Elementvorlage "Leere Seite" wird unter https://go.microsoft.com/fwlink/?LinkId=234238 dokumentiert.
 
@@ -40,12 +41,18 @@ namespace TextControlBox_DemoApp.Views
         {
             this.InitializeComponent();
             CustomTitleBar();
+            FillVersionDisplay();
 
             themeCombobox.SelectedIndex = AppSettings.GetSettingsAsInt("theme");
             fontFamilyCombobox.SelectedIndex = AppSettings.GetSettingsAsInt("fontFamilyIndex", Fonts.IndexOf("Consolas"));
             fontSizeNumberBox.Value = AppSettings.GetSettingsAsInt("fontSize", 18);
         }
-
+        private void FillVersionDisplay()
+        {
+            VersionDisplay.Text = "Version: " + Package.Current.Id.Version.Major + "." +
+                    Package.Current.Id.Version.Minor + "." +
+                    Package.Current.Id.Version.Build;
+        }
         private void CustomTitleBar()
         {
             // Hide default title bar.
@@ -96,6 +103,12 @@ namespace TextControlBox_DemoApp.Views
         private void themeCombobox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             AppSettings.SaveSettings("theme", themeCombobox.SelectedIndex);
+
+            //change the theme
+            if (Window.Current.Content is FrameworkElement rootElement)
+            {
+                rootElement.RequestedTheme = (ElementTheme)Enum.Parse(typeof(ElementTheme), themeCombobox.SelectedIndex.ToString());
+            }
         }
         private void fontFamilyCombobox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {

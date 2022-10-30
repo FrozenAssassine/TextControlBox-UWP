@@ -7,15 +7,15 @@
   IgnorableNamespaces="uap mp">
 
   <Identity
-    Name="1e9881bc-1207-401b-8daa-bce151184d8c"
-    Publisher="CN=juliu"
+    Name="52804JuliusKirsch.TextControlBoxDemo"
+    Publisher="CN=131520D9-7303-41D1-808C-53CCB4ADFB34"
     Version="1.0.0.0" />
 
-  <mp:PhoneIdentity PhoneProductId="1e9881bc-1207-401b-8daa-bce151184d8c" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <mp:PhoneIdentity PhoneProductId="92159b7f-0bbc-4b6c-9a74-7402e1857346" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
     <DisplayName>TCB Editor</DisplayName>
-    <PublisherDisplayName>juliu</PublisherDisplayName>
+    <PublisherDisplayName>Julius Kirsch</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
 
@@ -39,6 +39,11 @@
         BackgroundColor="transparent">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square71x71Logo="Assets\SmallTile.png"/>
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
+        <uap:InitialRotationPreference>
+          <uap:Rotation Preference="landscape"/>
+          <uap:Rotation Preference="portrait"/>
+          <uap:Rotation Preference="landscapeFlipped"/>
+          <uap:Rotation Preference="portraitFlipped"/></uap:InitialRotationPreference>
       </uap:VisualElements>
     </Application>
   </Applications>

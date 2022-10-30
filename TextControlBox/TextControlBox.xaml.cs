@@ -63,7 +63,7 @@ namespace TextControlBox
         private ElementTheme _RequestedTheme = ElementTheme.Default;
         private ApplicationTheme _AppTheme = ApplicationTheme.Light;
         private TextControlBoxDesign LightDesign = new TextControlBoxDesign(
-            new SolidColorBrush(Color.FromArgb(255, 255, 255, 255)),
+            new SolidColorBrush(Color.FromArgb(0, 255, 255, 255)),
             Color.FromArgb(255, 50, 50, 50),
             Color.FromArgb(100, 0, 100, 255),
             Color.FromArgb(255, 0, 0, 0),
@@ -72,7 +72,7 @@ namespace TextControlBox
             Color.FromArgb(0, 0, 0, 0)
             );
         private TextControlBoxDesign DarkDesign = new TextControlBoxDesign(
-            new SolidColorBrush(Color.FromArgb(255, 30, 30, 30)),
+            new SolidColorBrush(Color.FromArgb(0, 30, 30, 30)),
             Color.FromArgb(255, 255, 255, 255),
             Color.FromArgb(100, 0, 100, 255),
             Color.FromArgb(255, 255, 255, 255),
@@ -151,6 +151,8 @@ namespace TextControlBox
             LineEnding = LineEnding.LF;
 
             InitialiseOnStart();
+
+            SetFocus();
         }
 
         #region Update functions
