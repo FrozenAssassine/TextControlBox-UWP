@@ -125,7 +125,7 @@ namespace TextControlBox
         private readonly FlyoutHelper flyoutHelper;
         private readonly TabSpaceHelper tabSpaceHelper = new TabSpaceHelper();
         private readonly StringManager stringManager;
-        
+
         public TextControlBox()
         {
             this.InitializeComponent();
@@ -151,7 +151,6 @@ namespace TextControlBox
             LineEnding = LineEnding.CRLF;
 
             InitialiseOnStart();
-
             SetFocus();
         }
 
@@ -617,7 +616,6 @@ namespace TextControlBox
         #endregion
 
         #region Events
-        int ucount = 0;
         //Handle keyinputs
         private void EditContext_TextUpdating(CoreTextEditContext sender, CoreTextTextUpdatingEventArgs args)
         {
@@ -1383,7 +1381,7 @@ namespace TextControlBox
             UpdateCursor();
         }
         #endregion
-
+ 
         //Trys running the code and clears the memory if OutOfMemoryException gets thrown
         private async void Safe_Paste(bool HandleException = true)
         {
@@ -1431,8 +1429,13 @@ namespace TextControlBox
             try
             {
                 DataPackage dataPackage = new DataPackage();
+                Debug.WriteLine(SelectedText);
                 dataPackage.SetText(SelectedText);
-                DeleteText(); //Delete the selected text
+                if(TextSelection == null)
+                    DeleteLine(CursorPosition.LineNumber); //Delete the line
+                else
+                    DeleteText(); //Delete the selected text
+
                 dataPackage.RequestedOperation = DataPackageOperation.Move;
                 Clipboard.SetContent(dataPackage);
                 ClearSelection();
