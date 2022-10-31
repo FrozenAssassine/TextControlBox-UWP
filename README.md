@@ -5,6 +5,9 @@
 </div>
 
 <div align="center">
+     <a href="https://www.microsoft.com/store/productId/9NWL9M9JPQ36">
+         <img src="https://img.shields.io/badge/Download demo App-Microsoft%20Store-brightgreen?style=flat">
+    </a>
 <img src="https://img.shields.io/github/issues/FrozenAssassine/TextControlBox-UWP.svg?style=flat">
 <img src="https://img.shields.io/github/issues-closed/FrozenAssassine/TextControlBox-UWP.svg">
 <img src="https://img.shields.io/github/stars/FrozenAssassine/TextControlBox-UWP.svg">
