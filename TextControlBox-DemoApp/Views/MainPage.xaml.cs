@@ -26,6 +26,7 @@ using static System.Net.Mime.MediaTypeNames;
 using Windows.Storage.Streams;
 using Newtonsoft.Json.Linq;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.UI.Core.Preview;
 
 namespace TextControlBox_DemoApp.Views
 {
@@ -40,6 +41,9 @@ namespace TextControlBox_DemoApp.Views
         {
             this.InitializeComponent();
 
+            //event to handle closing
+            SystemNavigationManagerPreview.GetForCurrentView().CloseRequested += Application_OnCloseRequest;
+
             UpdateTitle();
             CustomTitleBar();
 
@@ -47,6 +51,19 @@ namespace TextControlBox_DemoApp.Views
             textbox_ZoomChanged(textbox, 100);
             Infobar_Encoding.Text = CurrentEncoding.EncodingName;
             Infobar_LineEnding.Text = textbox.LineEnding.ToString();
+        }
+
+        private bool IsContentDialogOpen()
+        {
+            var openedpopups = VisualTreeHelper.GetOpenPopups(Window.Current);
+            for (int i = 0; i < openedpopups.Count; i++)
+            {
+                if (openedpopups[i].Child is ContentDialog)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         private void ApplySettings()
@@ -232,6 +249,18 @@ namespace TextControlBox_DemoApp.Views
         {
             Titlebar.Visibility = sender.IsVisible ? Visibility.Visible : Visibility.Collapsed;
         }
+        private async void Application_OnCloseRequest(object sender, SystemNavigationCloseRequestedPreviewEventArgs e)
+        {
+            var deferral = e.GetDeferral();
+
+            if (IsContentDialogOpen())
+                e.Handled = true;
+
+            if (await CheckUnsavedChanges())
+                e.Handled = true;
+
+            deferral.Complete();
+        }
 
         private async void OpenFile_Click(object sender, RoutedEventArgs e)
         {
@@ -265,6 +294,12 @@ namespace TextControlBox_DemoApp.Views
         }
         private async void ExitApp_Click(object sender, RoutedEventArgs e)
         {
+            if (IsContentDialogOpen())
+                return;
+
+            if (await CheckUnsavedChanges())
+                return;
+
             await ApplicationView.GetForCurrentView().TryConsolidateAsync();
         }
         private void Undo_Click(object sender, RoutedEventArgs e)

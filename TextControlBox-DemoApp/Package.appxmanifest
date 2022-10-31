@@ -4,7 +4,10 @@
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
-  IgnorableNamespaces="uap mp">
+  xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4"
+  xmlns:iot2="http://schemas.microsoft.com/appx/manifest/iot/windows10/2"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap mp desktop4 iot2 rescap">
 
   <Identity
     Name="52804JuliusKirsch.TextControlBoxDemo"
@@ -30,7 +33,10 @@
   <Applications>
     <Application Id="App"
       Executable="$targetnametoken$.exe"
-      EntryPoint="TextControlBox_Editor.App">
+      EntryPoint="TextControlBox_Editor.App"
+      desktop4:SupportsMultipleInstances="true"
+      iot2:SupportsMultipleInstances="true">
+		
       <uap:VisualElements
         DisplayName="TCB Editor"
         Square150x150Logo="Assets\Square150x150Logo.png"
@@ -50,5 +56,6 @@
 
   <Capabilities>
     <Capability Name="internetClient" />
+    <rescap:Capability Name="confirmAppClose" />
   </Capabilities>
 </Package>
