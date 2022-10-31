@@ -617,6 +617,7 @@ namespace TextControlBox
         #endregion
 
         #region Events
+        int ucount = 0;
         //Handle keyinputs
         private void EditContext_TextUpdating(CoreTextEditContext sender, CoreTextTextUpdatingEventArgs args)
         {
@@ -1047,7 +1048,7 @@ namespace TextControlBox
         private void Canvas_Selection_PointerWheelChanged(object sender, PointerRoutedEventArgs e)
         {
             var delta = e.GetCurrentPoint(this).Properties.MouseWheelDelta;
-
+            bool NeedsUpdate = false;
             //Zoom using mousewheel
             if (Utils.IsKeyPressed(VirtualKey.Control))
             {
@@ -1057,17 +1058,24 @@ namespace TextControlBox
             //Scroll horizontal using mousewheel
             else if (Utils.IsKeyPressed(VirtualKey.Shift))
             {
-                HorizontalScroll -= delta * HorizontalScrollSensitivity;
+                HorizontalScrollbar.Value -= delta * HorizontalScrollSensitivity;
+                NeedsUpdate = true;
             }
             //Scroll horizontal using touchpad
             else if (e.GetCurrentPoint(this).Properties.IsHorizontalMouseWheel)
             {
-                HorizontalScroll += delta * HorizontalScrollSensitivity;
+                HorizontalScrollbar.Value += delta * HorizontalScrollSensitivity;
+                NeedsUpdate = true;
             }
             //Scroll vertical using mousewheel
             else
             {
-                VerticalScroll -= delta * VerticalScrollSensitivity;
+                VerticalScrollbar.Value -= delta * VerticalScrollSensitivity;
+                //Only update when a line was scrolled
+                if ((int)(VerticalScrollbar.Value / SingleLineHeight) != NumberOfStartLine)
+                {
+                    NeedsUpdate = true;
+                }
             }
 
             if (selectionrenderer.IsSelecting)
@@ -1076,8 +1084,10 @@ namespace TextControlBox
                 UpdateCursor();
 
                 selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
+                NeedsUpdate = true;
             }
-            UpdateAll();
+            if(NeedsUpdate)
+                UpdateAll();
         }
         private void Canvas_LineNumber_PointerMoved(object sender, PointerRoutedEventArgs e)
         {
@@ -1130,7 +1140,11 @@ namespace TextControlBox
         }
         private void VerticalScrollbar_Scroll(object sender, ScrollEventArgs e)
         {
-            UpdateAll();
+            //only update when a line was scrolled
+            if ((int)(VerticalScroll / SingleLineHeight) != NumberOfStartLine)
+            {
+                UpdateAll();
+            }
         }
         //Canvas event
         private void Canvas_Text_Draw(CanvasControl sender, CanvasDrawEventArgs args)
@@ -1153,12 +1167,11 @@ namespace TextControlBox
             int NumberOfLinesToBeRendered = (int)(sender.ActualHeight / SingleLineHeight);
             NumberOfStartLine = (int)(VerticalScroll / SingleLineHeight);
 
-            //Get all the lines, that need to be rendered, from the list
-            int count = NumberOfLinesToBeRendered + NumberOfStartLine > TotalLines.Count ? TotalLines.Count : NumberOfLinesToBeRendered + NumberOfStartLine;
-
             //Clear rendered lines, to fill it with new lines
             RenderedLines.Clear();
 
+            //Get all the lines, that need to be rendered, from the list
+            int count = NumberOfLinesToBeRendered + NumberOfStartLine > TotalLines.Count ? TotalLines.Count : NumberOfLinesToBeRendered + NumberOfStartLine;
             for (int i = NumberOfStartLine; i < count; i++)
             {
                 if (i < TotalLines.Count)
@@ -1183,7 +1196,6 @@ namespace TextControlBox
 
             //Get length of longest line in whole text
             Size LineLength = Utils.MeasureLineLenght(CanvasDevice.GetSharedDevice(), ListHelper.GetLine(TotalLines, Utils.GetLongestLineIndex(TotalLines)), TextFormat);
-
             //Measure horizontal Width of longest line and apply to scrollbar
             HorizontalScrollbar.Maximum = (LineLength.Width <= sender.ActualWidth ? 0 : LineLength.Width - sender.ActualWidth + 50);
             HorizontalScrollbar.ViewportSize = sender.ActualWidth;
@@ -1283,10 +1295,8 @@ namespace TextControlBox
                 Canvas_LineNumber.Width = SpaceBetweenLineNumberAndText;
                 return;
             }
-
             CanvasTextLayout LineNumberLayout = TextRenderer.CreateTextLayout(sender, LineNumberTextFormat, LineNumberTextToRender, (float)sender.Size.Width - SpaceBetweenLineNumberAndText, (float)sender.Size.Height);
             args.DrawingSession.DrawTextLayout(LineNumberLayout, 10, SingleLineHeight, LineNumberColorBrush);
-            //args.DrawingSession.FillRectangle(0, 0, (float)sender.ActualWidth, (float)sender.ActualHeight, _LineNumberBackground);
         }
         //Internal events:
         private void Internal_TextChanged(string text = null)
