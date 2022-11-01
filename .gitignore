@@ -362,3 +362,6 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /images
+/TextControlBox/TextControlBox.nuspec
+/TextControlBox/icon1.png
+/TextControlBox/.nuget
