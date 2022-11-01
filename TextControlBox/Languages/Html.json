@@ -3,7 +3,7 @@
 
     {
       //Keywords
-      "Pattern": "(?i)\\b(class|href|style|id|rel|charset|lang|type|src|target|content|name|property|alt|width|height)\\b",
+      "Pattern": "\\b(class|href|style|id|rel|charset|lang|type|src|target|content|name|property|alt|width|height)\\b",
       "ColorDark": "#Ff0000",
       "ColorLight": "#00CA00"
     },
@@ -39,7 +39,7 @@
     },
     {
       //Units
-      "Pattern": "(!?)[0-9]+(px|rem|em|vh|vw|px|pt|pc|in|mm|cm|deg|%)",
+      "Pattern": "[0-9]+(px|rem|em|vh|vw|px|pt|pc|in|mm|cm|deg|%)",
       "ColorDark": "#dd00dd",
       "ColorLight": "#ff00ff"
     },
