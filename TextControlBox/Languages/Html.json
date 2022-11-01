@@ -1,4 +1,4 @@
-﻿{
+{
   "Highlights": [
     {
       //Keywords
@@ -38,7 +38,7 @@
     },
     {
       //Units
-      "Pattern": "(!?)[0-9]+(px|rem|em|vh|vw|px|pt|pc|in|mm|cm|deg|%)",
+      "Pattern": "[0-9]+(px|rem|em|vh|vw|px|pt|pc|in|mm|cm|deg|%)",
       "ColorDark": "#dd00dd",
       "ColorLight": "#ff00ff"
     },
