@@ -101,8 +101,8 @@ The textbox is mostly done, but there are still some bugs where I'm working on.
 - DeleteLine(line)
 - AddLine(position, text)
 - FindInText(pattern)
-- SourroundSelectionWith(value)
-- SourroundSelectionWith(value1, value2)
+- SurroundSelectionWith(value)
+- SurroundSelectionWith(value1, value2)
 - DuplicateLine(line)
 - FindInText(word, up, matchCase, wholeWord)
 - ReplaceInText(word, replaceword, up, matchCase, wholeword)
@@ -113,6 +113,7 @@ The textbox is mostly done, but there are still some bugs where I'm working on.
 - LoadCodeLanguageFromJson(path)
 - SelectCodeLanguageById(identifier)
 - Unload()
+- ClearUndoRedoHistory()
   ```
 </details>
 
@@ -174,4 +175,3 @@ If you want to contribute for this project, feel free to open an <a href="https:
 #
 
 <img src="images/image1.png">
-<img src="images/image2.png">
