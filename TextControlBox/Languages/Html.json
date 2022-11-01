@@ -1,9 +1,8 @@
-﻿{
+{
   "Highlights": [
-
     {
       //Keywords
-      "Pattern": "\\b(class|href|style|id|rel|charset|lang|type|src|target|content|name|property|alt|width|height)\\b",
+      "Pattern": "[-A-Za-z_]+\\=",
       "ColorDark": "#Ff0000",
       "ColorLight": "#00CA00"
     },
