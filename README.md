@@ -32,11 +32,25 @@ The textbox is mostly done, but there are still some bugs where I'm working on.
 - Json to create custom syntaxhighlighting
 - Highly cusomizable
 
+
 ## Problems:
 - Multiple longer lines with 5000 characters and more are currently slowing down the rendering 
 - Because all the lines are stored in a List the ram usage with a million lines or more is pretty high.
 - Current text limit is 100 million characters
 - Currently there is no textwrapping
+
+## Available languages:
+- Batch
+- Config file
+- C++
+- C#
+- GCode
+- Hex
+- Html
+- Javascript
+- Json
+- PHP
+- QSharp
 
 ## Usage:
 
@@ -68,6 +82,14 @@ The textbox is mostly done, but there are still some bugs where I'm working on.
 - CodeLanguage (get/set)
 - RequestedTheme (get/set)
 - Design (get/set)
+- CodeLanguages (get/set) 
+- VerticalScrollSensitivity (get/set)
+- HorizontalScrollSensitivity (get/set)
+- VerticalScroll (get/set)
+- HorizontalScroll (get/set)
+- CornerRadius (get/set)
+- UseSpacesInsteadTabs (get/set)
+- NumberOfSpacesForTab (get/set)
   ```
 </details>
 <details>
@@ -107,10 +129,7 @@ The textbox is mostly done, but there are still some bugs where I'm working on.
 - FindInText(word, up, matchCase, wholeWord)
 - ReplaceInText(word, replaceword, up, matchCase, wholeword)
 - ReplaceAll(word, replaceword, up, matchCase, wholeword)
-- RemoveCodeLanguageFromBuffer(identifier)
-- LoadCodeLanguageFromJsonToBuffer(path, identifier)
-- GetCodeLanguageFromJson(path)
-- LoadCodeLanguageFromJson(path)
+- GetCodeLanguageFromJson(jsondata)
 - SelectCodeLanguageById(identifier)
 - Unload()
 - ClearUndoRedoHistory()
@@ -128,11 +147,12 @@ The textbox is mostly done, but there are still some bugs where I'm working on.
         "Italic": true
       },
       "Pattern": "REGEX PATTERN",
-      "ColorDark": "#dd00dd", //color in dark theme
-      "ColorLight": "#dd00dd" //color in light theme
+      "ColorDark": "#ffffff", //color in dark theme
+      "ColorLight": "#000000" //color in light theme
     },
   ],
   "Name": "NAME",
+  "Filter": "EXTENSION1|EXTENSION2",
   "Description": "DESCRIPTION",
   "Author": "AUTHOR"
 }  
@@ -144,15 +164,10 @@ The textbox is mostly done, but there are still some bugs where I'm working on.
 TextControlBox textbox = new TextControlBox();
 
 //first:
-await textbox.LoadCodeLanguageFromJson("PATH TO YOUR FILE");
+textbox.CodeLanguage = textbox.GetCodeLanguageFromJson("Json data");
 
 //second:
-await textbox.LoadCodeLanguageFromJsonToBuffer("PATH TO YOUR FILE", "IDENTIFIER");
-textbox.SelectCodeLanguageById("IDENTIFIER");
-
-//third
-JsonLoadResult result = await GetCodeLanguageFromJson("PATH TO YOUR FILE");
-textbox.CodeLanguage = result;
+textbox.SelectCodeLanguageById("CSharp"); //Builtin ids: Batch, ConfigFile, C++, CSharp, GCode, Hex, Html, Javascript, Json, PHP, QSharp 
 ```
 
 ## Create custom designs in C#:
