@@ -2,6 +2,7 @@
 using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using System.Numerics;
+using TextControlBox.Extensions;
 using TextControlBox.Text;
 using Windows.Foundation;
 

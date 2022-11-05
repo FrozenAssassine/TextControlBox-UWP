@@ -214,6 +214,9 @@ namespace TextControlBox
         }
         private void UpdateCursorVariable(Point Point)
         {
+            //Apply an offset to the cursorposition
+            Point.Subtract(-10, +10);
+
             CursorPosition.LineNumber = CursorRenderer.GetCursorLineFromPoint(Point, SingleLineHeight, NumberOfRenderedLines, NumberOfStartLine);
 
             UpdateCurrentLineTextLayout();
@@ -1480,7 +1483,12 @@ namespace TextControlBox
                 Canvas_LineNumber.Width = SpaceBetweenLineNumberAndText;
                 return;
             }
-            CanvasTextLayout LineNumberLayout = TextRenderer.CreateTextLayout(sender, LineNumberTextFormat, LineNumberTextToRender, (float)sender.Size.Width - SpaceBetweenLineNumberAndText, (float)sender.Size.Height);
+
+            float posX = (float)sender.Size.Width - SpaceBetweenLineNumberAndText;
+            if(posX < 0)
+                posX = 0;
+
+            CanvasTextLayout LineNumberLayout = TextRenderer.CreateTextLayout(sender, LineNumberTextFormat, LineNumberTextToRender, posX, (float)sender.Size.Height);
             args.DrawingSession.DrawTextLayout(LineNumberLayout, 10, SingleLineHeight, LineNumberColorBrush);
         }
         //Internal events:
@@ -2161,7 +2169,7 @@ namespace TextControlBox
         /// <summary>
         /// The space between the linenumbers and the start of the text
         /// </summary>
-        public float SpaceBetweenLineNumberAndText { get => _SpaceBetweenLineNumberAndText; set { _SpaceBetweenLineNumberAndText = value; UpdateText(); } }
+        public float SpaceBetweenLineNumberAndText { get => _SpaceBetweenLineNumberAndText; set { _SpaceBetweenLineNumberAndText = value; UpdateAll(); } }
         
         /// <summary>
         /// Get or set the current position of the cursor
