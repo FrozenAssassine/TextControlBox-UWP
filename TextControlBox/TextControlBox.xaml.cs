@@ -126,6 +126,9 @@ namespace TextControlBox
         private readonly TabSpaceHelper tabSpaceHelper = new TabSpaceHelper();
         private readonly StringManager stringManager;
 
+        /// <summary>
+        /// Creates a new instance of the TextControlBox
+        /// </summary>
         public TextControlBox()
         {
             this.InitializeComponent();
@@ -185,7 +188,7 @@ namespace TextControlBox
             //Check whether the current line is outside the bounds of the visible area
             if (Line < NumberOfStartLine || Line >= NumberOfStartLine + NumberOfRenderedLines)
             {
-                VerticalScroll = (Line - NumberOfRenderedLines / 2) * SingleLineHeight;
+                VerticalScrollbar.Value = (Line - NumberOfRenderedLines / 2) * SingleLineHeight;
             }
             UpdateAll();
         }
@@ -556,7 +559,7 @@ namespace TextControlBox
             if (CurPosInLine == OldHorizontalScrollValue)
                 return;
 
-            HorizontalScroll = CurPosInLine - (Canvas_Text.ActualWidth - 10);
+            HorizontalScrollbar.Value = CurPosInLine - (Canvas_Text.ActualWidth - 10);
             OldHorizontalScrollValue = CurPosInLine;
         }
         private void SetFocus()
@@ -603,6 +606,200 @@ namespace TextControlBox
             EditContext.TextUpdating += EditContext_TextUpdating;
             EditContext.FocusRemoved += EditContext_FocusRemoved;
         }
+
+        //Trys running the code and clears the memory if OutOfMemoryException gets thrown
+        private async void Safe_Paste(bool HandleException = true)
+        {
+            try
+            {
+                DataPackageView dataPackageView = Clipboard.GetContent();
+                if (dataPackageView.Contains(StandardDataFormats.Text))
+                {
+                    string Text = await dataPackageView.GetTextAsync();
+                    if (await Utils.IsOverTextLimit(Text.Length))
+                        return;
+
+                    AddCharacter(stringManager.CleanUpString(Text));
+                }
+            }
+            catch (OutOfMemoryException)
+            {
+                if (HandleException)
+                {
+                    CleanUp();
+                    Safe_Paste(false);
+                    return;
+                }
+                throw new OutOfMemoryException();
+            }
+        }
+        private string Safe_Gettext(bool HandleException = true)
+        {
+            try
+            {
+                return string.Join(NewLineCharacter, TotalLines.Select(x => x.Content));
+            }
+            catch (OutOfMemoryException)
+            {
+                if (HandleException)
+                {
+                    CleanUp();
+                    return Safe_Gettext(false);
+                }
+                throw new OutOfMemoryException();
+            }
+        }
+        private void Safe_Cut(bool HandleException = true)
+        {
+            try
+            {
+                DataPackage dataPackage = new DataPackage();
+                Debug.WriteLine(SelectedText);
+                dataPackage.SetText(SelectedText);
+                if (TextSelection == null)
+                    DeleteLine(CursorPosition.LineNumber); //Delete the line
+                else
+                    DeleteText(); //Delete the selected text
+
+                dataPackage.RequestedOperation = DataPackageOperation.Move;
+                Clipboard.SetContent(dataPackage);
+                ClearSelection();
+            }
+            catch (OutOfMemoryException)
+            {
+                if (HandleException)
+                {
+                    CleanUp();
+                    Safe_Cut(false);
+                    return;
+                }
+                throw new OutOfMemoryException();
+            }
+        }
+        private void Safe_Copy(bool HandleException = true)
+        {
+            try
+            {
+                DataPackage dataPackage = new DataPackage();
+                dataPackage.SetText(SelectedText);
+                dataPackage.RequestedOperation = DataPackageOperation.Copy;
+                Clipboard.SetContent(dataPackage);
+            }
+            catch (OutOfMemoryException)
+            {
+                if (HandleException)
+                {
+                    CleanUp();
+                    Safe_Copy(false);
+                    return;
+                }
+                throw new OutOfMemoryException();
+            }
+        }
+        private async void Safe_LoadText(string text, bool HandleException = true)
+        {
+            try
+            {
+                if (await Utils.IsOverTextLimit(text.Length))
+                    return;
+
+                ListHelper.Clear(TotalLines, text == "");
+                RenderedLines.Clear();
+                RenderedLines.TrimExcess();
+                selectionrenderer.ClearSelection();
+                undoRedo.ClearAll();
+
+                //Get the LineEnding
+                LineEnding = LineEndings.FindLineEnding(text);
+
+                if (text == "")
+                {
+                    UpdateAll();
+                    return;
+                }
+
+                //Split the lines using the current LineEnding
+                var lines = stringManager.CleanUpString(text).Split(NewLineCharacter);
+                using (PooledList<Line> LinesToAdd = new PooledList<Line>(lines.Length))
+                {
+                    for (int i = 0; i < lines.Length; i++)
+                    {
+                        LinesToAdd.Add(new Line(lines[i]));
+                    }
+                    TotalLines.AddRange(LinesToAdd);
+                }
+
+                UpdateAll();
+            }
+            catch (OutOfMemoryException)
+            {
+                if (HandleException)
+                {
+                    CleanUp();
+                    Safe_LoadText(text, false);
+                    return;
+                }
+                throw new OutOfMemoryException();
+            }
+        }
+        private async void Safe_SetText(string text, bool HandleException = true)
+        {
+            try
+            {
+                if (await Utils.IsOverTextLimit(text.Length))
+                    return;
+
+                selectionrenderer.ClearSelection();
+
+                string[] lines = null;
+                if (text != "")
+                {
+                    lines = stringManager.CleanUpString(text).Split(NewLineCharacter);
+                }
+
+                undoRedo.RecordUndoAction(() =>
+                {
+                    //Clear the lists
+                    ListHelper.Clear(TotalLines, text == "");
+                    RenderedLines.Clear();
+                    RenderedLines.TrimExcess();
+
+                    if (text == "")
+                    {
+                        UpdateAll();
+                        return;
+                    }
+
+                    for (int i = 0; i < lines.Length; i++)
+                    {
+                        TotalLines.Add(new Line(lines[i]));
+                    }
+
+                }, TotalLines, 0, TotalLines.Count, lines.Length, NewLineCharacter);
+
+                UpdateAll();
+            }
+            catch (OutOfMemoryException)
+            {
+                if (HandleException)
+                {
+                    CleanUp();
+                    Safe_SetText(text, false);
+                    return;
+                }
+                throw new OutOfMemoryException();
+            }
+        }
+        private void CleanUp()
+        {
+            GCSettings.LargeObjectHeapCompactionMode =
+              GCLargeObjectHeapCompactionMode.CompactOnce;
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+        }
+
         #endregion
 
         #region Events
@@ -877,12 +1074,12 @@ namespace TextControlBox
 
                 if (CurPosY > CanvasHeight - 50)
                 {
-                    VerticalScroll += (CurPosY > CanvasHeight + 30 ? 20 : (CanvasHeight - CurPosY) / 150);
+                    VerticalScrollbar.Value += (CurPosY > CanvasHeight + 30 ? 20 : (CanvasHeight - CurPosY) / 150);
                     UpdateAll();
                 }
                 else if (CurPosY < 50)
                 {
-                    VerticalScroll += CurPosY < -30 ? -20 : -(50 - CurPosY) / 10;
+                    VerticalScrollbar.Value += CurPosY < -30 ? -20 : -(50 - CurPosY) / 10;
                     UpdateAll();
                 }
 
@@ -1129,7 +1326,7 @@ namespace TextControlBox
         private void VerticalScrollbar_Scroll(object sender, ScrollEventArgs e)
         {
             //only update when a line was scrolled
-            if ((int)(VerticalScroll / SingleLineHeight) != NumberOfStartLine)
+            if ((int)(VerticalScrollbar.Value / SingleLineHeight) != NumberOfStartLine)
             {
                 UpdateAll();
             }
@@ -1153,7 +1350,7 @@ namespace TextControlBox
 
             //Calculate number of lines that needs to be rendered
             int NumberOfLinesToBeRendered = (int)(sender.ActualHeight / SingleLineHeight);
-            NumberOfStartLine = (int)(VerticalScroll / SingleLineHeight);
+            NumberOfStartLine = (int)(VerticalScrollbar.Value / SingleLineHeight);
 
             //Clear rendered lines, to fill it with new lines
             RenderedLines.Clear();
@@ -1372,206 +1569,12 @@ namespace TextControlBox
         }
         #endregion
 
-        //Trys running the code and clears the memory if OutOfMemoryException gets thrown
-        private async void Safe_Paste(bool HandleException = true)
-        {
-            try
-            {
-                DataPackageView dataPackageView = Clipboard.GetContent();
-                if (dataPackageView.Contains(StandardDataFormats.Text))
-                {
-                    string Text = await dataPackageView.GetTextAsync();
-                    if (await Utils.IsOverTextLimit(Text.Length))
-                        return;
-
-                    AddCharacter(stringManager.CleanUpString(Text));
-                }
-            }
-            catch (OutOfMemoryException)
-            {
-                if (HandleException)
-                {
-                    CleanUp();
-                    Safe_Paste(false);
-                    return;
-                }
-                throw new OutOfMemoryException();
-            }
-        }
-        private string Safe_Gettext(bool HandleException = true)
-        {
-            try
-            {
-                return string.Join(NewLineCharacter, TotalLines.Select(x => x.Content));
-            }
-            catch (OutOfMemoryException)
-            {
-                if (HandleException)
-                {
-                    CleanUp();
-                    return Safe_Gettext(false);
-                }
-                throw new OutOfMemoryException();
-            }
-        }
-        private void Safe_Cut(bool HandleException = true)
-        {
-            try
-            {
-                DataPackage dataPackage = new DataPackage();
-                Debug.WriteLine(SelectedText);
-                dataPackage.SetText(SelectedText);
-                if (TextSelection == null)
-                    DeleteLine(CursorPosition.LineNumber); //Delete the line
-                else
-                    DeleteText(); //Delete the selected text
-
-                dataPackage.RequestedOperation = DataPackageOperation.Move;
-                Clipboard.SetContent(dataPackage);
-                ClearSelection();
-            }
-            catch (OutOfMemoryException)
-            {
-                if (HandleException)
-                {
-                    CleanUp();
-                    Safe_Cut(false);
-                    return;
-                }
-                throw new OutOfMemoryException();
-            }
-        }
-        private void Safe_Copy(bool HandleException = true)
-        {
-            try
-            {
-                DataPackage dataPackage = new DataPackage();
-                dataPackage.SetText(SelectedText);
-                dataPackage.RequestedOperation = DataPackageOperation.Copy;
-                Clipboard.SetContent(dataPackage);
-            }
-            catch (OutOfMemoryException)
-            {
-                if (HandleException)
-                {
-                    CleanUp();
-                    Safe_Copy(false);
-                    return;
-                }
-                throw new OutOfMemoryException();
-            }
-        }
-        private async void Safe_LoadText(string text, bool HandleException = true)
-        {
-            try
-            {
-                if (await Utils.IsOverTextLimit(text.Length))
-                    return;
-
-                ListHelper.Clear(TotalLines, text == "");
-                RenderedLines.Clear();
-                RenderedLines.TrimExcess();
-                selectionrenderer.ClearSelection();
-                undoRedo.ClearAll();
-
-                //Get the LineEnding
-                LineEnding = LineEndings.FindLineEnding(text);
-
-                if (text == "")
-                {
-                    UpdateAll();
-                    return;
-                }
-
-                //Split the lines using the current LineEnding
-                var lines = stringManager.CleanUpString(text).Split(NewLineCharacter);
-                using (PooledList<Line> LinesToAdd = new PooledList<Line>(lines.Length))
-                {
-                    for (int i = 0; i < lines.Length; i++)
-                    {
-                        LinesToAdd.Add(new Line(lines[i]));
-                    }
-                    TotalLines.AddRange(LinesToAdd);
-                }
-
-                UpdateAll();
-            }
-            catch (OutOfMemoryException)
-            {
-                if (HandleException)
-                {
-                    CleanUp();
-                    Safe_LoadText(text, false);
-                    return;
-                }
-                throw new OutOfMemoryException();
-            }
-        }
-        private async void Safe_SetText(string text, bool HandleException = true)
-        {
-            try
-            {
-                if (await Utils.IsOverTextLimit(text.Length))
-                    return;
-
-                selectionrenderer.ClearSelection();
-
-                string[] lines = null;
-                if (text != "")
-                {
-                    lines = stringManager.CleanUpString(text).Split(NewLineCharacter);
-                }
-
-                undoRedo.RecordUndoAction(() =>
-                {
-                    //Clear the lists
-                    ListHelper.Clear(TotalLines, text == "");
-                    RenderedLines.Clear();
-                    RenderedLines.TrimExcess();
-
-                    if (text == "")
-                    {
-                        UpdateAll();
-                        return;
-                    }
-
-                    for (int i = 0; i < lines.Length; i++)
-                    {
-                        TotalLines.Add(new Line(lines[i]));
-                    }
-
-                }, TotalLines, 0, TotalLines.Count, lines.Length, NewLineCharacter);
-
-                UpdateAll();
-            }
-            catch (OutOfMemoryException)
-            {
-                if (HandleException)
-                {
-                    CleanUp();
-                    Safe_SetText(text, false);
-                    return;
-                }
-                throw new OutOfMemoryException();
-            }
-        }
-        private void CleanUp()
-        {
-            GCSettings.LargeObjectHeapCompactionMode =
-              GCLargeObjectHeapCompactionMode.CompactOnce;
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-        }
-
         #region Public functions and properties
-        //Functions:
+
         /// <summary>
-        /// Select the line specified by the index
+        /// Selects a line specified by the index
         /// </summary>
         /// <param name="index">The index of the line to select</param>
-        /// <param name="CursorAtStart">Select whether the cursor moves to start or end of the line</param>
         public void SelectLine(int index)
         {
             selectionrenderer.SetSelection(new CursorPosition(0, index), new CursorPosition(ListHelper.GetLine(TotalLines, index).Length, index));
@@ -1580,6 +1583,11 @@ namespace TextControlBox
             UpdateSelection();
             UpdateCursor();
         }
+        
+        /// <summary>
+        /// Moves the cursor to the beginning of the line specified by the index
+        /// </summary>
+        /// <param name="index">The index of the line to go to</param>
         public void GoToLine(int index)
         {
             CursorPosition = selectionrenderer.SelectionEndPosition = selectionrenderer.SelectionStartPosition = new CursorPosition(0, index);
@@ -1587,6 +1595,7 @@ namespace TextControlBox
             UpdateSelection();
             UpdateCursor();
         }
+        
         /// <summary>
         /// Load text to the textbox everything will reset. Use this to load text on application start
         /// </summary>
@@ -1595,30 +1604,54 @@ namespace TextControlBox
         {
             Safe_LoadText(text);
         }
+        
         /// <summary>
-        /// Load new content to the textbox an undo will be recorded. Use this to change the text when the app is running
+        /// Load new text to the textbox an undo will be recorded. Use this to change the text when the app is running
         /// </summary>
-        /// <param name="text">The text to load</param>
+        /// <param name="text">The text to set</param>
         public void SetText(string text)
         {
             Safe_SetText(text);
         }
+        
+        /// <summary>
+        /// Past the text from the clipboard to the current cursorposition
+        /// </summary>
         public void Paste()
         {
             Safe_Paste();
         }
+        
+        /// <summary>
+        /// Copies the selected text to the clipboard
+        /// </summary>
         public void Copy()
         {
             Safe_Copy();
         }
+        
+        /// <summary>
+        /// Deletes the selected text and copies it to the clipboard
+        /// </summary>
         public void Cut()
         {
             Safe_Cut();
         }
+        
+        /// <summary>
+        /// Gets the text from the textbox
+        /// </summary>
+        /// <returns>The text of the textbox</returns>
         public string GetText()
         {
             return Safe_Gettext();
         }
+        
+        /// <summary>
+        /// Sets a selection
+        /// </summary>
+        /// <param name="start">The index to start the selection</param>
+        /// <param name="length">The length of the selection</param>
         public void SetSelection(int start, int length)
         {
             var result = Selection.GetSelectionFromPosition(TotalLines, start, length, CharacterCount);
@@ -1632,6 +1665,10 @@ namespace TextControlBox
             UpdateSelection();
             UpdateCursor();
         }
+        
+        /// <summary>
+        /// Selects the whole text
+        /// </summary>
         public void SelectAll()
         {
             //No selection can be shown
@@ -1642,10 +1679,18 @@ namespace TextControlBox
             UpdateSelection();
             UpdateCursor();
         }
+        
+        /// <summary>
+        /// Clears the selection
+        /// </summary>
         public void ClearSelection()
         {
             ForceClearSelection();
         }
+        
+        /// <summary>
+        /// Undoes the last undo record
+        /// </summary>
         public void Undo()
         {
             if (IsReadonly)
@@ -1661,6 +1706,10 @@ namespace TextControlBox
                 ForceClearSelection();
             UpdateAll();
         }
+        
+        /// <summary>
+        /// Redoes the last redo record
+        /// </summary>
         public void Redo()
         {
             if (IsReadonly)
@@ -1676,132 +1725,232 @@ namespace TextControlBox
                 ForceClearSelection();
             UpdateAll();
         }
-        public void ScrollLineToCenter(int line)
+        
+        /// <summary>
+        /// Scrolls the line to the center of the textbox if the line is out of rendered region
+        /// </summary>
+        /// <param name="index">The line to center</param>
+        public void ScrollLineToCenter(int index)
         {
             //Check whether the current line is outside the bounds of the visible area
-            if (line < NumberOfStartLine || line >= NumberOfStartLine + NumberOfRenderedLines)
+            if (index < NumberOfStartLine || index >= NumberOfStartLine + NumberOfRenderedLines)
             {
-                ScrollLineIntoView(line);
+                ScrollLineIntoView(index);
             }
         }
+        
+        /// <summary>
+        /// Scrolls one line up
+        /// </summary>
         public void ScrollOneLineUp()
         {
-            VerticalScroll -= SingleLineHeight;
+            VerticalScrollbar.Value -= SingleLineHeight;
             UpdateAll();
         }
+        
+        /// <summary>
+        /// Scrolls one line down
+        /// </summary>
         public void ScrollOneLineDown()
         {
-            VerticalScroll += SingleLineHeight;
+            VerticalScrollbar.Value += SingleLineHeight;
             UpdateAll();
         }
-        public void ScrollLineIntoView(int line)
+        
+        /// <summary>
+        /// Forces the line to scroll to center
+        /// </summary>
+        /// <param name="index">The line to center</param>
+        public void ScrollLineIntoView(int index)
         {
-            VerticalScroll = (line - NumberOfRenderedLines / 2) * SingleLineHeight;
+            VerticalScrollbar.Value = (index - NumberOfRenderedLines / 2) * SingleLineHeight;
             UpdateAll();
         }
+        
+        /// <summary>
+        /// Scrolls the first line into view
+        /// </summary>
         public void ScrollTopIntoView()
         {
-            VerticalScroll = (CursorPosition.LineNumber - 1) * SingleLineHeight;
+            VerticalScrollbar.Value = (CursorPosition.LineNumber - 1) * SingleLineHeight;
             UpdateAll();
         }
+        
+        /// <summary>
+        /// Scrolls the bottom line into view
+        /// </summary>
         public void ScrollBottomIntoView()
         {
-            VerticalScroll = (CursorPosition.LineNumber - NumberOfRenderedLines + 1) * SingleLineHeight;
+            VerticalScrollbar.Value = (CursorPosition.LineNumber - NumberOfRenderedLines + 1) * SingleLineHeight;
             UpdateAll();
         }
+        
+        /// <summary>
+        /// Scrolls one page up (same as page up-key)
+        /// </summary>
         public void ScrollPageUp()
         {
             CursorPosition.LineNumber -= NumberOfRenderedLines;
             if (CursorPosition.LineNumber < 0)
                 CursorPosition.LineNumber = 0;
 
-            VerticalScroll -= NumberOfRenderedLines * SingleLineHeight;
+            VerticalScrollbar.Value -= NumberOfRenderedLines * SingleLineHeight;
             UpdateAll();
         }
+        
+        /// <summary>
+        /// Scrolls one page up (same as page down-key)
+        /// </summary>
         public void ScrollPageDown()
         {
             CursorPosition.LineNumber += NumberOfRenderedLines;
             if (CursorPosition.LineNumber > TotalLines.Count - 1)
                 CursorPosition.LineNumber = TotalLines.Count - 1;
-            VerticalScroll += NumberOfRenderedLines * SingleLineHeight;
+            VerticalScrollbar.Value += NumberOfRenderedLines * SingleLineHeight;
             UpdateAll();
         }
-        public string GetLineContent(int line)
+        
+        /// <summary>
+        /// Gets the content of the line specified by the index
+        /// </summary>
+        /// <param name="index">The index to get the content from</param>
+        /// <returns>The text from the line specified by the index</returns>
+        public string GetLineText(int index)
         {
-            return ListHelper.GetLine(TotalLines, line).Content;
+            return ListHelper.GetLine(TotalLines, index).Content;
         }
-        public string GetLinesContent(int startLine, int count)
+
+        /// <summary>
+        /// Gets the text of multiple lines, starting by startLine
+        /// </summary>
+        /// <param name="start">The line to start with</param>
+        /// <param name="length">The number of lines to get</param>
+        /// <returns>The text from the lines specified by index and count</returns>
+        public string GetLinesText(int start, int length)
         {
-            return ListHelper.GetLinesAsString(TotalLines, startLine, count, NewLineCharacter);
+            return ListHelper.GetLinesAsString(TotalLines, start, length, NewLineCharacter);
         }
-        public bool SetLineContent(int line, string text)
+
+        /// <summary>
+        /// Sets the content of the line specified by the index
+        /// </summary>
+        /// <param name="index">The index of the line to change the content</param>
+        /// <param name="text">The text to set to the line</param>
+        /// <returns>Returns true if the text was changed successfully and false if the index was out of range</returns>
+        public bool SetLineText(int index, string text)
         {
-            if (line >= TotalLines.Count || line < 0)
+            if (index >= TotalLines.Count || index < 0)
                 return false;
             undoRedo.RecordUndoAction(() =>
             {
-                ListHelper.GetLine(TotalLines, line).Content = stringManager.CleanUpString(text);
-            }, TotalLines, line, 1, 1, NewLineCharacter);
+                ListHelper.GetLine(TotalLines, index).Content = stringManager.CleanUpString(text);
+            }, TotalLines, index, 1, 1, NewLineCharacter);
             UpdateText();
             return true;
         }
-        public bool DeleteLine(int line)
+        
+        /// <summary>
+        /// Deletes the line from the textbox
+        /// </summary>
+        /// <param name="index">The line to delete</param>
+        /// <returns>Returns true if the line was deleted successfully and false if the index is out of range</returns>
+        public bool DeleteLine(int index)
         {
-            if (line >= TotalLines.Count || line < 0)
+            if (index >= TotalLines.Count || index < 0)
                 return false;
 
             undoRedo.RecordUndoAction(() =>
             {
-                TotalLines.RemoveAt(line);
-            }, TotalLines, line, 2, 1, NewLineCharacter);
+                TotalLines.RemoveAt(index);
+            }, TotalLines, index, 2, 1, NewLineCharacter);
 
             UpdateText();
             return true;
         }
-        public bool AddLine(int position, string text)
+        
+        /// <summary>
+        /// Adds a new line with the text specified
+        /// </summary>
+        /// <param name="index">The position to insert the line to</param>
+        /// <param name="text">The text to put in the new line</param>
+        /// <returns>Returns true if the line was deleted successfully and false if the index was out of range</returns>
+        public bool AddLine(int index, string text)
         {
-            if (position > TotalLines.Count || position < 0)
+            if (index > TotalLines.Count || index < 0)
                 return false;
 
             undoRedo.RecordUndoAction(() =>
             {
-                ListHelper.Insert(TotalLines, new Line(stringManager.CleanUpString(text)), position);
-            }, TotalLines, position, 1, 2, NewLineCharacter);
+                ListHelper.Insert(TotalLines, new Line(stringManager.CleanUpString(text)), index);
+            }, TotalLines, index, 1, 2, NewLineCharacter);
 
             UpdateText();
             return true;
         }
+        
+        /// <summary>
+        /// Find in the text specified by the pattern
+        /// </summary>
+        /// <param name="pattern"></param>
+        /// <returns>A TextSelectionPosition class with the index and position of the word or null if the pattern was not found</returns>
         public TextSelectionPosition FindInText(string pattern)
         {
             var pos = Regex.Match(GetText(), pattern);
-            return new TextSelectionPosition(pos.Index, pos.Length);
+            if (pos.Success)
+                return new TextSelectionPosition(pos.Index, pos.Length);
+            else return null;
         }
-        public void SurroundSelectionWith(string value)
+        
+        /// <summary>
+        /// Surrounds the selection with the text specified by the value
+        /// </summary>
+        /// <param name="text">The text to surround the selection with</param>
+        public void SurroundSelectionWith(string text)
         {
-            value = stringManager.CleanUpString(value);
-            SurroundSelectionWith(value, value);
+            text = stringManager.CleanUpString(text);
+            SurroundSelectionWith(text, text);
         }
-        public void SurroundSelectionWith(string value1, string value2)
+        
+        /// <summary>
+        /// Surround the selection with individual text for the left and right side.
+        /// </summary>
+        /// <param name="text1">The text for the left side</param>
+        /// <param name="text2">The text for the right side</param>
+        public void SurroundSelectionWith(string text1, string text2)
         {
             if (!SelectionIsNull())
             {
-                AddCharacter(stringManager.CleanUpString(value1) + SelectedText + stringManager.CleanUpString(value2));
+                AddCharacter(stringManager.CleanUpString(text1) + SelectedText + stringManager.CleanUpString(text2));
             }
         }
-        public void DuplicateLine(int line)
+        
+        /// <summary>
+        /// Duplicates the line specified by the index into the next line
+        /// </summary>
+        /// <param name="index">The index of the line to duplicate</param>
+        public void DuplicateLine(int index)
         {
             undoRedo.RecordUndoAction(() =>
             {
-                var content = new Line(ListHelper.GetLine(TotalLines, line).Content);
-                ListHelper.Insert(TotalLines, content, line);
+                var content = new Line(ListHelper.GetLine(TotalLines, index).Content);
+                ListHelper.Insert(TotalLines, content, index);
                 CursorPosition.LineNumber += 1;
-            }, TotalLines, line, 1, 2, NewLineCharacter);
+            }, TotalLines, index, 1, 2, NewLineCharacter);
 
             ScrollOneLineDown();
             UpdateText();
             UpdateCursor();
         }
-        public bool FindInText(string Word, bool Up, bool MatchCase, bool WholeWord)
+        
+        /// <summary>
+        /// Finds and selects a word in the textbox
+        /// </summary>
+        /// <param name="word">The word to search for</param>
+        /// <param name="up">The direction true = up, false = down</param>
+        /// <param name="matchCase">Whether to search case sensitive</param>
+        /// <param name="wholeWord">Whether to search for a whole word</param>
+        /// <returns>True if the word was found</returns>
+        public bool FindInText(string word, bool up, bool matchCase, bool wholeWord)
         {
             string Text = GetText();
             bool NotFound()
@@ -1810,12 +1959,12 @@ namespace TextControlBox
                 return false;
             }
             //Search down:
-            if (!Up)
+            if (!up)
             {
-                if (!MatchCase)
+                if (!matchCase)
                 {
                     Text = Text.ToLower();
-                    Word = Word.ToLower();
+                    word = word.ToLower();
                 }
                 if (SelectionStart == -1)
                 {
@@ -1827,17 +1976,17 @@ namespace TextControlBox
                 {
                     startpos = SelectionStart + SelectionLength;
                 }
-                if (Word.Length + startpos > Text.Length)
+                if (word.Length + startpos > Text.Length)
                 {
                     return NotFound();
                 }
 
-                int index = WholeWord ? StringExtension.IndexOfWholeWord(Text, Word, startpos) : Text.IndexOf(Word, startpos);
+                int index = wholeWord ? StringExtension.IndexOfWholeWord(Text, word, startpos) : Text.IndexOf(word, startpos);
                 if (index == -1)
                 {
                     return NotFound();
                 }
-                SetSelection(index, Word.Length);
+                SetSelection(index, word.Length);
                 ScrollTopIntoView();
                 return true;
             }
@@ -1845,10 +1994,10 @@ namespace TextControlBox
             {
                 try
                 {
-                    if (!MatchCase)
+                    if (!matchCase)
                     {
                         Text = Text.ToLower();
-                        Word = Word.ToLower();
+                        word = word.ToLower();
                     }
                     if (SelectionStart == -1)
                     {
@@ -1856,14 +2005,14 @@ namespace TextControlBox
                     }
 
                     string shortedText = Text.Substring(0, SelectionStart);
-                    int index = WholeWord ? StringExtension.LastIndexOfWholeWord(shortedText, Word) : shortedText.LastIndexOf(Word);
+                    int index = wholeWord ? StringExtension.LastIndexOfWholeWord(shortedText, word) : shortedText.LastIndexOf(word);
                     if (index == -1)
                     {
                         SetSelection(Text.Length, 0);
                         return NotFound();
                     }
 
-                    SetSelection(index, Word.Length);
+                    SetSelection(index, word.Length);
                     ScrollTopIntoView();
                     return true;
                 }
@@ -1874,41 +2023,61 @@ namespace TextControlBox
                 }
             }
         }
-        public bool ReplaceInText(string Word, string ReplaceWord, bool Up, bool MatchCase, bool WholeWord)
+
+        /// <summary>
+        /// Finds and replaces a word in the textbox
+        /// </summary>
+        /// <param name="word">The word to search for</param>
+        /// <param name="replaceWord">The word to replace with</param>
+        /// <param name="up">The direction true = up, false = down</param>
+        /// <param name="matchCase">Whether to search case sensitive</param>
+        /// <param name="wholeWord">Whether to search for a whole word</param>
+        /// <returns>True if the word was found</returns>
+        public bool ReplaceInText(string word, string replaceWord, bool up, bool matchCase, bool wholeWord)
         {
-            if (Word.Length == 0)
+            if (word.Length == 0)
             {
                 return false;
             }
 
-            bool res = FindInText(Word, Up, MatchCase, WholeWord);
+            bool res = FindInText(word, up, matchCase, wholeWord);
             if (res)
             {
-                SelectedText = ReplaceWord;
+                SelectedText = replaceWord;
             }
 
             return res;
         }
-        public bool ReplaceAll(string Word, string ReplaceWord, bool Up, bool MatchCase, bool WholeWord)
+
+        /// <summary>
+        /// Replaces all words found with another word
+        /// </summary>
+        /// <param name="word">The word to search for</param>
+        /// <param name="replaceWord">The word to replace with</param>
+        /// <param name="up">The direction true = up, false = down</param>
+        /// <param name="matchCase">Whether to search case sensitive</param>
+        /// <param name="wholeWord">Whether to search for a whole word</param>
+        /// <returns>True if the word was found</returns>
+        public bool ReplaceAll(string word, string replaceWord, bool up, bool matchCase, bool wholeWord)
         {
 
-            if (Word.Length == 0)
+            if (word.Length == 0)
             {
                 return false;
             }
 
             int selstart = SelectionStart, sellenght = SelectionLength;
 
-            if (!WholeWord)
+            if (!wholeWord)
             {
                 SelectAll();
-                if (MatchCase)
+                if (matchCase)
                 {
-                    SelectedText = GetText().Replace(Word, ReplaceWord);
+                    SelectedText = GetText().Replace(word, replaceWord);
                 }
                 else
                 {
-                    SelectedText = GetText().Replace(Word.ToLower(), ReplaceWord.ToLower());
+                    SelectedText = GetText().Replace(word.ToLower(), replaceWord.ToLower());
                 }
 
                 return true;
@@ -1918,17 +2087,17 @@ namespace TextControlBox
             bool res = true;
             while (res)
             {
-                res = ReplaceInText(Word, ReplaceWord, Up, MatchCase, WholeWord);
+                res = ReplaceInText(word, replaceWord, up, matchCase, wholeWord);
             }
 
             SetSelection(selstart, sellenght);
             return true;
         }
+
         /// <summary>
-        /// Change the current Codelanguage in the textbox to another with the given Identifier 
+        /// Unloads the textbox and releases all resources
+        /// Don't use it afterwards
         /// </summary>
-        /// <param name="Identifier"></param>
-        /// <returns></returns>
         public void Unload()
         {
             EditContext.NotifyFocusLeave(); //inform the IME to not send any more text
@@ -1946,13 +2115,23 @@ namespace TextControlBox
             LineNumberContent = TextToRender = null;
             undoRedo.NullAll();
         }
+        
+        /// <summary>
+        /// Clears the undo and redo history
+        /// </summary>
         public void ClearUndoRedoHistory()
         {
             undoRedo.ClearAll();
         }
 
-        //Properties:
+        /// <summary>
+        /// True to enable Syntaxhighlighting and false to disable it
+        /// </summary>
         public bool SyntaxHighlighting { get; set; } = true;
+        
+        /// <summary>
+        /// The Codelanguage to use for syntaxhighlighting
+        /// </summary>
         public CodeLanguage CodeLanguage
         {
             get => _CodeLanguage;
@@ -1962,6 +2141,12 @@ namespace TextControlBox
                 UpdateText();
             }
         }
+
+        /// <summary>
+        /// The lineending to use for the text.
+        /// It is detected automatically when loading text to the textbox and can be read from the variable. It can also be changed
+        /// 
+        /// </summary>
         public LineEnding LineEnding
         {
             get => _LineEnding;
@@ -1972,16 +2157,44 @@ namespace TextControlBox
                 _LineEnding = value;
             }
         }
+
+        /// <summary>
+        /// The space between the linenumbers and the start of the text
+        /// </summary>
         public float SpaceBetweenLineNumberAndText { get => _SpaceBetweenLineNumberAndText; set { _SpaceBetweenLineNumberAndText = value; UpdateText(); } }
+        
+        /// <summary>
+        /// Get or set the current position of the cursor
+        /// </summary>
         public CursorPosition CursorPosition
         {
             get => _CursorPosition;
-            set { _CursorPosition = new CursorPosition(value.CharacterPosition, value.LineNumber); }
+            set { _CursorPosition = new CursorPosition(value.CharacterPosition, value.LineNumber); UpdateCursor(); }
         }
+        
+        /// <summary>
+        /// The fontfamily of the textbox
+        /// </summary>
         public new FontFamily FontFamily { get => _FontFamily; set { _FontFamily = value; NeedsTextFormatUpdate = true; UpdateAll(); } }
+
+        /// <summary>
+        /// The fontsize of the textbox
+        /// </summary>
         public new int FontSize { get => _FontSize; set { _FontSize = value; UpdateZoom(); } }
+        
+        /// <summary>
+        /// Get the actual renderd size of the fontsize in pixels
+        /// </summary>
         public float RenderedFontSize { get => ZoomedFontSize; }
+
+        /// <summary>
+        /// Get or set the text of the textbox
+        /// </summary>
         public string Text { get => GetText(); set { SetText(value); } }
+        
+        /// <summary>
+        /// Get or set the theme of the textbox
+        /// </summary>
         public new ElementTheme RequestedTheme
         {
             get => _RequestedTheme;
@@ -1999,6 +2212,10 @@ namespace TextControlBox
                 UpdateAll();
             }
         }
+        
+        /// <summary>
+        /// Get or set the design of the textbox returns null if the default design is in use
+        /// </summary>
         public TextControlBoxDesign Design
         {
             get => UseDefaultDesign ? null : _Design;
@@ -2022,6 +2239,10 @@ namespace TextControlBox
                 UpdateAll();
             }
         }
+        
+        /// <summary>
+        /// True to show, false to hide the linenumbers
+        /// </summary>
         public bool ShowLineNumbers
         {
             get => _ShowLineNumbers;
@@ -2031,21 +2252,40 @@ namespace TextControlBox
                 UpdateAll();
             }
         }
+        
+        /// <summary>
+        /// True to show, false to hide the linehighlighter
+        /// </summary>
         public bool ShowLineHighlighter
         {
             get => _ShowLineHighlighter;
             set { _ShowLineHighlighter = value; UpdateCursor(); }
         }
+        
+        /// <summary>
+        /// Define the zoomfactor in percent; The default is 100%
+        /// </summary>
         public int ZoomFactor { get => _ZoomFactor; set { _ZoomFactor = value; UpdateZoom(); } } //%
+        
+        /// <summary>
+        /// False to allow changes to the textbox, true to lock the editing
+        /// </summary>
         public bool IsReadonly { get => EditContext.IsReadOnly; set => EditContext.IsReadOnly = value; }
-        [Description("Change the size of the cursor. Use null for the default size")]
+
+        /// <summary>
+        /// Change the size and offset of the cursor. Use null for the default
+        /// </summary>
         public CursorSize CursorSize { get => _CursorSize; set { _CursorSize = value; UpdateCursor(); } }
+       
+        /// <summary>
+        /// Change the contextflyout of the textbox
+        /// </summary>
         public new MenuFlyout ContextFlyout
         {
             get { return flyoutHelper.MenuFlyout; }
             set
             {
-                //Use the inbuild flyout
+                //Use the builtin flyout
                 if (value == null)
                 {
                     flyoutHelper.CreateFlyout(this);
@@ -2056,9 +2296,25 @@ namespace TextControlBox
                 }
             }
         }
+
+        /// <summary>
+        /// True to disable the ContextFlyout, false to enable it
+        /// </summary>
         public bool ContextFlyoutDisabled { get; set; }
+        
+        /// <summary>
+        /// The characterposition of the selection start
+        /// </summary>
         public int SelectionStart { get => selectionrenderer.SelectionStart; set { SetSelection(value, SelectionLength); } }
+
+        /// <summary>
+        /// The characterposition of the selection length
+        /// </summary>
         public int SelectionLength { get => selectionrenderer.SelectionLength; set { SetSelection(SelectionStart, value); } }
+        
+        /// <summary>
+        /// Get or set the selected text
+        /// </summary>
         public string SelectedText
         {
             get
@@ -2075,37 +2331,109 @@ namespace TextControlBox
                 AddCharacter(stringManager.CleanUpString(value));
             }
         }
+        
+        /// <summary>
+        /// Get the number of lines in the textbox
+        /// </summary>
         public int NumberOfLines { get => TotalLines.Count; }
+        
+        /// <summary>
+        /// Get the line index of the cursor
+        /// </summary>
         public int CurrentLineIndex { get => CursorPosition.LineNumber; }
+        
+        /// <summary>
+        /// Get or set the scrollbar position
+        /// </summary>
         public ScrollBarPosition ScrollBarPosition
         {
             get => new ScrollBarPosition(HorizontalScrollbar.Value, VerticalScroll);
             set { HorizontalScrollbar.Value = value.ValueX; VerticalScroll = value.ValueY; }
         }
+        
+        /// <summary>
+        /// Get the number of characters in the textbox
+        /// </summary>
         public int CharacterCount { get => Utils.CountCharacters(TotalLines); }
+        
+        /// <summary>
+        /// Get or set the scroll sensitivity of the vertical scrollbar
+        /// </summary>
         public double VerticalScrollSensitivity { get => _VerticalScrollSensitivity; set => _VerticalScrollSensitivity = value < 1 ? 1 : value; }
+
+        /// <summary>
+        /// Get or set the scroll sensitivity of the horizontal scrollbar
+        /// </summary>
         public double HorizontalScrollSensitivity { get => _HorizontalScrollSensitivity; set => _HorizontalScrollSensitivity = value < 1 ? 1 : value; }
-        public double VerticalScroll { get => VerticalScrollbar.Value; set => VerticalScrollbar.Value = value < 0 ? 0 : value; }
-        public double HorizontalScroll { get => HorizontalScrollbar.Value; set => HorizontalScrollbar.Value = value < 0 ? 0 : value; }
+        
+        /// <summary>
+        /// Get the vertical scrollposition
+        /// </summary>
+        public double VerticalScroll { get => VerticalScrollbar.Value; set { VerticalScrollbar.Value = value < 0 ? 0 : value; UpdateAll(); } }
+
+        /// <summary>
+        /// Get the horizontal scrollposition
+        /// </summary>
+        public double HorizontalScroll { get => HorizontalScrollbar.Value; set { HorizontalScrollbar.Value = value < 0 ? 0 : value; UpdateAll(); } }
+        
+        /// <summary>
+        /// The radius of the borders around the control
+        /// </summary>
         public new CornerRadius CornerRadius { get => MainGrid.CornerRadius; set => MainGrid.CornerRadius = value; }
+        
+        /// <summary>
+        /// Indicates whether to use spaces or tabs
+        /// </summary>
         public bool UseSpacesInsteadTabs { get => tabSpaceHelper.UseSpacesInsteadTabs; set { tabSpaceHelper.UseSpacesInsteadTabs = value; tabSpaceHelper.UpdateTabs(TotalLines); } }
+        
+        /// <summary>
+        /// The number of spaces to use instead of one tab
+        /// </summary>
         public int NumberOfSpacesForTab { get => tabSpaceHelper.NumberOfSpaces; set { tabSpaceHelper.NumberOfSpaces = value; tabSpaceHelper.UpdateTabs(TotalLines); } }
         #endregion
 
         #region Public events
-        //Events:
-        public delegate void TextChangedEvent(TextControlBox sender, string Text);
+
+        /// <summary>
+        /// Invokes when the text has changed
+        /// </summary>
+        /// <param name="sender">The textbox in which the text was changed</param>
+        /// <param name="text">The text of the textbox</param>
+        public delegate void TextChangedEvent(TextControlBox sender, string text);
         public event TextChangedEvent TextChanged;
+
+        /// <summary>
+        /// Invokes when the selection has changed
+        /// </summary>
+        /// <param name="sender">The textbox in which the selection was changed</param>
+        /// <param name="args">The new position of the cursor</param>
         public delegate void SelectionChangedEvent(TextControlBox sender, Text.SelectionChangedEventHandler args);
         public event SelectionChangedEvent SelectionChanged;
-        public delegate void ZoomChangedEvent(TextControlBox sender, int ZoomFactor);
+        
+        /// <summary>
+        /// Invokes when the zoom has changed
+        /// </summary>
+        /// <param name="sender">The textbox in which the zoom was changed</param>
+        /// <param name="zoomFactor">The factor of the current zoom</param>
+        public delegate void ZoomChangedEvent(TextControlBox sender, int zoomFactor);
         public event ZoomChangedEvent ZoomChanged;
+
+        /// <summary>
+        /// Invokes when the textbox received focus
+        /// </summary>
+        /// <param name="sender">The textbox that received focus</param>
         public delegate void GotFocusEvent(TextControlBox sender);
         public new event GotFocusEvent GotFocus;
+
+        /// <summary>
+        /// Invokes when the textbox lost focus
+        /// </summary>
+        /// <param name="sender">The textbox that lost focus</param>
         public delegate void LostFocusEvent(TextControlBox sender);
         public new event LostFocusEvent LostFocus;
         #endregion
 
+        #region Static functions
         //static functions
         private static void GetLanguagesFromBuffer()
         {
@@ -2120,6 +2448,9 @@ namespace TextControlBox
         }
         private static Dictionary<string, CodeLanguage> _CodeLanguages = null;
 
+        /// <summary>
+        /// Get all the builtin codelanguages for syntaxhighlighting
+        /// </summary>
         public static Dictionary<string, CodeLanguage> CodeLanguages
         {
             get
@@ -2130,16 +2461,29 @@ namespace TextControlBox
                 return _CodeLanguages;
             }
         }
+        
+        /// <summary>
+        /// Get a CodeLanguage by the identifier from the list
+        /// </summary>
+        /// <param name="Identifier"></param>
+        /// <returns></returns>
         public static CodeLanguage GetCodeLanguageFromId(string Identifier)
         {
             CodeLanguages.TryGetValue(Identifier, out CodeLanguage codelanguage);
             return codelanguage;
         }
+
+        /// <summary>
+        /// Get a CodeLanguage class from the Json data
+        /// </summary>
+        /// <param name="Json">The data to build the class from</param>
+        /// <returns>An instance of the JsonLoadResult with the CodeLanguage and a bool indicating whether the method succeed</returns>
         public static JsonLoadResult GetCodeLanguageFromJson(string Json)
         {
             return SyntaxHighlightingRenderer.GetCodeLanguageFromJson(Json);
         }
 
+        #endregion
     }
     public class TextControlBoxDesign
     {
@@ -2158,6 +2502,16 @@ namespace TextControlBox
             this.LineNumberBackground = Design.LineNumberBackground;
         }
 
+        /// <summary>
+        /// Create a new instance of the TextControlBoxDesign class
+        /// </summary>
+        /// <param name="Background">The background color of the textbox</param>
+        /// <param name="TextColor">The color of the text</param>
+        /// <param name="SelectionColor">The color of the selection</param>
+        /// <param name="CursorColor">The color of the cursor</param>
+        /// <param name="LineHighlighterColor">The color of the linehighlighter</param>
+        /// <param name="LineNumberColor">The color of the linenumber</param>
+        /// <param name="LineNumberBackground">The background color of the linenumbers</param>
         public TextControlBoxDesign(Brush Background, Color TextColor, Color SelectionColor, Color CursorColor, Color LineHighlighterColor, Color LineNumberColor, Color LineNumberBackground)
         {
             this.Background = Background;
@@ -2168,6 +2522,7 @@ namespace TextControlBox
             this.LineNumberColor = LineNumberColor;
             this.LineNumberBackground = LineNumberBackground;
         }
+        
         public Brush Background { get; set; }
         public Color TextColor { get; set; }
         public Color SelectionColor { get; set; }
@@ -2183,17 +2538,37 @@ namespace TextControlBox
             this.ValueX = ScrollBarPosition.ValueX;
             this.ValueY = ScrollBarPosition.ValueY;
         }
+
+        /// <summary>
+        /// Creates a new instance of the ScrollBarPosition class
+        /// </summary>
+        /// <param name="ValueX">The horizontal amount scrolled</param>
+        /// <param name="ValueY">The vertical amount scrolled</param>
         public ScrollBarPosition(double ValueX = 0, double ValueY = 0)
         {
             this.ValueX = ValueX;
             this.ValueY = ValueY;
         }
 
+        /// <summary>
+        /// The amount scrolled horizontally
+        /// </summary>
         public double ValueX { get; set; }
+
+        /// <summary>
+        /// The amount scrolled vertically
+        /// </summary>
         public double ValueY { get; set; }
     }
     public class CursorSize
     {
+        /// <summary>
+        /// Creates a new instance of the CursorSize class
+        /// </summary>
+        /// <param name="Width">The width of the cursor</param>
+        /// <param name="Height">The height of the cursor</param>
+        /// <param name="OffsetX">The x-offset from the actual cursor position</param>
+        /// <param name="OffsetY">The y-offset from the actual cursor position</param>
         public CursorSize(float Width = 0, float Height = 0, float OffsetX = 0, float OffsetY = 0)
         {
             this.Width = Width;
@@ -2201,9 +2576,25 @@ namespace TextControlBox
             this.OffsetX = OffsetX;
             this.OffsetY = OffsetY;
         }
+        
+        /// <summary>
+        /// The width of the cursor
+        /// </summary>
         public float Width { get; private set; }
+        
+        /// <summary>
+        /// The height of the cursor
+        /// </summary>
         public float Height { get; private set; }
+
+        /// <summary>
+        /// The left/right offset from the actual cursor position
+        /// </summary>
         public float OffsetX { get; private set; }
+        
+        /// <summary>
+        /// The top/bottom offset from the actual cursor position
+        /// </summary>
         public float OffsetY { get; private set; }
     }
 }
