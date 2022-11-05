@@ -1,6 +1,12 @@
 ﻿{
   "Highlights": [
     {
+      //-/+ floating numbers
+      "Pattern": "\\b([+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?\\b",
+      "ColorDark": "#ff00ff",
+      "ColorLight": "#dd00dd"
+    },
+    {
       //keywords
       "Pattern": "(?i)(set|echo|for|pushd|popd|pause|exit|cd|if|else|goto|del)\\s",
       "ColorDark": "#dd00dd",
