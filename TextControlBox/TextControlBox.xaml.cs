@@ -447,7 +447,7 @@ namespace TextControlBox
             for (int i = 0; i < files.Length; i++)
             {
                 var codeLanguage = SyntaxHighlightingRenderer.GetCodeLanguageFromJson(File.ReadAllText(files[i]));
-                CodeLanguageBuffer.Add(codeLanguage.Name, codeLanguage);
+                CodeLanguages.Add(codeLanguage.CodeLanguage.Name, codeLanguage.CodeLanguage);
             }
         }
         private Line GetCurrentLine()
@@ -1939,55 +1939,15 @@ namespace TextControlBox
         /// </summary>
         /// <param name="Identifier"></param>
         /// <returns></returns>
-        public bool SelectCodeLanguageById(string Identifier)
+        public JsonLoadResult GetCodeLanguageFromJson(string Json)
         {
-            if (CodeLanguageBuffer.ContainsKey(Identifier))
-            {
-                CodeLanguage = CodeLanguageBuffer.GetValueOrDefault(Identifier);
-                return true;
-            }
-            return false;
+            return SyntaxHighlightingRenderer.GetCodeLanguageFromJson(Json);
         }
-        /// <summary>
-        /// Load a Codelanguage from a json file and apply it to the textbox
-        /// </summary>
-        /// <param name="Path">The path to the json file</param>
-        /// <returns>JsonLoadMessage.Success if successful</returns>
-        public async Task<JsonLoadMessage> LoadCodeLanguageFromJson(string Path)
+        public bool SelectCodeLanguageById(string Id)
         {
-            var res = await SyntaxHighlightingRenderer.LoadFromFile(Path);
-            CodeLanguage = res.CodeLanguage;
-            return res.JsonLoadMessage;
-        }
-        /// <summary>
-        /// Get the Codelanguage from a given json file and return it
-        /// </summary>
-        /// <param name="Path">The path to the json file</param>
-        /// <returns></returns>
-        public async Task<JsonLoadResult> GetCodeLanguageFromJson(string Path)
-        {
-            return await SyntaxHighlightingRenderer.LoadFromFile(Path);
-        }
-        /// <summary>
-        /// Load a Codelanguage from a json file and add it to the internal buffer of languages using the Identifier
-        /// </summary>
-        /// <param name="Path">The path to the json file</param>
-        /// <param name="Identifier">The Identifier to the current language</param>
-        /// <returns>JsonLoadMessage.Success if successful</returns>
-        public async Task<JsonLoadMessage> LoadCodeLanguageFromJsonToBuffer(string Path, string Identifier)
-        {
-            var res = await SyntaxHighlightingRenderer.LoadFromFile(Path);
-            CodeLanguageBuffer.Add(Identifier, res.CodeLanguage);
-            return res.JsonLoadMessage;
-        }
-        /// <summary>
-        /// Remove a Codelanguage by it's Identifier from the local buffer
-        /// </summary>
-        /// <param name="Identifier"></param>
-        /// <returns></returns>
-        public bool RemoveCodeLanguageFromBuffer(string Identifier)
-        {
-            return CodeLanguageBuffer.Remove(Identifier);
+            bool res = CodeLanguages.TryGetValue(Id, out CodeLanguage codelanguage);
+            CodeLanguage = codelanguage;
+            return res;
         }
         public void Unload()
         {
@@ -2010,7 +1970,7 @@ namespace TextControlBox
         {
             undoRedo.ClearAll();
         }
-
+        
         //Properties:
         public bool SyntaxHighlighting { get; set; } = true;
         public CodeLanguage CodeLanguage
@@ -2147,10 +2107,10 @@ namespace TextControlBox
         public double HorizontalScrollSensitivity { get => _HorizontalScrollSensitivity; set => _HorizontalScrollSensitivity = value < 1 ? 1 : value; }
         public double VerticalScroll { get => VerticalScrollbar.Value; set => VerticalScrollbar.Value = value < 0 ? 0 : value; }
         public double HorizontalScroll { get => HorizontalScrollbar.Value; set => HorizontalScrollbar.Value = value < 0 ? 0 : value; }
-        public readonly Dictionary<string, CodeLanguage> CodeLanguageBuffer = new Dictionary<string, CodeLanguage>();
         public new CornerRadius CornerRadius { get => MainGrid.CornerRadius; set => MainGrid.CornerRadius = value; }
         public bool UseSpacesInsteadTabs { get => tabSpaceHelper.UseSpacesInsteadTabs; set { tabSpaceHelper.UseSpacesInsteadTabs = value; tabSpaceHelper.UpdateTabs(TotalLines); } }
         public int NumberOfSpacesForTab { get => tabSpaceHelper.NumberOfSpaces; set { tabSpaceHelper.NumberOfSpaces = value;  tabSpaceHelper.UpdateTabs(TotalLines); } }
+        public Dictionary<string,CodeLanguage > CodeLanguages = new Dictionary<string, CodeLanguage>();
         #endregion
 
         #region Public events

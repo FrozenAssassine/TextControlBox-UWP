@@ -36,72 +36,52 @@ namespace TextControlBox.Renderer
                 for (int j = 0; j < matches.Count; j++)
                 {
                     var match = matches[j];
-                    DrawnTextLayout.SetColor(match.Index, match.Length, color);
+                    int index = match.Index;
+                    int length = match.Length;
+                    //if (match.Groups.Count > 1 && match.Groups[1].Value != "")
+                    //{
+                    //    index = match.Groups[1].Index;
+                    //    length = match.Groups[1].Length;
+                    //}
+                    DrawnTextLayout.SetColor(index, length, color);
                     if (highlight.CodeStyle != null)
                     {
                         if (highlight.CodeStyle.Italic)
-                            DrawnTextLayout.SetFontStyle(match.Index, match.Length, ItalicFont);
+                            DrawnTextLayout.SetFontStyle(index, length, ItalicFont);
                         if (highlight.CodeStyle.Bold)
-                            DrawnTextLayout.SetFontWeight(match.Index, match.Length, BoldFont);
+                            DrawnTextLayout.SetFontWeight(index, length, BoldFont);
                         if (highlight.CodeStyle.Underlined)
-                            DrawnTextLayout.SetUnderline(match.Index, match.Length, true);
+                            DrawnTextLayout.SetUnderline(index, length, true);
                     }
                 }
             }
         }
 
-        public static CodeLanguage GetCodeLanguageFromJson(string Json)
+        public static JsonLoadResult GetCodeLanguageFromJson(string Json)
         {
             try
             {
-                return JsonConvert.DeserializeObject<CodeLanguage>(Json);
+                return new JsonLoadResult(true, JsonConvert.DeserializeObject<CodeLanguage>(Json));
             }
-            catch (JsonReaderException ex)
+            catch (JsonReaderException)
             {
-                return null;
+                return new JsonLoadResult(false, null);
             }
-            catch (JsonSerializationException ex)
+            catch (JsonSerializationException)
             {
-                return null;
-            }
-        }
-
-        public static async Task<JsonLoadResult> LoadFromFile(string Path)
-        {
-            StorageFile file = await StorageFile.GetFileFromPathAsync(Path);
-            if (file == null)
-                return new JsonLoadResult(JsonLoadMessage.FileNotFound, null);
-
-            try
-            {
-                using (Stream stream = await file.OpenStreamForReadAsync())
-                {
-                    using (StreamReader reader = new StreamReader(stream))
-                    {
-                        var res = GetCodeLanguageFromJson(reader.ReadToEnd());
-                        return new JsonLoadResult(res == null ? JsonLoadMessage.JsonParseError : JsonLoadMessage.Success, res);
-                    }
-                }
-            }
-            catch (UnauthorizedAccessException)
-            {
-                return new JsonLoadResult(JsonLoadMessage.NoAccessToPath, null);
+                return new JsonLoadResult(false, null);
             }
         }
     }
     public class JsonLoadResult
     {
-        public JsonLoadResult(JsonLoadMessage Message, CodeLanguage CodeLanguage)
+        public JsonLoadResult(bool Succeed, CodeLanguage CodeLanguage)
         {
-            this.JsonLoadMessage = Message;
+            this.Succeed = Succeed;
             this.CodeLanguage = CodeLanguage;
         }
-        public JsonLoadMessage JsonLoadMessage { get; set; }
+        public bool Succeed { get; set; }
         public CodeLanguage CodeLanguage { get; set; }
-    }
-    public enum JsonLoadMessage
-    {
-        Success, FileNotFound, NoAccessToPath, JsonParseError
     }
     public class SyntaxHighlights
     {

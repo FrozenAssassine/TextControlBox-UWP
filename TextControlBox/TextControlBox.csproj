@@ -177,6 +177,7 @@
     <Content Include="Languages\CSharp.json" />
     <Content Include="Languages\Html.json" />
     <Content Include="Languages\Json.json" />
+    <Content Include="Languages\QSharp.json" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Languages\GCode.json" />
@@ -184,6 +185,16 @@
   <ItemGroup>
     <Content Include="Languages\Batch.json" />
     <Content Include="Languages\Cpp.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Languages\ConfigFile.json" />
+    <Content Include="Languages\PHP.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Languages\Hex.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Languages\Javascript.json" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
