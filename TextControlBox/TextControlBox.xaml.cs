@@ -2135,7 +2135,7 @@ namespace TextControlBox
             CodeLanguages.TryGetValue(Identifier, out CodeLanguage codelanguage);
             return codelanguage;
         }
-        public JsonLoadResult GetCodeLanguageFromJson(string Json)
+        public static JsonLoadResult GetCodeLanguageFromJson(string Json)
         {
             return SyntaxHighlightingRenderer.GetCodeLanguageFromJson(Json);
         }
