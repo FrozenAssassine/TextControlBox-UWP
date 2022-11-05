@@ -82,7 +82,7 @@ The textbox is mostly done, but there are still some bugs where I'm working on.
 - CodeLanguage (get/set)
 - RequestedTheme (get/set)
 - Design (get/set)
-- CodeLanguages (get/set) 
+- static CodeLanguages (get/set) 
 - VerticalScrollSensitivity (get/set)
 - HorizontalScrollSensitivity (get/set)
 - VerticalScroll (get/set)
@@ -129,8 +129,8 @@ The textbox is mostly done, but there are still some bugs where I'm working on.
 - FindInText(word, up, matchCase, wholeWord)
 - ReplaceInText(word, replaceword, up, matchCase, wholeword)
 - ReplaceAll(word, replaceword, up, matchCase, wholeword)
-- GetCodeLanguageFromJson(jsondata)
-- SelectCodeLanguageById(identifier)
+- static GetCodeLanguageFromJson(jsondata)
+- static SelectCodeLanguageById(identifier)
 - Unload()
 - ClearUndoRedoHistory()
   ```
@@ -163,11 +163,13 @@ The textbox is mostly done, but there are still some bugs where I'm working on.
 
 TextControlBox textbox = new TextControlBox();
 
-//first:
-textbox.CodeLanguage = textbox.GetCodeLanguageFromJson("Json data");
+//Use a builtin language | Available: Batch, ConfigFile, C++, CSharp, GCode, Hex, Html, Javascript, Json, PHP, QSharp 
+textbox.CodeLanguage = TextControlBox.GetCodeLanguageFromId("CSharp");
 
-//second:
-textbox.SelectCodeLanguageById("CSharp"); //Builtin ids: Batch, ConfigFile, C++, CSharp, GCode, Hex, Html, Javascript, Json, PHP, QSharp 
+//Use a custom language:
+var result = TextControlBox.GetCodeLanguageFromJson("JSON DATA");
+if(result.Succeed)
+     textbox.CodeLanguage = result.CodeLanguage; 
 ```
 
 ## Create custom designs in C#:
