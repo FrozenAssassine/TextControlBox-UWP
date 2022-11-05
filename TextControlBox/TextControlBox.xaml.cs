@@ -2384,7 +2384,7 @@ namespace TextControlBox
         /// <summary>
         /// Indicates whether to use spaces or tabs
         /// </summary>
-        public bool UseSpacesInsteadTabs { get => tabSpaceHelper.UseSpacesInsteadTabs; set { tabSpaceHelper.UseSpacesInsteadTabs = value; tabSpaceHelper.UpdateTabs(TotalLines); } }
+        public bool UseSpacesInsteadTabs { get => tabSpaceHelper.UseSpacesInsteadTabs; set { tabSpaceHelper.UseSpacesInsteadTabs = value; tabSpaceHelper.UpdateTabs(TotalLines); UpdateText(); } }
         
         /// <summary>
         /// The number of spaces to use instead of one tab
