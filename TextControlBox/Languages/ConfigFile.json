@@ -1,0 +1,44 @@
+﻿{
+  "Highlights": [
+    {
+      "Description": "brackets",
+      "Pattern": "[\\[\\]]",
+      "ColorDark": "#0000FF",
+      "ColorLight": "#0000FF"
+    },
+    {
+      "Description": "sections",
+      "Pattern": "\\[[\\t\\s]*(\\w+)[\\t\\s]*\\]",
+      "ColorDark": "#9900FF",
+      "ColorLight": "#9900FF"
+    },
+    {
+      "Description": "keys",
+      "Pattern": "(\\w+)\\=",
+      "ColorDark": "#DDDD00",
+      "ColorLight": "#DDDD00"
+    },
+    {
+      "Description": "values",
+      "Pattern": "\\=(.+)",
+      "ColorDark": "#EE0000",
+      "ColorLight": "#EE0000"
+    },
+    {
+      "Description": "comments",
+      "Pattern": "#.*\\n",
+      "ColorDark": "#00FF00",
+      "ColorLight": "#00FF00"
+    },
+    {
+      "Description": "comments",
+      "Pattern": "(;|\/\/|\brem\b).*",
+      "ColorDark": "#888888",
+      "ColorLight": "#888888"
+    }
+  ],
+  "Name": "ConfigFile",
+  "Filter": "ini|inf",
+  "Description": "Syntaxhighlighting for configuration files.",
+  "Author": "Finn Freitag"
+}
