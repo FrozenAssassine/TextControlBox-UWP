@@ -129,7 +129,6 @@ namespace TextControlBox
         public TextControlBox()
         {
             this.InitializeComponent();
-            AddLanguagesToBuffer();
 
             InitialiseTextService();
 
@@ -441,15 +440,6 @@ namespace TextControlBox
             if (TotalLines.Count == 0)
                 TotalLines.Add(new Line());
         }
-        private void AddLanguagesToBuffer()
-        {
-            var files = Directory.GetFiles("TextControlBox/Languages");
-            for (int i = 0; i < files.Length; i++)
-            {
-                var codeLanguage = SyntaxHighlightingRenderer.GetCodeLanguageFromJson(File.ReadAllText(files[i]));
-                CodeLanguages.Add(codeLanguage.CodeLanguage.Name, codeLanguage.CodeLanguage);
-            }
-        }
         private Line GetCurrentLine()
         {
             return ListHelper.GetLine(TotalLines, CursorPosition.LineNumber);
@@ -652,8 +642,8 @@ namespace TextControlBox
                         CursorPosition = Selection.EndPosition;
                     }
                 }
-                UpdateAll();                
-                
+                UpdateAll();
+
                 //mark as handled to not change focus
                 e.Handled = true;
             }
@@ -1084,7 +1074,7 @@ namespace TextControlBox
                 selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
                 NeedsUpdate = true;
             }
-            if(NeedsUpdate)
+            if (NeedsUpdate)
                 UpdateAll();
         }
         private void Canvas_LineNumber_PointerMoved(object sender, PointerRoutedEventArgs e)
@@ -1381,7 +1371,7 @@ namespace TextControlBox
             UpdateCursor();
         }
         #endregion
- 
+
         //Trys running the code and clears the memory if OutOfMemoryException gets thrown
         private async void Safe_Paste(bool HandleException = true)
         {
@@ -1431,7 +1421,7 @@ namespace TextControlBox
                 DataPackage dataPackage = new DataPackage();
                 Debug.WriteLine(SelectedText);
                 dataPackage.SetText(SelectedText);
-                if(TextSelection == null)
+                if (TextSelection == null)
                     DeleteLine(CursorPosition.LineNumber); //Delete the line
                 else
                     DeleteText(); //Delete the selected text
@@ -1641,7 +1631,7 @@ namespace TextControlBox
 
             UpdateSelection();
             UpdateCursor();
-}
+        }
         public void SelectAll()
         {
             //No selection can be shown
@@ -1939,16 +1929,6 @@ namespace TextControlBox
         /// </summary>
         /// <param name="Identifier"></param>
         /// <returns></returns>
-        public JsonLoadResult GetCodeLanguageFromJson(string Json)
-        {
-            return SyntaxHighlightingRenderer.GetCodeLanguageFromJson(Json);
-        }
-        public bool SelectCodeLanguageById(string Id)
-        {
-            bool res = CodeLanguages.TryGetValue(Id, out CodeLanguage codelanguage);
-            CodeLanguage = codelanguage;
-            return res;
-        }
         public void Unload()
         {
             EditContext.NotifyFocusLeave(); //inform the IME to not send any more text
@@ -1970,7 +1950,7 @@ namespace TextControlBox
         {
             undoRedo.ClearAll();
         }
-        
+
         //Properties:
         public bool SyntaxHighlighting { get; set; } = true;
         public CodeLanguage CodeLanguage
@@ -2109,8 +2089,7 @@ namespace TextControlBox
         public double HorizontalScroll { get => HorizontalScrollbar.Value; set => HorizontalScrollbar.Value = value < 0 ? 0 : value; }
         public new CornerRadius CornerRadius { get => MainGrid.CornerRadius; set => MainGrid.CornerRadius = value; }
         public bool UseSpacesInsteadTabs { get => tabSpaceHelper.UseSpacesInsteadTabs; set { tabSpaceHelper.UseSpacesInsteadTabs = value; tabSpaceHelper.UpdateTabs(TotalLines); } }
-        public int NumberOfSpacesForTab { get => tabSpaceHelper.NumberOfSpaces; set { tabSpaceHelper.NumberOfSpaces = value;  tabSpaceHelper.UpdateTabs(TotalLines); } }
-        public Dictionary<string,CodeLanguage > CodeLanguages = new Dictionary<string, CodeLanguage>();
+        public int NumberOfSpacesForTab { get => tabSpaceHelper.NumberOfSpaces; set { tabSpaceHelper.NumberOfSpaces = value; tabSpaceHelper.UpdateTabs(TotalLines); } }
         #endregion
 
         #region Public events
@@ -2126,6 +2105,41 @@ namespace TextControlBox
         public delegate void LostFocusEvent(TextControlBox sender);
         public new event LostFocusEvent LostFocus;
         #endregion
+
+        //static functions
+        private static void GetLanguagesFromBuffer()
+        {
+            _CodeLanguages = new Dictionary<string, CodeLanguage>();
+
+            var files = Directory.GetFiles("TextControlBox/Languages");
+            for (int i = 0; i < files.Length; i++)
+            {
+                var codeLanguage = SyntaxHighlightingRenderer.GetCodeLanguageFromJson(File.ReadAllText(files[i]));
+                _CodeLanguages.Add(codeLanguage.CodeLanguage.Name, codeLanguage.CodeLanguage);
+            }
+        }
+        private static Dictionary<string, CodeLanguage> _CodeLanguages = null;
+
+        public static Dictionary<string, CodeLanguage> CodeLanguages
+        {
+            get
+            {
+                if (_CodeLanguages == null)
+                    GetLanguagesFromBuffer();
+
+                return _CodeLanguages;
+            }
+        }
+        public static CodeLanguage GetCodeLanguageFromId(string Identifier)
+        {
+            CodeLanguages.TryGetValue(Identifier, out CodeLanguage codelanguage);
+            return codelanguage;
+        }
+        public JsonLoadResult GetCodeLanguageFromJson(string Json)
+        {
+            return SyntaxHighlightingRenderer.GetCodeLanguageFromJson(Json);
+        }
+
     }
     public class TextControlBoxDesign
     {

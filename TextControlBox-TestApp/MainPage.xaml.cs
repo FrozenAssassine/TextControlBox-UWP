@@ -19,7 +19,7 @@ namespace TextControlBox_TestApp
             this.InitializeComponent();
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
 
-            TextControlBox.FontSize = 20;
+            textbox.FontSize = 20;
             Load();
 
             /*TextControlBox.Design = new TextControlBoxDesign
@@ -35,7 +35,7 @@ namespace TextControlBox_TestApp
         }
         private void Load()
         {
-            TextControlBox.SelectCodeLanguageById("CSharp");
+            textbox.CodeLanguage = TextControlBox.TextControlBox.GetCodeLanguageFromId("CSharp");
         }
         private string GenerateContent()
         {
@@ -53,7 +53,7 @@ namespace TextControlBox_TestApp
             bool ControlKey = Window.Current.CoreWindow.GetKeyState(Windows.System.VirtualKey.Control).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
             if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.R)
             {
-                TextControlBox.LoadText(GenerateContent());
+                textbox.LoadText(GenerateContent());
             }
             if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.E)
             {
@@ -61,8 +61,8 @@ namespace TextControlBox_TestApp
             }
             if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.D)
             {
-                TextControlBox.RequestedTheme = TextControlBox.RequestedTheme == ElementTheme.Dark ? 
-                    ElementTheme.Light : TextControlBox.RequestedTheme == ElementTheme.Default ? ElementTheme.Light : ElementTheme.Dark;
+                textbox.RequestedTheme = textbox.RequestedTheme == ElementTheme.Dark ? 
+                    ElementTheme.Light : textbox.RequestedTheme == ElementTheme.Default ? ElementTheme.Light : ElementTheme.Dark;
                 
                 //TextControlBox.DuplicateLine(TextControlBox.CurrentLineIndex);
             }
@@ -81,7 +81,7 @@ namespace TextControlBox_TestApp
                 if(file != null)
                 {
                     string text = await FileIO.ReadTextAsync(file);
-                    TextControlBox.LoadText(text);
+                    textbox.LoadText(text);
                 }
             }
         }
