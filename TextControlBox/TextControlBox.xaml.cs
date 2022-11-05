@@ -2133,6 +2133,19 @@ namespace TextControlBox
         }
 
         /// <summary>
+        /// Get the cursorposition in pixels relative to the textbox
+        /// </summary>
+        /// <returns>The cursorposition in pixels</returns>
+        public Point GetCursorPosition()
+        {
+            return new Point
+            {
+                Y = (float)((CursorPosition.LineNumber - NumberOfStartLine) * SingleLineHeight) + SingleLineHeight / 4,
+                X = CursorRenderer.GetCursorPositionInLine(CurrentLineTextLayout, CursorPosition, 0)
+            };
+        }
+
+        /// <summary>
         /// True to enable Syntaxhighlighting and false to disable it
         /// </summary>
         public bool SyntaxHighlighting { get; set; } = true;
