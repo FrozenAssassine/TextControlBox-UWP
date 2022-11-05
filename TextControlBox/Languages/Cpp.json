@@ -18,7 +18,6 @@
       "ColorDark": "#dd00dd",
       "ColorLight": "#dd00dd"
     },
-
     {
       //#-Keywords
       "Pattern": "\\B#(define|elif|else|endif|error|ifndef|ifdef|if|import|include|line|pragma|region|undef|using)",
@@ -55,7 +54,8 @@
       "ColorLight": "#888888"
     }
   ],
-  "Name": "Cpp",
+  "Name": "C++",
+  "Filter": "cpp|cxx|cc|hpp|h",
   "Description": "Syntax highlighting for C++ language",
   "Author": "Julius Kirsch"
 }
