@@ -2,7 +2,7 @@
   "Highlights": [
     {
       //-/+ floating numbers
-      "Pattern": "([+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?",
+      "Pattern": "\\b([+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?\\b",
       "ColorDark": "#ff00ff",
       "ColorLight": "#ff00ff"
     },

@@ -2,9 +2,9 @@
   "Highlights": [
     {
       //-/+ floating numbers
-      "Pattern": "([+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?",
+      "Pattern": "\\b([+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?\\b",
       "ColorDark": "#ff00ff",
-      "ColorLight": "#ff00ff"
+      "ColorLight": "#dd00dd"
     },
     {
       //null, true, false
@@ -19,15 +19,8 @@
       "ColorLight": "#969696"
     },
     {
-      //strings: ""
-      "Pattern": "\"[^\\n]*?\"",
-      "ColorDark": "#00FF00",
-      "ColorLight": "#00CA00"
-    },
-    {
-      //strings: ''
-      "Pattern": "'[^\\n]*?'",
-      "ColorDark": "#00FF00",
+      "Pattern": "(\".+\")\\:",
+      "ColorDark": "#dddd00",
       "ColorLight": "#00CA00"
     },
     {
@@ -41,9 +34,22 @@
       "Pattern": "//(.*?)\\r?\\n",
       "ColorDark": "#646464",
       "ColorLight": "#888888"
+    },
+    {
+      //strings: ''
+      "Pattern": "'[^\\n]*?'",
+      "ColorDark": "#00FF00",
+      "ColorLight": "#00CA00"
+    },
+    {
+      //strings: ""
+      "Pattern": "\"[^\\n]*?\"",
+      "ColorDark": "#00FF00",
+      "ColorLight": "#00CA00"
     }
   ],
   "Name": "Json",
   "Description": "Syntax highlighting for Json language",
+  "Filter":  "json",
   "Author": "Julius Kirsch"
 }
