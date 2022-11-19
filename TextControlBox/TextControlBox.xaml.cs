@@ -244,10 +244,11 @@ namespace TextControlBox
             if (IgnoreSelection)
                 ClearSelection();
 
-            int SplittedTextLength = text.Contains(NewLineCharacter) ? text.NumberOfOccurences(NewLineCharacter) + 1 : 1;
+            int SplittedTextLength = text.Contains(NewLineCharacter) ? Utils.CountLines(text, NewLineCharacter) : 1;
 
             if (TextSelection == null && SplittedTextLength == 1)
             {
+
                 undoRedo.RecordUndoAction(() =>
                 {
                     var CharacterPos = GetCurPosInLine();
@@ -257,6 +258,7 @@ namespace TextControlBox
                     else
                         CurrentLine.AddText(text, CharacterPos);
                     CursorPosition.CharacterPosition = text.Length + CharacterPos;
+
                 }, TotalLines, CursorPosition.LineNumber, 1, 1, NewLineCharacter);
             }
             else if (TextSelection == null && SplittedTextLength > 1)
@@ -266,7 +268,7 @@ namespace TextControlBox
                     CursorPosition = Selection.InsertText(TextSelection, CursorPosition, TotalLines, text, NewLineCharacter);
                 }, TotalLines, CursorPosition.LineNumber, 1, SplittedTextLength, NewLineCharacter);
             }
-            else if (text == "") //delete selection
+            else if (text.Length == 0) //delete selection
             {
                 DeleteSelection();
             }
@@ -444,7 +446,9 @@ namespace TextControlBox
         {
             UpdateZoom();
             if (TotalLines.Count == 0)
+            {
                 TotalLines.Add(new Line());
+            }
         }
         private Line GetCurrentLine()
         {
@@ -609,6 +613,14 @@ namespace TextControlBox
             EditContext.TextUpdating += EditContext_TextUpdating;
             EditContext.FocusRemoved += EditContext_FocusRemoved;
         }
+        private void UpdateWhenScrolled()
+        {
+            //only update when a line was scrolled
+            if ((int)(VerticalScrollbar.Value / SingleLineHeight) != NumberOfStartLine)
+            {
+                UpdateAll();
+            }
+        }
 
         //Trys running the code and clears the memory if OutOfMemoryException gets thrown
         private async void Safe_Paste(bool HandleException = true)
@@ -657,7 +669,6 @@ namespace TextControlBox
             try
             {
                 DataPackage dataPackage = new DataPackage();
-                Debug.WriteLine(SelectedText);
                 dataPackage.SetText(SelectedText);
                 if (TextSelection == null)
                     DeleteLine(CursorPosition.LineNumber); //Delete the line
@@ -706,31 +717,16 @@ namespace TextControlBox
                 if (await Utils.IsOverTextLimit(text.Length))
                     return;
 
-                ListHelper.Clear(TotalLines, text == "");
-                RenderedLines.Clear();
-                RenderedLines.TrimExcess();
-                selectionrenderer.ClearSelection();
-                undoRedo.ClearAll();
-
                 //Get the LineEnding
                 LineEnding = LineEndings.FindLineEnding(text);
 
-                if (text == "")
-                {
-                    UpdateAll();
-                    return;
-                }
+                selectionrenderer.ClearSelection();
+                undoRedo.ClearAll();
 
-                //Split the lines using the current LineEnding
-                var lines = stringManager.CleanUpString(text).Split(NewLineCharacter);
-                using (PooledList<Line> LinesToAdd = new PooledList<Line>(lines.Length))
-                {
-                    for (int i = 0; i < lines.Length; i++)
-                    {
-                        LinesToAdd.Add(new Line(lines[i]));
-                    }
-                    TotalLines.AddRange(LinesToAdd);
-                }
+                if (text.Length == 0)
+                    ListHelper.Clear(TotalLines, true);
+                else
+                    Selection.ReplaceLines(TotalLines, 0, TotalLines.Count, stringManager.CleanUpString(text).Split(NewLineCharacter));
 
                 UpdateAll();
             }
@@ -754,31 +750,14 @@ namespace TextControlBox
 
                 selectionrenderer.ClearSelection();
 
-                string[] lines = null;
-                if (text != "")
-                {
-                    lines = stringManager.CleanUpString(text).Split(NewLineCharacter);
-                }
-
                 undoRedo.RecordUndoAction(() =>
                 {
-                    //Clear the lists
-                    ListHelper.Clear(TotalLines, text == "");
-                    RenderedLines.Clear();
-                    RenderedLines.TrimExcess();
-
-                    if (text == "")
+                    Selection.ReplaceLines(TotalLines, 0, TotalLines.Count, stringManager.CleanUpString(text).Split(NewLineCharacter));
+                    if (text.Length == 0) //Create a new line when the text gets cleared
                     {
-                        UpdateAll();
-                        return;
+                        TotalLines.Add(new Line());
                     }
-
-                    for (int i = 0; i < lines.Length; i++)
-                    {
-                        TotalLines.Add(new Line(lines[i]));
-                    }
-
-                }, TotalLines, 0, TotalLines.Count, lines.Length, NewLineCharacter);
+                }, TotalLines, 0, TotalLines.Count, Utils.CountLines(text, NewLineCharacter), NewLineCharacter);
 
                 UpdateAll();
             }
@@ -795,6 +774,8 @@ namespace TextControlBox
         }
         private void CleanUp()
         {
+            Debug.WriteLine("Collect GC");
+
             GCSettings.LargeObjectHeapCompactionMode =
               GCLargeObjectHeapCompactionMode.CompactOnce;
             GC.Collect();
@@ -1078,19 +1059,18 @@ namespace TextControlBox
                 if (CurPosY > CanvasHeight - 50)
                 {
                     VerticalScrollbar.Value += (CurPosY > CanvasHeight + 30 ? 20 : (CanvasHeight - CurPosY) / 150);
-                    UpdateAll();
+                    UpdateWhenScrolled();
                 }
                 else if (CurPosY < 50)
                 {
                     VerticalScrollbar.Value += CurPosY < -30 ? -20 : -(50 - CurPosY) / 10;
-                    UpdateAll();
+                    UpdateWhenScrolled();
                 }
 
                 //Horizontal
                 if (CurPosX > CanvasWidth - 100)
                 {
                     ScrollIntoViewHorizontal();
-                    UpdateAll();
                 }
                 else if (CurPosX < 100)
                 {
@@ -1606,15 +1586,17 @@ namespace TextControlBox
         
         /// <summary>
         /// Load text to the textbox everything will reset. Use this to load text on application start
+        /// Use "" to emty the textbox
         /// </summary>
         /// <param name="text">The text to load</param>
         public void LoadText(string text)
         {
             Safe_LoadText(text);
         }
-        
+
         /// <summary>
         /// Load new text to the textbox an undo will be recorded. Use this to change the text when the app is running
+        /// Use "" to emty the textbox
         /// </summary>
         /// <param name="text">The text to set</param>
         public void SetText(string text)
@@ -1705,11 +1687,17 @@ namespace TextControlBox
                 return;
 
             //Do the Undo
+            Utils.ChangeCursor(CoreCursorType.Wait);
+
             var sel = undoRedo.Undo(TotalLines, stringManager, NewLineCharacter);
             Internal_TextChanged();
+            Utils.ChangeCursor(CoreCursorType.IBeam);
 
             if (sel != null)
-                selectionrenderer.SetSelection(sel.StartPosition, sel.EndPosition);
+            {
+                selectionrenderer.SetSelection(sel);
+                CursorPosition = sel.EndPosition;
+            }
             else
                 ForceClearSelection();
             UpdateAll();
@@ -1724,11 +1712,17 @@ namespace TextControlBox
                 return;
 
             //Do the Redo
+            Utils.ChangeCursor(CoreCursorType.Wait);
             var sel = undoRedo.Redo(TotalLines, stringManager, NewLineCharacter);
             Internal_TextChanged();
+            Utils.ChangeCursor(CoreCursorType.IBeam);
+
 
             if (sel != null)
+            {
                 selectionrenderer.SetSelection(sel);
+                CursorPosition = sel.EndPosition;
+            }
             else
                 ForceClearSelection();
             UpdateAll();
@@ -2252,8 +2246,6 @@ namespace TextControlBox
                     UseDefaultDesign = true;
                     _Design = _AppTheme == ApplicationTheme.Dark ? DarkDesign : LightDesign;
                 }
-
-                //Debug.WriteLine(Design.TextColor + "::" + RequestedTheme + ":" + UseDefaultDesign);
 
                 this.Background = _Design.Background;
                 ColorResourcesCreated = false;

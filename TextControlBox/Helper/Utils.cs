@@ -2,8 +2,12 @@
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
 using System;
+using System.Collections.Specialized;
 using System.Diagnostics;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml;
 using TextControlBox.Extensions;
 using TextControlBox.Text;
 using Windows.Foundation;
@@ -11,6 +15,7 @@ using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace TextControlBox.Helper
 {
@@ -134,11 +139,6 @@ namespace TextControlBox.Helper
             }
         }
 
-        public static Rect UIElementToRect(UIElement element)
-        {
-            return new Rect { Height = element.ActualSize.Y, Width = element.ActualSize.X, Y = element.ActualOffset.Y, X = element.ActualOffset.X };
-        }
-
         public static Point GetPointFromCoreWindowRelativeTo(PointerEventArgs args, UIElement realtive)
         {
             //Convert the point relative to the Canvas_Selection to get around Control position changes in the Window
@@ -148,6 +148,11 @@ namespace TextControlBox.Helper
         public static Point GetTextboxstartingPoint(UIElement realtiveTo)
         {
             return realtiveTo.TransformToVisual(Window.Current.Content).TransformPoint(new Point(0, 0));
+        }
+
+        public static int CountLines(string text, string NewLineCharacter)
+        {
+            return (text.Length - text.Replace(NewLineCharacter, "").Length) / NewLineCharacter.Length + 1;
         }
     }
 }

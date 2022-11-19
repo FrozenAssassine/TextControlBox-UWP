@@ -24,7 +24,7 @@ namespace TextControlBox.Text
             else
             {
                 var OrderedSelection = Selection.OrderTextSelection(TextSelection);
-                var Lines = Selection.GetPointerToSelectedLines(TotalLines, OrderedSelection);
+                var Lines = Selection.GetSelectedLines(TotalLines, OrderedSelection);
 
                 TextSelection tempSel = new TextSelection(OrderedSelection);
                 tempSel.StartPosition.CharacterPosition = 0;
@@ -64,7 +64,7 @@ namespace TextControlBox.Text
             }
             else
             {
-                var Lines = Selection.GetPointerToSelectedLines(TotalLines, TextSelection);
+                var Lines = Selection.GetSelectedLines(TotalLines, TextSelection);
                 TextSelection = Selection.OrderTextSelection(TextSelection);
 
                 if (TextSelection.StartPosition.LineNumber == TextSelection.EndPosition.LineNumber) //Singleline
