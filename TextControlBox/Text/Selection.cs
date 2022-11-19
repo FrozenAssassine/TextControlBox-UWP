@@ -1,8 +1,12 @@
 ﻿using Collections.Pooled;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using TextControlBox.Helper;
+using Windows.UI.Xaml.Shapes;
 
 namespace TextControlBox.Text
 {
@@ -57,6 +61,16 @@ namespace TextControlBox.Text
             return Utils.CursorPositionsAreEqual(sel.StartPosition, new CursorPosition(0, 0)) &&
                 Utils.CursorPositionsAreEqual(sel.EndPosition, new CursorPosition(ListHelper.GetLine(TotalLines, -1).Length, TotalLines.Count - 1));
         }
+        //returns whether the selection starts at character zero and ends 
+        public static bool WholeLinesAreSelected(TextSelection Selection, PooledList<Line> TotalLines)
+        {
+            if (Selection == null)
+                return false;
+            var sel = OrderTextSelection(Selection);
+            return Utils.CursorPositionsAreEqual(sel.StartPosition, new CursorPosition(0, sel.StartPosition.LineNumber)) &&
+                Utils.CursorPositionsAreEqual(sel.EndPosition, new CursorPosition(ListHelper.GetLine(TotalLines, sel.EndPosition.LineNumber).Length, TotalLines.Count - 1));
+        }
+
 
         public static CursorPosition GetMax(CursorPosition Pos1, CursorPosition Pos2)
         {
@@ -97,35 +111,18 @@ namespace TextControlBox.Text
             }
 
             //Multiline:
-
-            //Get the text in front of the cursor
             int CurPos = CursorPosition.CharacterPosition;
-
             if (CurPos > CurrentLine.Length)
                 CurPos = CurrentLine.Length;
+            
+            //GEt the text in front of the cursor
             string TextInFrontOfCursor = CurrentLine.Content.Substring(0, CurPos < 0 ? 0 : CurPos);
-
             //Get the text behind the cursor
-            if (CurPos > CurrentLine.Length)
-                CurPos = CurrentLine.Length;
             string TextBehindCursor = CurrentLine.Content.Remove(0, CurPos < 0 ? 0 : CurPos);
 
             ListHelper.DeleteAt(TotalLines, CursorPosition.LineNumber);
+            ListHelper.InsertRange(TotalLines, ListHelper.CreateLines(lines, 0, TextInFrontOfCursor, TextBehindCursor), CursorPosition.LineNumber);
 
-            using (PooledList<Line> LinesToInsert = new PooledList<Line>(lines.Length))
-            {
-                //Paste the text
-                for (int i = 0; i < lines.Length; i++)
-                {
-                    if (i == 0)
-                        LinesToInsert.Add(new Line(TextInFrontOfCursor + lines[i]));
-                    else if (i == lines.Length - 1)
-                        LinesToInsert.Add(new Line(lines[i] + TextBehindCursor));
-                    else
-                        LinesToInsert.Add(new Line(lines[i]));
-                }
-                ListHelper.InsertRange(TotalLines, LinesToInsert, CursorPosition.LineNumber);
-            }
             return new CursorPosition(CursorPosition.CharacterPosition + lines.Length > 0 ? lines[lines.Length - 1].Length : 0, CursorPosition.LineNumber + lines.Length - 1);
         }
 
@@ -143,11 +140,11 @@ namespace TextControlBox.Text
             int StartPosition = Selection.StartPosition.CharacterPosition;
             int EndPosition = Selection.EndPosition.CharacterPosition;
 
-            string[] SplittedText = Text.Split(NewLineCharacter);
+            string[] lines = Text.Split(NewLineCharacter);
             Line Start_Line = ListHelper.GetLine(TotalLines, StartLine);
 
             //Selection is singleline and text to paste is also singleline
-            if (StartLine == EndLine && SplittedText.Length == 1)
+            if (StartLine == EndLine && lines.Length == 1)
             {
                 if (StartPosition == 0 && EndPosition == ListHelper.GetLine(TotalLines, EndLine).Length)
                     Start_Line.Content = "";
@@ -157,126 +154,77 @@ namespace TextControlBox.Text
                 Start_Line.AddText(Text, StartPosition);
                 return new CursorPosition(StartPosition + Text.Length, Selection.StartPosition.LineNumber);
             }
-            else if (StartLine == EndLine && SplittedText.Length > 1)
+            else if (StartLine == EndLine && lines.Length > 1 && (StartPosition != 0 && EndPosition != Start_Line.Length))
             {
-                if (StartPosition == 0 && EndPosition == ListHelper.GetLine(TotalLines, EndLine).Length)
-                    Start_Line.Content = "";
-
                 string TextTo = Start_Line.Content == "" ? "" : StartPosition >= Start_Line.Length ? Start_Line.Content : Start_Line.Content.Substring(0, StartPosition);
                 string TextFrom = Start_Line.Content == "" ? "" : EndPosition >= Start_Line.Length ? Start_Line.Content : Start_Line.Content.Substring(EndPosition);
 
-                using (PooledList<Line> Lines = new PooledList<Line>(SplittedText.Length))
-                {
-                    for (int i = 0; i < SplittedText.Length; i++)
-                    {
-                        if (i == 0)
-                            Start_Line.SetText(TextTo + SplittedText[i]);
-                        else if (i == SplittedText.Length - 1)
-                            Lines.Add(new Line(SplittedText[i] + TextFrom));
-                        else
-                            Lines.Add(new Line(SplittedText[i]));
-                    }
-                    ListHelper.InsertRange(TotalLines, Lines, StartLine + 1);
-                    return new CursorPosition(EndPosition + Text.Length, StartLine + SplittedText.Length - 1);
-                }
+                Start_Line.SetText(TextTo + lines[0]);
+
+                var linesToAdd = ListHelper.CreateLines(lines, 1, "", TextFrom);
+                ListHelper.InsertRange(TotalLines, linesToAdd, StartLine + 1);
+                //ListHelper.Insert(TotalLines, new Line(lines[lines.Length - 1] + TextFrom), StartLine + 1);
+
+                return new CursorPosition(EndPosition + Text.Length, StartLine + lines.Length - 1);
             }
             else if (WholeTextSelected(Selection, TotalLines))
             {
-                ReplaceLines(TotalLines, 0, TotalLines.Count, SplittedText);
+                ReplaceLines(TotalLines, 0, TotalLines.Count, lines);
                 return new CursorPosition(ListHelper.GetLine(TotalLines, -1).Length, TotalLines.Count - 1);
             }
             else
             {
-                using (PooledList<Line> LinesToInsert = new PooledList<Line>(SplittedText.Length))
+                Line End_Line = ListHelper.GetLine(TotalLines, EndLine);
+
+                //All lines are selected from start to finish
+                if (StartPosition == 0 && EndPosition == End_Line.Length)
                 {
-                    int RemoveStart, RemoveCount;
-                    int InsertPosition = StartLine;
-                    Line End_Line = ListHelper.GetLine(TotalLines, EndLine);
+                    //ListHelper.RemoveRange(TotalLines, StartLine, EndLine - StartLine + 1);
 
-                    //All lines are selected from start to finish
-                    if (StartPosition == 0 && EndPosition == End_Line.Length)
-                    {
-                        //ListHelper.RemoveRange(TotalLines, StartLine, EndLine - StartLine + 1);
-                        RemoveStart = StartLine;
-                        RemoveCount = EndLine - StartLine + 1;
-                        for (int i = 0; i < SplittedText.Length; i++)
-                        {
-                            LinesToInsert.Add(new Line(SplittedText[i]));
-                        }
-                        StartLine -= 1;
-                    }
-                    //Only the startline is completely selected
-                    else if (StartPosition == 0 && EndPosition != End_Line.Length)
-                    {
-                        End_Line.Substring(EndPosition);
-                        //ListHelper.RemoveRange(TotalLines, StartLine, EndLine - StartLine);
-                        RemoveStart = StartLine;
-                        RemoveCount = EndLine - StartLine;
+                    ListHelper.RemoveRange(TotalLines, StartLine, EndLine - StartLine + 1);
+                    ListHelper.InsertRange(TotalLines, ListHelper.CreateLines(lines), StartLine);
+                }
+                //Only the startline is completely selected
+                else if (StartPosition == 0 && EndPosition != End_Line.Length)
+                {
+                    End_Line.Substring(EndPosition);
+                    End_Line.AddToStart(lines[lines.Length - 1]);
 
-                        for (int i = 0; i < SplittedText.Length; i++)
-                        {
-                            if (i == SplittedText.Length - 1)
-                                End_Line.AddToStart(SplittedText[i]);
-                            else
-                                LinesToInsert.Add(new Line(SplittedText[i]));
-                        }
-                        StartLine -= 1;
-                    }
-                    //Only the endline is completely selected
-                    else if (StartPosition != 0 && EndPosition == End_Line.Length)
-                    {
-                        Start_Line.Remove(StartPosition);
-                        //ListHelper.RemoveRange(TotalLines, StartLine + 1, EndLine - StartLine);
-                        RemoveStart = StartLine + 1;
-                        RemoveCount = EndLine - StartLine;
+                    ListHelper.RemoveRange(TotalLines, StartLine, EndLine - StartLine);
+                    ListHelper.InsertRange(TotalLines, ListHelper.CreateLines(lines, 0, lines.Length - 1), StartLine);
+                }
+                //Only the endline is completely selected
+                else if (StartPosition != 0 && EndPosition == End_Line.Length)
+                {
+                    Start_Line.Remove(StartPosition);
+                    Start_Line.AddToEnd(lines[0]);
 
-                        for (int i = 0; i < SplittedText.Length; i++)
-                        {
-                            if (i == 0)
-                                Start_Line.AddToEnd(SplittedText[i]);
-                            else
-                                LinesToInsert.Add(new Line(SplittedText[i]));
-                        }
+                    ListHelper.RemoveRange(TotalLines, StartLine + 1, EndLine - StartLine);
+                    ListHelper.InsertRange(TotalLines, ListHelper.CreateLines(lines, 1), StartLine + 1);
+                }
+                else
+                {                    
+                    //Delete the selected parts
+                    Start_Line.Remove(StartPosition);
+                    End_Line.Substring(EndPosition);
+
+                    //Only one line to insert
+                    if (lines.Length == 1)
+                    {
+                        Start_Line.AddToEnd(lines[0] + End_Line.Content);
+
+                        ListHelper.RemoveRange(TotalLines, StartLine + 1, EndLine - StartLine < 0 ? 0 : EndLine - StartLine);
                     }
                     else
                     {
-                        Start_Line.Remove(StartPosition);
-                        End_Line.Substring(EndPosition);
+                        Start_Line.AddToEnd(lines[0]);
+                        ListHelper.RemoveRange(TotalLines, StartLine + 1, EndLine - StartLine - 1 < 0 ? 0 : EndLine - StartLine - 1);
+                        ListHelper.InsertRange(TotalLines, ListHelper.CreateLines(lines, 1, lines.Length - 1), StartLine + 1);
+                        End_Line.AddToStart(lines[lines.Length - 1]);
 
-                        int Remove = EndLine - StartLine - 1;
-                        //ListHelper.RemoveRange(TotalLines, StartLine + 1, Remove < 0 ? 0 : Remove);
-                        RemoveStart = StartLine + 1;
-                        RemoveCount = Remove < 0 ? 0 : Remove;
-
-                        if (SplittedText.Length == 1)
-                        {
-                            Start_Line.AddToEnd(SplittedText[0] + End_Line.Content);
-                            TotalLines.Remove(End_Line);
-                        }
-                        else
-                        {
-                            for (int i = 0; i < SplittedText.Length; i++)
-                            {
-                                if (i == 0)
-                                    Start_Line.AddToEnd(SplittedText[i]);
-                                if (i != 0 && i != SplittedText.Length - 1)
-                                    LinesToInsert.Add(new Line(SplittedText[i]));
-                                if (i == SplittedText.Length - 1)
-                                {
-                                    End_Line.AddToStart(SplittedText[i]);
-                                }
-                            }
-                        }
                     }
-
-                    ListHelper.RemoveRange(TotalLines, RemoveStart, RemoveCount);
-                    if (LinesToInsert.Count > 0)
-                    {
-                        ListHelper.InsertRange(TotalLines, LinesToInsert, StartLine + 1);
-                    }
-
-                    return new CursorPosition(Start_Line.Length + End_Line.Length - 1, InsertPosition + SplittedText.Length - 1);
                 }
+                return new CursorPosition(Start_Line.Length + End_Line.Length - 1, StartLine + lines.Length - 1);
             }
         }
 
@@ -411,7 +359,7 @@ namespace TextControlBox.Text
         }
 
         //Returns the whole lines, without respecting the characterposition of the selection
-        public static PooledList<Line> GetPointerToSelectedLines(PooledList<Line> TotalLines, TextSelection Selection)
+        public static PooledList<Line> GetSelectedLines(PooledList<Line> TotalLines, TextSelection Selection)
         {
             if (Selection == null)
                 return null;
@@ -429,39 +377,6 @@ namespace TextControlBox.Text
                 return ListHelper.GetLines(TotalLines, StartLine, Count);
             }
         }
-        //Get the selected lines as a new Line without respecting the characterposition
-        public static PooledList<Line> GetCopyOfSelectedLines(PooledList<Line> TotalLines, TextSelection Selection)
-        {
-            if (Selection == null)
-                return null;
-
-            int StartLine = Math.Min(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
-            int EndLine = Math.Max(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
-
-            //Get the items into the list CurrentItems
-            PooledList<Line> CurrentItems;
-            if (EndLine == StartLine)
-            {
-                CurrentItems = ListHelper.GetLines(TotalLines, StartLine, 1);
-            }
-            else
-            {
-                int Count = EndLine - StartLine + 1;
-                if (StartLine + Count >= TotalLines.Count)
-                    Count = TotalLines.Count - StartLine;
-
-                CurrentItems = ListHelper.GetLines(TotalLines, StartLine, Count);
-            }
-
-            //Create new items with same content from CurrentItems into NewItems
-            PooledList<Line> NewItems = new PooledList<Line>();
-            for (int i = 0; i < CurrentItems.Count; i++)
-            {
-                NewItems.Add(new Line(CurrentItems[i].Content));
-            }
-            CurrentItems = null;
-            return NewItems;
-        }
 
         public static string GetSelectedTextWithoutCharacterPos(PooledList<Line> TotalLines, TextSelection TextSelection, string NewLineCharacter)
         {
@@ -478,11 +393,7 @@ namespace TextControlBox.Text
             }
             else
             {
-                int Count = EndLine - StartLine + 1;
-                if (StartLine + Count >= TotalLines.Count)
-                    Count = TotalLines.Count - StartLine;
-
-                return string.Join(NewLineCharacter, ListHelper.GetLines(TotalLines, StartLine, Count).Select(x => x.Content));
+                return ListHelper.GetLinesAsString(TotalLines, StartLine, EndLine - StartLine + 1, NewLineCharacter);
             }
         }
 
@@ -545,43 +456,67 @@ namespace TextControlBox.Text
             if (SplittedText.Length == 0)
             {
                 ListHelper.RemoveRange(TotalLines, Start, Count);
+                return;
             }
-            else
-            {
-                //delete items from Start to Count
-                //Insert SplittedText at Start
-                PooledList<Line> linesToReplace =
-                    Start + Count == TotalLines.Count ? TotalLines : ListHelper.GetLines(TotalLines, Start, Count);
 
-                if (linesToReplace.Count >= SplittedText.Length)
+
+            Debug.WriteLine(Start + ":" + Count);
+
+            PooledList<Line> linesToReplace = ListHelper.GetLines(TotalLines, Start, Count);
+            for (int i = 0; i < linesToReplace.Count; i++)
+            {
+                Debug.WriteLine("Lines: " + i + " = " + linesToReplace[i].Content);
+            }
+
+            //Same line-length -> check for any differences in the individual lines
+            if (linesToReplace.Count == SplittedText.Length)
+            {
+                Debug.WriteLine("Case1");
+                for (int i = 0; i < linesToReplace.Count; i++)
                 {
-                    for (int i = 0; i < linesToReplace.Count; i++)
+                    if (!linesToReplace[i].Content.Equals(SplittedText[i], StringComparison.Ordinal))
                     {
-                        if (i >= SplittedText.Length)
-                        {
-                            ListHelper.RemoveRange(linesToReplace, Start + i, linesToReplace.Count - i);
-                            break;
-                        }
+                        Debug.WriteLine("\tReplace: " + linesToReplace[i].Content + ":" + SplittedText[i]);
                         linesToReplace[i].SetText(SplittedText[i]);
                     }
                 }
-                else
+            }
+            //Delete items from Start to Count; Insert SplittedText at Start
+            else if (linesToReplace.Count > SplittedText.Length)
+            {
+                Debug.WriteLine("Case2");
+
+                for (int i = 0; i < linesToReplace.Count; i++)
                 {
-                    for (int i = 0; i < SplittedText.Length; i++)
+                    if (i < SplittedText.Length)
                     {
-                        if (i >= linesToReplace.Count)
-                        {
-                            using (var addLines = new PooledList<Line>())
-                            {
-                                for (int j = i; j < SplittedText.Length; j++)
-                                {
-                                    addLines.Add(new Line(SplittedText[j]));
-                                }
-                                TotalLines.InsertRange(Start + i, addLines);
-                            }
-                            break;
-                        }
+                        Debug.WriteLine("\tReplace" + linesToReplace[i].Content + " -> " + SplittedText[i]);
+                        Debug.WriteLine("REplace: " + i);
                         linesToReplace[i].SetText(SplittedText[i]);
+                    }
+                    else
+                    {
+                        Debug.WriteLine("\tRemoveRange" + (Start + i) + ":" + (linesToReplace.Count - i));
+                        ListHelper.RemoveRange(TotalLines, Start + i, linesToReplace.Count - i);
+                        break;
+                    }
+                }
+            }
+            //Replace all items from Start - Count with existing (add more if out of range)
+            else
+            {
+                Debug.WriteLine("Case3");
+                for (int i = 0; i < SplittedText.Length; i++)
+                {
+                    //replace all possible lines
+                    if (i < linesToReplace.Count)
+                    {
+                        linesToReplace[i].SetText(SplittedText[i]);
+                    }
+                    else //Add new lines
+                    {
+                        ListHelper.InsertRange(TotalLines, ListHelper.CreateLines(SplittedText, i), Start + i);
+                        break;
                     }
                 }
             }

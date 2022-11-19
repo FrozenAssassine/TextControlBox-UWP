@@ -11,7 +11,7 @@
     <AssemblyName>TextControlBox</AssemblyName>
     <DefaultLanguage>de-DE</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
-    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.22621.0</TargetPlatformVersion>
+    <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.22000.0</TargetPlatformVersion>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <MinimumVisualStudioVersion>14</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
@@ -107,7 +107,7 @@
     <DebugType>full</DebugType>
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
-    <Optimize>true</Optimize>
+    <Optimize>false</Optimize>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <PlatformTarget>x64</PlatformTarget>
@@ -125,7 +125,6 @@
   <ItemGroup>
     <Compile Include="Extensions\ColorExtension.cs" />
     <Compile Include="Extensions\PointExtension.cs" />
-    <Compile Include="Helper\Extensions.cs" />
     <Compile Include="Helper\FlyoutHelper.cs" />
     <Compile Include="Helper\TabSpaceHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
