@@ -49,7 +49,7 @@ namespace TextControlBox
         private LineEnding _LineEnding = LineEnding.CRLF;
         private bool _ShowLineHighlighter = true;
         private int _FontSize = 18;
-        private int _ZoomFactor = 101; //%
+        private int _ZoomFactor = 100; //%
         private double _HorizontalScrollSensitivity = 1;
         private double _VerticalScrollSensitivity = 1;
         private float SingleLineHeight { get => TextFormat == null ? 0 : TextFormat.LineSpacing; }
@@ -69,7 +69,8 @@ namespace TextControlBox
             Color.FromArgb(255, 0, 0, 0),
             Color.FromArgb(50, 200, 200, 200),
             Color.FromArgb(255, 180, 180, 180),
-            Color.FromArgb(0, 0, 0, 0)
+            Color.FromArgb(0, 0, 0, 0),
+            Color.FromArgb(100, 200, 120, 0)
             );
         private TextControlBoxDesign DarkDesign = new TextControlBoxDesign(
             new SolidColorBrush(Color.FromArgb(0, 30, 30, 30)),
@@ -78,7 +79,8 @@ namespace TextControlBox
             Color.FromArgb(255, 255, 255, 255),
             Color.FromArgb(50, 100, 100, 100),
             Color.FromArgb(255, 100, 100, 100),
-            Color.FromArgb(0, 0, 0, 0)
+            Color.FromArgb(0, 0, 0, 0),
+            Color.FromArgb(100, 160, 80, 0)
             );
 
         //Colors:
@@ -125,6 +127,7 @@ namespace TextControlBox
         private readonly FlyoutHelper flyoutHelper;
         private readonly TabSpaceHelper tabSpaceHelper = new TabSpaceHelper();
         private readonly StringManager stringManager;
+        private readonly SearchHelper searchHelper = new SearchHelper();
 
         /// <summary>
         /// Creates a new instance of the TextControlBox
@@ -1373,6 +1376,10 @@ namespace TextControlBox
             //Create the textlayout --> apply the Syntaxhighlighting --> render it
             DrawnTextLayout = TextRenderer.CreateTextResource(sender, DrawnTextLayout, TextFormat, RenderedText, new Size { Height = sender.Size.Height, Width = this.ActualWidth }, ZoomedFontSize);
             SyntaxHighlightingRenderer.UpdateSyntaxHighlighting(DrawnTextLayout, _AppTheme, _CodeLanguage, SyntaxHighlighting, RenderedText);
+            //render the search highlights
+            if (SearchIsOpen)
+                SearchHighlightsRenderer.RenderHighlights(args, DrawnTextLayout, RenderedText, searchHelper.MatchingSearchLines, searchHelper.SearchParameter.SearchExpression, (float)-HorizontalScroll, SingleLineHeight / 4, _Design.SearchHighlightColor);
+
             args.DrawingSession.DrawTextLayout(DrawnTextLayout, (float)-HorizontalScroll, SingleLineHeight, TextColorBrush);
 
             if (_ShowLineNumbers)
@@ -1465,7 +1472,7 @@ namespace TextControlBox
             }
 
             float posX = (float)sender.Size.Width - SpaceBetweenLineNumberAndText;
-            if(posX < 0)
+            if (posX < 0)
                 posX = 0;
 
             CanvasTextLayout LineNumberLayout = TextRenderer.CreateTextLayout(sender, LineNumberTextFormat, LineNumberTextToRender, posX, (float)sender.Size.Height);
@@ -1474,6 +1481,10 @@ namespace TextControlBox
         //Internal events:
         private void Internal_TextChanged(string text = null)
         {
+            //update the possible lines if the search is open
+            if (searchHelper.IsSearchOpen)
+                searchHelper.UpdateSearchLines(TotalLines);
+
             TextChanged?.Invoke(this, text ?? GetText());
         }
         private void Internal_CursorChanged()
@@ -1571,7 +1582,7 @@ namespace TextControlBox
             UpdateSelection();
             UpdateCursor();
         }
-        
+
         /// <summary>
         /// Moves the cursor to the beginning of the line specified by the index
         /// </summary>
@@ -1583,7 +1594,7 @@ namespace TextControlBox
             UpdateSelection();
             UpdateCursor();
         }
-        
+
         /// <summary>
         /// Load text to the textbox everything will reset. Use this to load text on application start
         /// Use "" to emty the textbox
@@ -1603,7 +1614,7 @@ namespace TextControlBox
         {
             Safe_SetText(text);
         }
-        
+
         /// <summary>
         /// Past the text from the clipboard to the current cursorposition
         /// </summary>
@@ -1611,7 +1622,7 @@ namespace TextControlBox
         {
             Safe_Paste();
         }
-        
+
         /// <summary>
         /// Copies the selected text to the clipboard
         /// </summary>
@@ -1619,7 +1630,7 @@ namespace TextControlBox
         {
             Safe_Copy();
         }
-        
+
         /// <summary>
         /// Deletes the selected text and copies it to the clipboard
         /// </summary>
@@ -1627,7 +1638,7 @@ namespace TextControlBox
         {
             Safe_Cut();
         }
-        
+
         /// <summary>
         /// Gets the text from the textbox
         /// </summary>
@@ -1636,7 +1647,7 @@ namespace TextControlBox
         {
             return Safe_Gettext();
         }
-        
+
         /// <summary>
         /// Sets a selection
         /// </summary>
@@ -1655,7 +1666,7 @@ namespace TextControlBox
             UpdateSelection();
             UpdateCursor();
         }
-        
+
         /// <summary>
         /// Selects the whole text
         /// </summary>
@@ -1669,7 +1680,7 @@ namespace TextControlBox
             UpdateSelection();
             UpdateCursor();
         }
-        
+
         /// <summary>
         /// Clears the selection
         /// </summary>
@@ -1677,7 +1688,7 @@ namespace TextControlBox
         {
             ForceClearSelection();
         }
-        
+
         /// <summary>
         /// Undoes the last undo record
         /// </summary>
@@ -1702,7 +1713,7 @@ namespace TextControlBox
                 ForceClearSelection();
             UpdateAll();
         }
-        
+
         /// <summary>
         /// Redoes the last redo record
         /// </summary>
@@ -1727,7 +1738,7 @@ namespace TextControlBox
                 ForceClearSelection();
             UpdateAll();
         }
-        
+
         /// <summary>
         /// Scrolls the line to the center of the textbox if the line is out of rendered region
         /// </summary>
@@ -1740,7 +1751,7 @@ namespace TextControlBox
                 ScrollLineIntoView(index);
             }
         }
-        
+
         /// <summary>
         /// Scrolls one line up
         /// </summary>
@@ -1749,7 +1760,7 @@ namespace TextControlBox
             VerticalScrollbar.Value -= SingleLineHeight;
             UpdateAll();
         }
-        
+
         /// <summary>
         /// Scrolls one line down
         /// </summary>
@@ -1758,7 +1769,7 @@ namespace TextControlBox
             VerticalScrollbar.Value += SingleLineHeight;
             UpdateAll();
         }
-        
+
         /// <summary>
         /// Forces the line to scroll to center
         /// </summary>
@@ -1768,7 +1779,7 @@ namespace TextControlBox
             VerticalScrollbar.Value = (index - NumberOfRenderedLines / 2) * SingleLineHeight;
             UpdateAll();
         }
-        
+
         /// <summary>
         /// Scrolls the first line into view
         /// </summary>
@@ -1777,7 +1788,7 @@ namespace TextControlBox
             VerticalScrollbar.Value = (CursorPosition.LineNumber - 1) * SingleLineHeight;
             UpdateAll();
         }
-        
+
         /// <summary>
         /// Scrolls the bottom line into view
         /// </summary>
@@ -1786,7 +1797,7 @@ namespace TextControlBox
             VerticalScrollbar.Value = (CursorPosition.LineNumber - NumberOfRenderedLines + 1) * SingleLineHeight;
             UpdateAll();
         }
-        
+
         /// <summary>
         /// Scrolls one page up (same as page up-key)
         /// </summary>
@@ -1799,7 +1810,7 @@ namespace TextControlBox
             VerticalScrollbar.Value -= NumberOfRenderedLines * SingleLineHeight;
             UpdateAll();
         }
-        
+
         /// <summary>
         /// Scrolls one page up (same as page down-key)
         /// </summary>
@@ -1811,7 +1822,7 @@ namespace TextControlBox
             VerticalScrollbar.Value += NumberOfRenderedLines * SingleLineHeight;
             UpdateAll();
         }
-        
+
         /// <summary>
         /// Gets the content of the line specified by the index
         /// </summary>
@@ -1850,7 +1861,7 @@ namespace TextControlBox
             UpdateText();
             return true;
         }
-        
+
         /// <summary>
         /// Deletes the line from the textbox
         /// </summary>
@@ -1869,7 +1880,7 @@ namespace TextControlBox
             UpdateText();
             return true;
         }
-        
+
         /// <summary>
         /// Adds a new line with the text specified
         /// </summary>
@@ -1889,20 +1900,7 @@ namespace TextControlBox
             UpdateText();
             return true;
         }
-        
-        /// <summary>
-        /// Find in the text specified by the pattern
-        /// </summary>
-        /// <param name="pattern"></param>
-        /// <returns>A TextSelectionPosition class with the index and position of the word or null if the pattern was not found</returns>
-        public TextSelectionPosition FindInText(string pattern)
-        {
-            var pos = Regex.Match(GetText(), pattern);
-            if (pos.Success)
-                return new TextSelectionPosition(pos.Index, pos.Length);
-            else return null;
-        }
-        
+
         /// <summary>
         /// Surrounds the selection with the text specified by the value
         /// </summary>
@@ -1912,7 +1910,7 @@ namespace TextControlBox
             text = stringManager.CleanUpString(text);
             SurroundSelectionWith(text, text);
         }
-        
+
         /// <summary>
         /// Surround the selection with individual text for the left and right side.
         /// </summary>
@@ -1925,7 +1923,7 @@ namespace TextControlBox
                 AddCharacter(stringManager.CleanUpString(text1) + SelectedText + stringManager.CleanUpString(text2));
             }
         }
-        
+
         /// <summary>
         /// Duplicates the line specified by the index into the next line
         /// </summary>
@@ -1943,157 +1941,98 @@ namespace TextControlBox
             UpdateText();
             UpdateCursor();
         }
-        
-        /// <summary>
-        /// Finds and selects a word in the textbox
-        /// </summary>
-        /// <param name="word">The word to search for</param>
-        /// <param name="up">The direction true = up, false = down</param>
-        /// <param name="matchCase">Whether to search case sensitive</param>
-        /// <param name="wholeWord">Whether to search for a whole word</param>
-        /// <returns>True if the word was found</returns>
-        public bool FindInText(string word, bool up, bool matchCase, bool wholeWord)
-        {
-            string Text = GetText();
-            bool NotFound()
-            {
-                SetSelection(SelectionStart, 0);
-                return false;
-            }
-            //Search down:
-            if (!up)
-            {
-                if (!matchCase)
-                {
-                    Text = Text.ToLower();
-                    word = word.ToLower();
-                }
-                if (SelectionStart == -1)
-                {
-                    SelectionStart = 0;
-                }
-
-                int startpos = SelectionStart;
-                if (SelectionLength > 0)
-                {
-                    startpos = SelectionStart + SelectionLength;
-                }
-                if (word.Length + startpos > Text.Length)
-                {
-                    return NotFound();
-                }
-
-                int index = wholeWord ? StringExtension.IndexOfWholeWord(Text, word, startpos) : Text.IndexOf(word, startpos);
-                if (index == -1)
-                {
-                    return NotFound();
-                }
-                SetSelection(index, word.Length);
-                ScrollTopIntoView();
-                return true;
-            }
-            else
-            {
-                try
-                {
-                    if (!matchCase)
-                    {
-                        Text = Text.ToLower();
-                        word = word.ToLower();
-                    }
-                    if (SelectionStart == -1)
-                    {
-                        SelectionStart = 0;
-                    }
-
-                    string shortedText = Text.Substring(0, SelectionStart);
-                    int index = wholeWord ? StringExtension.LastIndexOfWholeWord(shortedText, word) : shortedText.LastIndexOf(word);
-                    if (index == -1)
-                    {
-                        SetSelection(Text.Length, 0);
-                        return NotFound();
-                    }
-
-                    SetSelection(index, word.Length);
-                    ScrollTopIntoView();
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine("Exception in TextControlBox --> FindInText:" + "\n" + ex.Message);
-                    return false;
-                }
-            }
-        }
 
         /// <summary>
-        /// Finds and replaces a word in the textbox
+        /// Replaces all occurences in the text with another word
         /// </summary>
         /// <param name="word">The word to search for</param>
         /// <param name="replaceWord">The word to replace with</param>
-        /// <param name="up">The direction true = up, false = down</param>
-        /// <param name="matchCase">Whether to search case sensitive</param>
-        /// <param name="wholeWord">Whether to search for a whole word</param>
-        /// <returns>True if the word was found</returns>
-        public bool ReplaceInText(string word, string replaceWord, bool up, bool matchCase, bool wholeWord)
+        /// <param name="matchCase">Search with case sensitivity</param>
+        /// <param name="wholeWord">Search for whole words</param>
+        /// <returns></returns>
+        public SearchResult ReplaceAll(string word, string replaceWord, bool matchCase, bool wholeWord)
         {
-            if (word.Length == 0)
-            {
-                return false;
-            }
+            if (word.Length == 0 || replaceWord.Length == 0)
+                return SearchResult.InvalidInput;
 
-            bool res = FindInText(word, up, matchCase, wholeWord);
-            if (res)
-            {
-                SelectedText = replaceWord;
-            }
+            SearchParameter searchParameter = new SearchParameter(word, wholeWord, matchCase);
 
+            undoRedo.RecordUndoAction(() =>
+            {
+                for (int i = 0; i < TotalLines.Count; i++)
+                {
+                    if (TotalLines[i].Contains(searchParameter))
+                    {
+                        TotalLines[i].Content = Regex.Replace(TotalLines[i].Content, searchParameter.SearchExpression, replaceWord);
+                    }
+                }
+            }, TotalLines, 0, TotalLines.Count, TotalLines.Count, NewLineCharacter);
+            UpdateText();
+            return SearchResult.ReachedEnd;
+        }
+
+        /// <summary>
+        /// Searches for the next occurence. Call this after BeginSearch
+        /// </summary>
+        /// <returns>SearchResult.Found if the word was found</returns>
+        public SearchResult FindNext()
+        {
+            if (!searchHelper.IsSearchOpen)
+                return SearchResult.SearchNotOpened;
+
+            var res = searchHelper.FindNext(TotalLines, CursorPosition);
+            if (res.selection != null)
+            {
+                selectionrenderer.SetSelection(res.selection);
+                ScrollLineIntoView(CursorPosition.LineNumber);
+                UpdateText();
+                UpdateSelection();
+            }
+            return res.result;
+        }
+
+        /// <summary>
+        /// Searches for the previous occurence. Call this after BeginSearch
+        /// </summary>
+        /// <returns>SearchResult.Found if the word was found</returns>
+        public SearchResult FindPrevious()
+        {
+            if (!searchHelper.IsSearchOpen)
+                return SearchResult.SearchNotOpened;
+
+            var res = searchHelper.FindPrevious(TotalLines, CursorPosition);
+            if (res.selection != null)
+            {
+                selectionrenderer.SetSelection(res.selection);
+                ScrollLineIntoView(CursorPosition.LineNumber);
+                UpdateText();
+                UpdateSelection();
+            }
+            return res.result;
+        }
+
+        /// <summary>
+        /// Begins the search and highlights all occurences
+        /// </summary>
+        /// <param name="word">The word to search for</param>
+        /// <param name="wholeWord">Search for a whole word</param>
+        /// <param name="matchCase">Search for a case sensitive word</param>
+        /// <returns></returns>
+        public SearchResult BeginSearch(string word, bool wholeWord, bool matchCase)
+        {
+            var res = searchHelper.BeginSearch(TotalLines, word, wholeWord, matchCase);
+            FindNext();
+            UpdateText();
             return res;
         }
 
         /// <summary>
-        /// Replaces all words found with another word
+        /// Ends the search removes the highlights
         /// </summary>
-        /// <param name="word">The word to search for</param>
-        /// <param name="replaceWord">The word to replace with</param>
-        /// <param name="up">The direction true = up, false = down</param>
-        /// <param name="matchCase">Whether to search case sensitive</param>
-        /// <param name="wholeWord">Whether to search for a whole word</param>
-        /// <returns>True if the word was found</returns>
-        public bool ReplaceAll(string word, string replaceWord, bool up, bool matchCase, bool wholeWord)
+        public void EndSearch()
         {
-
-            if (word.Length == 0)
-            {
-                return false;
-            }
-
-            int selstart = SelectionStart, sellenght = SelectionLength;
-
-            if (!wholeWord)
-            {
-                SelectAll();
-                if (matchCase)
-                {
-                    SelectedText = GetText().Replace(word, replaceWord);
-                }
-                else
-                {
-                    SelectedText = GetText().Replace(word.ToLower(), replaceWord.ToLower());
-                }
-
-                return true;
-            }
-
-            SetSelection(SelectionStart, 0);
-            bool res = true;
-            while (res)
-            {
-                res = ReplaceInText(word, replaceWord, up, matchCase, wholeWord);
-            }
-
-            SetSelection(selstart, sellenght);
-            return true;
+            searchHelper.EndSearch();
+            UpdateText();
         }
 
         /// <summary>
@@ -2117,7 +2056,7 @@ namespace TextControlBox
             LineNumberContent = TextToRender = null;
             undoRedo.NullAll();
         }
-        
+
         /// <summary>
         /// Clears the undo and redo history
         /// </summary>
@@ -2143,7 +2082,7 @@ namespace TextControlBox
         /// True to enable Syntaxhighlighting and false to disable it
         /// </summary>
         public bool SyntaxHighlighting { get; set; } = true;
-        
+
         /// <summary>
         /// The Codelanguage to use for syntaxhighlighting
         /// </summary>
@@ -2177,7 +2116,7 @@ namespace TextControlBox
         /// The space between the linenumbers and the start of the text
         /// </summary>
         public float SpaceBetweenLineNumberAndText { get => _SpaceBetweenLineNumberAndText; set { _SpaceBetweenLineNumberAndText = value; UpdateAll(); } }
-        
+
         /// <summary>
         /// Get or set the current position of the cursor
         /// </summary>
@@ -2186,7 +2125,7 @@ namespace TextControlBox
             get => _CursorPosition;
             set { _CursorPosition = new CursorPosition(value.CharacterPosition, value.LineNumber); UpdateCursor(); }
         }
-        
+
         /// <summary>
         /// The fontfamily of the textbox
         /// </summary>
@@ -2196,7 +2135,7 @@ namespace TextControlBox
         /// The fontsize of the textbox
         /// </summary>
         public new int FontSize { get => _FontSize; set { _FontSize = value; UpdateZoom(); } }
-        
+
         /// <summary>
         /// Get the actual renderd size of the fontsize in pixels
         /// </summary>
@@ -2206,7 +2145,7 @@ namespace TextControlBox
         /// Get or set the text of the textbox
         /// </summary>
         public string Text { get => GetText(); set { SetText(value); } }
-        
+
         /// <summary>
         /// Get or set the theme of the textbox
         /// </summary>
@@ -2227,9 +2166,9 @@ namespace TextControlBox
                 UpdateAll();
             }
         }
-        
+
         /// <summary>
-        /// Get or set the design of the textbox returns null if the default design is in use
+        /// Get or set the design of the textbox returns null if the default design is used
         /// </summary>
         public TextControlBoxDesign Design
         {
@@ -2252,7 +2191,7 @@ namespace TextControlBox
                 UpdateAll();
             }
         }
-        
+
         /// <summary>
         /// True to show, false to hide the linenumbers
         /// </summary>
@@ -2265,7 +2204,7 @@ namespace TextControlBox
                 UpdateAll();
             }
         }
-        
+
         /// <summary>
         /// True to show, false to hide the linehighlighter
         /// </summary>
@@ -2274,12 +2213,12 @@ namespace TextControlBox
             get => _ShowLineHighlighter;
             set { _ShowLineHighlighter = value; UpdateCursor(); }
         }
-        
+
         /// <summary>
         /// Define the zoomfactor in percent; The default is 100%
         /// </summary>
         public int ZoomFactor { get => _ZoomFactor; set { _ZoomFactor = value; UpdateZoom(); } } //%
-        
+
         /// <summary>
         /// False to allow changes to the textbox, true to lock the editing
         /// </summary>
@@ -2289,7 +2228,7 @@ namespace TextControlBox
         /// Change the size and offset of the cursor. Use null for the default
         /// </summary>
         public CursorSize CursorSize { get => _CursorSize; set { _CursorSize = value; UpdateCursor(); } }
-       
+
         /// <summary>
         /// Change the contextflyout of the textbox
         /// </summary>
@@ -2314,7 +2253,7 @@ namespace TextControlBox
         /// True to disable the ContextFlyout, false to enable it
         /// </summary>
         public bool ContextFlyoutDisabled { get; set; }
-        
+
         /// <summary>
         /// The characterposition of the selection start
         /// </summary>
@@ -2324,7 +2263,7 @@ namespace TextControlBox
         /// The characterposition of the selection length
         /// </summary>
         public int SelectionLength { get => selectionrenderer.SelectionLength; set { SetSelection(SelectionStart, value); } }
-        
+
         /// <summary>
         /// Get or set the selected text
         /// </summary>
@@ -2344,17 +2283,17 @@ namespace TextControlBox
                 AddCharacter(stringManager.CleanUpString(value));
             }
         }
-        
+
         /// <summary>
         /// Get the number of lines in the textbox
         /// </summary>
         public int NumberOfLines { get => TotalLines.Count; }
-        
+
         /// <summary>
         /// Get the line index of the cursor
         /// </summary>
         public int CurrentLineIndex { get => CursorPosition.LineNumber; }
-        
+
         /// <summary>
         /// Get or set the scrollbar position
         /// </summary>
@@ -2363,12 +2302,12 @@ namespace TextControlBox
             get => new ScrollBarPosition(HorizontalScrollbar.Value, VerticalScroll);
             set { HorizontalScrollbar.Value = value.ValueX; VerticalScroll = value.ValueY; }
         }
-        
+
         /// <summary>
         /// Get the number of characters in the textbox
         /// </summary>
         public int CharacterCount { get => Utils.CountCharacters(TotalLines); }
-        
+
         /// <summary>
         /// Get or set the scroll sensitivity of the vertical scrollbar
         /// </summary>
@@ -2378,7 +2317,7 @@ namespace TextControlBox
         /// Get or set the scroll sensitivity of the horizontal scrollbar
         /// </summary>
         public double HorizontalScrollSensitivity { get => _HorizontalScrollSensitivity; set => _HorizontalScrollSensitivity = value < 1 ? 1 : value; }
-        
+
         /// <summary>
         /// Get the vertical scrollposition
         /// </summary>
@@ -2388,21 +2327,27 @@ namespace TextControlBox
         /// Get the horizontal scrollposition
         /// </summary>
         public double HorizontalScroll { get => HorizontalScrollbar.Value; set { HorizontalScrollbar.Value = value < 0 ? 0 : value; UpdateAll(); } }
-        
+
         /// <summary>
         /// The radius of the borders around the control
         /// </summary>
         public new CornerRadius CornerRadius { get => MainGrid.CornerRadius; set => MainGrid.CornerRadius = value; }
-        
+
         /// <summary>
         /// Indicates whether to use spaces or tabs
         /// </summary>
         public bool UseSpacesInsteadTabs { get => tabSpaceHelper.UseSpacesInsteadTabs; set { tabSpaceHelper.UseSpacesInsteadTabs = value; tabSpaceHelper.UpdateTabs(TotalLines); UpdateText(); } }
-        
+
         /// <summary>
         /// The number of spaces to use instead of one tab
         /// </summary>
         public int NumberOfSpacesForTab { get => tabSpaceHelper.NumberOfSpaces; set { tabSpaceHelper.NumberOfSpaces = value; tabSpaceHelper.UpdateTabs(TotalLines); } }
+
+        /// <summary>
+        /// Get whether the search is currently active
+        /// </summary>
+        public bool SearchIsOpen { get => searchHelper.IsSearchOpen; }
+
         #endregion
 
         #region Public events
@@ -2422,7 +2367,7 @@ namespace TextControlBox
         /// <param name="args">The new position of the cursor</param>
         public delegate void SelectionChangedEvent(TextControlBox sender, Text.SelectionChangedEventHandler args);
         public event SelectionChangedEvent SelectionChanged;
-        
+
         /// <summary>
         /// Invokes when the zoom has changed
         /// </summary>
@@ -2474,7 +2419,7 @@ namespace TextControlBox
                 return _CodeLanguages;
             }
         }
-        
+
         /// <summary>
         /// Get a CodeLanguage by the identifier from the list
         /// </summary>
@@ -2525,7 +2470,7 @@ namespace TextControlBox
         /// <param name="LineHighlighterColor">The color of the linehighlighter</param>
         /// <param name="LineNumberColor">The color of the linenumber</param>
         /// <param name="LineNumberBackground">The background color of the linenumbers</param>
-        public TextControlBoxDesign(Brush Background, Color TextColor, Color SelectionColor, Color CursorColor, Color LineHighlighterColor, Color LineNumberColor, Color LineNumberBackground)
+        public TextControlBoxDesign(Brush Background, Color TextColor, Color SelectionColor, Color CursorColor, Color LineHighlighterColor, Color LineNumberColor, Color LineNumberBackground, Color SearchHighlightColor)
         {
             this.Background = Background;
             this.TextColor = TextColor;
@@ -2534,8 +2479,9 @@ namespace TextControlBox
             this.LineHighlighterColor = LineHighlighterColor;
             this.LineNumberColor = LineNumberColor;
             this.LineNumberBackground = LineNumberBackground;
+            this.SearchHighlightColor = SearchHighlightColor;
         }
-        
+
         public Brush Background { get; set; }
         public Color TextColor { get; set; }
         public Color SelectionColor { get; set; }
@@ -2543,6 +2489,7 @@ namespace TextControlBox
         public Color LineHighlighterColor { get; set; }
         public Color LineNumberColor { get; set; }
         public Color LineNumberBackground { get; set; }
+        public Color SearchHighlightColor { get; set; }
     }
     public class ScrollBarPosition
     {
@@ -2589,12 +2536,12 @@ namespace TextControlBox
             this.OffsetX = OffsetX;
             this.OffsetY = OffsetY;
         }
-        
+
         /// <summary>
         /// The width of the cursor
         /// </summary>
         public float Width { get; private set; }
-        
+
         /// <summary>
         /// The height of the cursor
         /// </summary>
@@ -2604,7 +2551,7 @@ namespace TextControlBox
         /// The left/right offset from the actual cursor position
         /// </summary>
         public float OffsetX { get; private set; }
-        
+
         /// <summary>
         /// The top/bottom offset from the actual cursor position
         /// </summary>

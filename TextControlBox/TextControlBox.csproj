@@ -124,8 +124,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Extensions\ColorExtension.cs" />
+    <Compile Include="Extensions\IntExtension.cs" />
     <Compile Include="Extensions\PointExtension.cs" />
     <Compile Include="Helper\FlyoutHelper.cs" />
+    <Compile Include="Helper\SearchHelper.cs" />
     <Compile Include="Helper\TabSpaceHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Helper\DebugHelper.cs" />
@@ -133,6 +135,7 @@
     <Compile Include="Helper\Utils.cs" />
     <Compile Include="Renderer\CursorRenderer.cs" />
     <Compile Include="Renderer\LineHighlighter.cs" />
+    <Compile Include="Renderer\SearchHighlightsRenderer.cs" />
     <Compile Include="Renderer\SelectionRenderer.cs" />
     <Compile Include="Renderer\SyntaxHighlightingRenderer.cs" />
     <Compile Include="Renderer\TextRenderer.cs" />
