@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json.Linq;
 using System;
 using System.Text;
+using System.Text.RegularExpressions;
+using TextControlBox.Helper;
 
 namespace TextControlBox.Text
 {
@@ -69,6 +71,16 @@ namespace TextControlBox.Text
             {
                 _Content = _Content.Remove(End) + Text + _Content.Remove(0, start);
             }
+        }
+        public bool Contains(SearchParameter Parameter)
+        {
+            if(Parameter.WholeWord)
+                return Regex.IsMatch(_Content, Parameter.SearchExpression, RegexOptions.Compiled);
+            
+            if (Parameter.MatchCase)
+                return _Content.Contains(Parameter.Word, StringComparison.Ordinal);
+            else
+                return _Content.Contains(Parameter.Word, StringComparison.OrdinalIgnoreCase);
         }
     }
 }
