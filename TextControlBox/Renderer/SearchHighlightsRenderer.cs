@@ -11,7 +11,7 @@ using Windows.UI;
 
 namespace TextControlBox.Renderer
 {
-    public class SearchHighlightsRenderer
+    internal class SearchHighlightsRenderer
     {
         public static Rect CreateRect(Rect r, float MarginLeft = 0, float MarginTop = 0)
         {

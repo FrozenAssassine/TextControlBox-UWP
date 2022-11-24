@@ -16,7 +16,7 @@ using Windows.UI.Xaml;
 
 namespace TextControlBox.Renderer
 {
-    public class SyntaxHighlightingRenderer
+    internal class SyntaxHighlightingRenderer
     {
         public static FontWeight BoldFont = new FontWeight { Weight = 600 };
         public static FontStyle ItalicFont = FontStyle.Italic;
@@ -38,11 +38,6 @@ namespace TextControlBox.Renderer
                     var match = matches[j];
                     int index = match.Index;
                     int length = match.Length;
-                    //if (match.Groups.Count > 1 && match.Groups[1].Value != "")
-                    //{
-                    //    index = match.Groups[1].Index;
-                    //    length = match.Groups[1].Length;
-                    //}
                     DrawnTextLayout.SetColor(index, length, color);
                     if (highlight.CodeStyle != null)
                     {
@@ -80,7 +75,13 @@ namespace TextControlBox.Renderer
             this.Succeed = Succeed;
             this.CodeLanguage = CodeLanguage;
         }
+        /// <summary>
+        /// true if the loading succeed
+        /// </summary>
         public bool Succeed { get; set; }
+        /// <summary>
+        /// The codelanguage loaded
+        /// </summary>
         public CodeLanguage CodeLanguage { get; set; }
     }
     public class SyntaxHighlights

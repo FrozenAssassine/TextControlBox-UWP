@@ -4,7 +4,7 @@ using Microsoft.Graphics.Canvas.UI.Xaml;
 
 namespace TextControlBox.Renderer
 {
-    public class LineHighlighter
+    internal class LineHighlighter
     {
         public static void Render(float CanvasWidth, CanvasTextLayout TextLayout, float XOffset, float Y, float FontSize, CanvasDrawEventArgs args, CanvasSolidColorBrush BackgroundBrush)
         {

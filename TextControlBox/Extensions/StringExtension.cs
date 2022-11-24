@@ -2,7 +2,7 @@
 
 namespace TextControlBox.Extensions
 {
-    public static class StringExtension
+    internal static class StringExtension
     {
         public static int IndexOfWholeWord(string Text, string Word, int StartIndex)
         {

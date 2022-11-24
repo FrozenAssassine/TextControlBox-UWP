@@ -7,7 +7,7 @@ using TextControlBox.Helper;
 
 namespace TextControlBox.Text
 {
-    public class StringManager
+    internal class StringManager
     {
         private TabSpaceHelper tabSpaceHelper;
         public LineEnding lineEnding;

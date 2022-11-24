@@ -7,7 +7,7 @@ using Windows.Foundation;
 
 namespace TextControlBox.Extensions
 {
-    public static class PointExtension
+    internal static class PointExtension
     {
         public static Point Subtract(this Point point, double subtractX, double subtractY)
         {

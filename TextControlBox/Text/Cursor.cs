@@ -5,7 +5,7 @@ using Windows.UI.Xaml;
 
 namespace TextControlBox.Text
 {
-    public class Cursor
+    internal class Cursor
     {
         private static bool ControlIsPressed { get => Window.Current.CoreWindow.GetKeyState(Windows.System.VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down); }
 

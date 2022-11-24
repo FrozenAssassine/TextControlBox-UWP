@@ -3,7 +3,7 @@ using Windows.UI.Xaml.Controls;
 
 namespace TextControlBox.Helper
 {
-    public class FlyoutHelper
+    internal class FlyoutHelper
     {
         public MenuFlyout MenuFlyout;
 

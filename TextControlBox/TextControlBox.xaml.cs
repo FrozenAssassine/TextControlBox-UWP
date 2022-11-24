@@ -2445,10 +2445,6 @@ namespace TextControlBox
     }
     public class TextControlBoxDesign
     {
-        public TextControlBoxDesign()
-        {
-
-        }
         public TextControlBoxDesign(TextControlBoxDesign Design)
         {
             this.Background = Design.Background;

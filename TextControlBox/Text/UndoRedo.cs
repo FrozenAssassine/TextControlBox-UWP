@@ -10,7 +10,7 @@ using static System.Collections.Specialized.BitVector32;
 
 namespace TextControlBox.Text
 {
-    public class UndoRedo
+    internal class UndoRedo
     {
         private Stack<UndoRedoItem> UndoStack = new Stack<UndoRedoItem>();
         private Stack<UndoRedoItem> RedoStack = new Stack<UndoRedoItem>();
@@ -185,7 +185,7 @@ namespace TextControlBox.Text
         /// </summary>
         public bool CanRedo { get => RedoStack.Count > 0; }
     }
-    public struct UndoRedoItem
+    internal struct UndoRedoItem
     {
         public int StartLine { get; set; }
         public string UndoText { get; set; }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TextControlBox.Extensions
 {
-    public static class IntExtension
+    internal static class IntExtension
     {
         public static bool IsInRange(this int value, int start, int count)
         {

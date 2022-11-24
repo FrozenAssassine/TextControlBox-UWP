@@ -4,7 +4,7 @@ using TextControlBox.Text;
 
 namespace TextControlBox.Helper
 {
-    public class DebugHelper
+    internal class DebugHelper
     {
         public static void DebugList(PooledList<Line> List, string DebugTitle = "--DebugList--")
         {

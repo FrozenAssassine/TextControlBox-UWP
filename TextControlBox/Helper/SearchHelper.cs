@@ -175,7 +175,7 @@ namespace TextControlBox.Helper
             return results.ToArray();
         }
     }
-    public class SearchParameter
+    internal class SearchParameter
     {
         public SearchParameter(string Word, bool wholeWord = false, bool matchCase = false)
         {
@@ -193,12 +193,15 @@ namespace TextControlBox.Helper
         public string Word { get; set; }
         public string SearchExpression { get; set; } = "";
     }
+    /// <summary>
+    /// A result returned from the search
+    /// </summary>
     public enum SearchResult
     {
         Found, NotFound, InvalidInput, ReachedBegin, ReachedEnd, SearchNotOpened
     }
 
-    public struct InternSearchResult
+    internal struct InternSearchResult
     {
         public InternSearchResult(SearchResult result, TextSelection selection)
         {

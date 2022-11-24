@@ -4,7 +4,7 @@ using TextControlBox.Helper;
 
 namespace TextControlBox.Text
 {
-    public class TabKey
+    internal class TabKey
     {
         public static TextSelection MoveTabBack(PooledList<Line> TotalLines, TextSelection TextSelection, CursorPosition CursorPosition, string TabCharacter, string NewLineCharacter, UndoRedo UndoRedo)
         {

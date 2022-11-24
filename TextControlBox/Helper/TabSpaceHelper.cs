@@ -9,7 +9,7 @@ using TextControlBox.Text;
 
 namespace TextControlBox.Helper
 {
-    public class TabSpaceHelper
+    internal class TabSpaceHelper
     {
         private int _NumberOfSpaces = 4;
         public int NumberOfSpaces 

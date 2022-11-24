@@ -9,7 +9,7 @@ using TextControlBox.Text;
 
 namespace TextControlBox.Helper
 {
-    public class ListHelper
+    internal class ListHelper
     {
         public struct ValueResult
         {

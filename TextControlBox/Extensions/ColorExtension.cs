@@ -7,7 +7,7 @@ using Windows.UI;
 
 namespace TextControlBox.Extensions
 {
-    public static class ColorExtension
+    internal static class ColorExtension
     {
         public static Windows.UI.Color ToMediaColor(this System.Drawing.Color drawingColor)
         {

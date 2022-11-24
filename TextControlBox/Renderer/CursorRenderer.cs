@@ -8,7 +8,7 @@ using Windows.Foundation;
 
 namespace TextControlBox.Renderer
 {
-    public class CursorRenderer
+    internal class CursorRenderer
     {
         public static int GetCursorLineFromPoint(Point Point, float SingleLineHeight, int NumberOfRenderedLines, int NumberOfStartLine)
         {

@@ -6,7 +6,7 @@ using TextControlBox.Helper;
 
 namespace TextControlBox.Text
 {
-    public class Line
+    internal class Line
     {
         private string _Content = "";
         public string Content { get => _Content; set { _Content = value; } }

@@ -5,7 +5,7 @@ using Windows.UI.Xaml.Media;
 
 namespace TextControlBox.Renderer
 {
-    public class TextRenderer
+    internal class TextRenderer
     {
         public static CanvasTextLayout CreateTextResource(ICanvasResourceCreatorWithDpi ResourceCreator, CanvasTextLayout TextLayout, CanvasTextFormat TextFormat, string Text, Size targetSize, float ZoomedFontSize)
         {

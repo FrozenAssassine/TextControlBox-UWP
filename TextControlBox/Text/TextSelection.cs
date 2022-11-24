@@ -1,6 +1,6 @@
 ﻿namespace TextControlBox.Text
 {
-    public class TextSelection
+    internal class TextSelection
     {
         public TextSelection()
         {

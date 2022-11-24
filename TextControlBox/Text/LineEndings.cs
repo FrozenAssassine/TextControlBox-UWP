@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace TextControlBox.Text
 {
-    public class LineEndings
+    internal class LineEndings
     {
         public static string LineEndingToString(LineEnding LineEnding)
         {

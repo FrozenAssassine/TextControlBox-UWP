@@ -9,7 +9,7 @@ using Windows.UI;
 
 namespace TextControlBox.Renderer
 {
-    public class SelectionRenderer
+    internal class SelectionRenderer
     {
         public bool HasSelection = false;
         public bool IsSelecting = false;

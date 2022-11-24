@@ -10,7 +10,7 @@ using Windows.UI.Xaml.Shapes;
 
 namespace TextControlBox.Text
 {
-    public class Selection
+    internal class Selection
     {
         public static bool Equals(TextSelection Sel1, TextSelection Sel2)
         {

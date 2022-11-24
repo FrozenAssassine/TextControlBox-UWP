@@ -19,7 +19,7 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace TextControlBox.Helper
 {
-    public class Utils
+    internal class Utils
     {
         public static Size MeasureTextSize(CanvasDevice device, string text, CanvasTextFormat textFormat, float limitedToWidth = 0.0f, float limitedToHeight = 0.0f)
         {
