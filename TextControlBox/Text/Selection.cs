@@ -68,7 +68,7 @@ namespace TextControlBox.Text
                 return false;
             var sel = OrderTextSelection(Selection);
             return Utils.CursorPositionsAreEqual(sel.StartPosition, new CursorPosition(0, sel.StartPosition.LineNumber)) &&
-                Utils.CursorPositionsAreEqual(sel.EndPosition, new CursorPosition(ListHelper.GetLine(TotalLines, sel.EndPosition.LineNumber).Length, TotalLines.Count - 1));
+                Utils.CursorPositionsAreEqual(sel.EndPosition, new CursorPosition(ListHelper.GetLine(TotalLines, sel.EndPosition.LineNumber).Length, sel.EndPosition.LineNumber));
         }
 
 
@@ -459,24 +459,15 @@ namespace TextControlBox.Text
                 return;
             }
 
-
-            Debug.WriteLine(Start + ":" + Count);
-
             PooledList<Line> linesToReplace = ListHelper.GetLines(TotalLines, Start, Count);
-            for (int i = 0; i < linesToReplace.Count; i++)
-            {
-                Debug.WriteLine("Lines: " + i + " = " + linesToReplace[i].Content);
-            }
 
             //Same line-length -> check for any differences in the individual lines
             if (linesToReplace.Count == SplittedText.Length)
             {
-                Debug.WriteLine("Case1");
                 for (int i = 0; i < linesToReplace.Count; i++)
                 {
                     if (!linesToReplace[i].Content.Equals(SplittedText[i], StringComparison.Ordinal))
                     {
-                        Debug.WriteLine("\tReplace: " + linesToReplace[i].Content + ":" + SplittedText[i]);
                         linesToReplace[i].SetText(SplittedText[i]);
                     }
                 }
@@ -484,19 +475,14 @@ namespace TextControlBox.Text
             //Delete items from Start to Count; Insert SplittedText at Start
             else if (linesToReplace.Count > SplittedText.Length)
             {
-                Debug.WriteLine("Case2");
-
                 for (int i = 0; i < linesToReplace.Count; i++)
                 {
                     if (i < SplittedText.Length)
                     {
-                        Debug.WriteLine("\tReplace" + linesToReplace[i].Content + " -> " + SplittedText[i]);
-                        Debug.WriteLine("REplace: " + i);
                         linesToReplace[i].SetText(SplittedText[i]);
                     }
                     else
                     {
-                        Debug.WriteLine("\tRemoveRange" + (Start + i) + ":" + (linesToReplace.Count - i));
                         ListHelper.RemoveRange(TotalLines, Start + i, linesToReplace.Count - i);
                         break;
                     }
@@ -505,7 +491,6 @@ namespace TextControlBox.Text
             //Replace all items from Start - Count with existing (add more if out of range)
             else
             {
-                Debug.WriteLine("Case3");
                 for (int i = 0; i < SplittedText.Length; i++)
                 {
                     //replace all possible lines
