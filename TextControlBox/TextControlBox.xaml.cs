@@ -3,25 +3,20 @@ using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Brushes;
 using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using TextControlBox.Extensions;
 using TextControlBox.Helper;
 using TextControlBox.Renderer;
 using TextControlBox.Text;
 using Windows.ApplicationModel.DataTransfer;
-using Windows.ApplicationModel.Resources.Core;
 using Windows.Foundation;
-using Windows.Storage.Streams;
 using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Text.Core;
@@ -31,7 +26,6 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
-using static System.Net.Mime.MediaTypeNames;
 using Color = Windows.UI.Color;
 
 namespace TextControlBox
@@ -146,9 +140,7 @@ namespace TextControlBox
 
             //Events:
             this.KeyDown += TextControlBox_KeyDown;
-            Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
             Window.Current.CoreWindow.PointerMoved += CoreWindow_PointerMoved;
-            Window.Current.CoreWindow.PointerPressed += CoreWindow_PointerPressed;
             Window.Current.CoreWindow.PointerReleased += CoreWindow_PointerReleased;
 
             //set default values
@@ -580,6 +572,8 @@ namespace TextControlBox
             EditContext.NotifyFocusEnter();
             inputPane.TryShow();
             Utils.ChangeCursor(CoreCursorType.IBeam);
+
+            UpdateCursor();
         }
         private void RemoveFocus()
         {
@@ -831,9 +825,6 @@ namespace TextControlBox
                 //mark as handled to not change focus
                 e.Handled = true;
             }
-        }
-        private void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs e)
-        {
             if (!HasFocus)
                 return;
 
@@ -841,7 +832,7 @@ namespace TextControlBox
             var shift = Utils.IsKeyPressed(VirtualKey.Shift);
             if (ctrl && !shift)
             {
-                switch (e.VirtualKey)
+                switch (e.Key)
                 {
                     case VirtualKey.Up:
                         ScrollOneLineUp();
@@ -872,11 +863,11 @@ namespace TextControlBox
                         break;
                 }
 
-                if (e.VirtualKey != VirtualKey.Left && e.VirtualKey != VirtualKey.Right && e.VirtualKey != VirtualKey.Back && e.VirtualKey != VirtualKey.Delete)
+                if (e.Key != VirtualKey.Left && e.Key != VirtualKey.Right && e.Key != VirtualKey.Back && e.Key != VirtualKey.Delete)
                     return;
             }
 
-            switch (e.VirtualKey)
+            switch (e.Key)
             {
                 case VirtualKey.Enter:
                     AddNewLine();
@@ -1100,6 +1091,9 @@ namespace TextControlBox
         }
         private void Canvas_Selection_PointerMoved(object sender, PointerRoutedEventArgs e)
         {
+            if (!HasFocus)
+                return;
+
             var point = e.GetCurrentPoint(Canvas_Selection);
             //Drag drop text -> move the cursor to get the insertion point
             if (DragDropSelection)
@@ -1508,19 +1502,19 @@ namespace TextControlBox
             SelectionChanged?.Invoke(this, args);
         }
         //Focus:
-        private void CoreWindow_PointerPressed(CoreWindow sender, PointerEventArgs args)
-        {
-            //Check whether the cursor is inside the bounds of the Control
-            if (Utils.GetElementRect(MainGrid).Contains(args.CurrentPoint.Position))
-            {
-                SetFocus();
-            }
-            else
-            {
-                RemoveFocus();
-            }
-        }
         private void EditContext_FocusRemoved(CoreTextEditContext sender, object args)
+        {
+            RemoveFocus();           
+        }
+        private void UserControl_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            this.Focus(FocusState.Programmatic);
+        }
+        private void UserControl_GotFocus(object sender, RoutedEventArgs e)
+        {
+            SetFocus();
+        }
+        private void UserControl_LostFocus(object sender, RoutedEventArgs e)
         {
             RemoveFocus();
         }
@@ -2045,7 +2039,6 @@ namespace TextControlBox
             //Unsubscribe from events:
             this.KeyDown -= TextControlBox_KeyDown;
             Window.Current.CoreWindow.PointerMoved -= CoreWindow_PointerMoved;
-            Window.Current.CoreWindow.PointerPressed -= CoreWindow_PointerPressed;
             EditContext.TextUpdating -= EditContext_TextUpdating;
             EditContext.FocusRemoved -= EditContext_FocusRemoved;
 
