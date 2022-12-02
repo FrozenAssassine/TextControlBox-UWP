@@ -8,13 +8,17 @@
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400"
-    TabIndex="0" IsTabStop="True" AllowFocusOnInteraction="True" IsFocusEngagementEnabled="True"
+    TabIndex="0" IsTabStop="True" AllowFocusOnInteraction="false"
     PointerWheelChanged="Canvas_Selection_PointerWheelChanged"
     PointerEntered="UserControl_PointerEntered" 
-    PointerExited="UserControl_PointerExited" 
+    PointerExited="UserControl_PointerExited"
+    Tapped="UserControl_Tapped"
     AllowDrop="True"
     Drop="UserControl_Drop"
-    DragOver="UserControl_DragOver">
+    DragOver="UserControl_DragOver"
+    GotFocus="UserControl_GotFocus"
+    LostFocus="UserControl_LostFocus"
+    >
 
     <Grid x:Name="MainGrid">
         <Grid.ColumnDefinitions>
@@ -50,7 +54,7 @@
                         PointerPressed="Canvas_Selection_PointerPressed"
                         PointerMoved="Canvas_Selection_PointerMoved"
                         HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch" />
+                        VerticalAlignment="Stretch"/>
             <ScrollBar PointerEntered="Scrollbar_PointerEntered" PointerExited="Scrollbar_PointerExited" SmallChange="10" LargeChange="100" Minimum="0" Scroll="VerticalScrollbar_Scroll" x:Name="VerticalScrollbar" Value="0" IndicatorMode="MouseIndicator" Background="Transparent" HorizontalAlignment="Right" Orientation="Vertical" VerticalAlignment="Stretch"/>
             <ScrollBar PointerEntered="Scrollbar_PointerEntered" PointerExited="Scrollbar_PointerExited" SmallChange="10" LargeChange="100" Minimum="0" Scroll="HorizontalScrollbar_Scroll" x:Name="HorizontalScrollbar" Value="0" IndicatorMode="MouseIndicator" Background="Transparent" HorizontalAlignment="Stretch" Orientation="Horizontal" VerticalAlignment="Bottom"/>
         </Grid>
