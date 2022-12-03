@@ -14,19 +14,19 @@
     },
     {
       //Opening tag 1
-      "Pattern": "<+[a-zA-Z0-9]+>",
+      "Pattern": "<+[a-zA-Z0-9:]+>",
       "ColorDark": "#0099ff",
       "ColorLight": "#00AADD"
     },
     {
       //Opening tag 2
-      "Pattern": "[<]+[a-zA-Z0-9]+\\s",
+      "Pattern": "[<]+[a-zA-Z0-9:]+\\s",
       "ColorDark": "#0099ff",
       "ColorLight": "#969696"
     },
     {
       //Opening tag 2
-      "Pattern": "<+[/]+[a-zA-Z0-9]+>",
+      "Pattern": "<+[/]+[a-zA-Z0-9:]+>",
       "ColorDark": "#0099ff",
       "ColorLight": "#969696"
     },
