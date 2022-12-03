@@ -1036,7 +1036,10 @@ namespace TextControlBox
             }
 
             if (selectionrenderer.IsSelecting)
+            {
+                this.Focus(FocusState.Programmatic);
                 selectionrenderer.HasSelection = true;
+            }
 
             selectionrenderer.IsSelecting = false;
         }
