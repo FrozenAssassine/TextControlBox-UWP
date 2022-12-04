@@ -203,6 +203,9 @@
   <ItemGroup>
     <Content Include="Languages\Java.json" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Languages\Xml.json" />
+  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
