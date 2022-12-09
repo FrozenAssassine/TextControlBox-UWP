@@ -15,13 +15,14 @@
 <img src="https://img.shields.io/github/repo-size/FrozenAssassine/TextControlBox-UWP">
 </div>
 
-<h3 align="center">A UWP based textbox with Syntaxhighlighting and support for very large amount of text which is still in development and not done yet.</h3>
+<h3 align="center">A UWP based textbox with Syntaxhighlighting and support for very large amount of text which is still in development.</h3>
 
 ## Reason why I built it
 UWP has a default Textbox and a RichTextBox. Both of them are very slow in rendering multiple thousand lines. The selection works also very slow. So I decided to create my own version of a Textbox.
 
 ## Info:
-The textbox is mostly done, but there are still some bugs where I'm working on.
+The textbox is mostly done, but there are still some bugs, I'm working on.
+I also would like to have a Winui3 variant, but I don't have a idea how to use the CoreTextServicesManager in it
 
 ## Features:
 - Viewing files with a million lines or more without performance issues
@@ -30,14 +31,13 @@ The textbox is mostly done, but there are still some bugs where I'm working on.
 - Linenumbering
 - Linehighlighter
 - Json to create custom syntaxhighlighting
-- Highly cusomizable
+- Highly customizable
 
 
 ## Problems:
-- Multiple longer lines with 5000 characters and more are currently slowing down the rendering 
-- Because all the lines are stored in a List the ram usage with a million lines or more is pretty high.
 - Current text limit is 100 million characters
 - Currently there is no textwrapping
+- Not available for Winui3, because I have no idea how to use the CoreTextServicesManager in it 
 
 ## Available languages:
 - Batch
@@ -47,10 +47,12 @@ The textbox is mostly done, but there are still some bugs where I'm working on.
 - GCode
 - Hex
 - Html
+- Java
 - Javascript
 - Json
 - PHP
 - QSharp
+- Xml
 
 ## Usage:
 
@@ -152,7 +154,7 @@ The textbox is mostly done, but there are still some bugs where I'm working on.
     },
   ],
   "Name": "NAME",
-  "Filter": "EXTENSION1|EXTENSION2",
+  "Filter": "EXTENSION1|EXTENSION2", //.cpp|.c
   "Description": "DESCRIPTION",
   "Author": "AUTHOR"
 }  
@@ -163,7 +165,8 @@ The textbox is mostly done, but there are still some bugs where I'm working on.
 
 TextControlBox textbox = new TextControlBox();
 
-//Use a builtin language | Available: Batch, ConfigFile, C++, CSharp, GCode, Hex, Html, Javascript, Json, PHP, QSharp 
+//Use a builtin language | Available: Batch, ConfigFile, C++, CSharp, GCode, Hex, Html, Javascript, Json Json, PHP, QSharp, Xml
+//Language identifiers are case intensitive
 textbox.CodeLanguage = TextControlBox.GetCodeLanguageFromId("CSharp");
 
 //Use a custom language:
@@ -181,7 +184,8 @@ textbox.Design = new TextControlBoxDesign(
     Color.FromArgb(255, 255, 255, 255), //Cursor color
     Color.FromArgb(50, 100, 100, 100), //Linehighlighter color
     Color.FromArgb(255, 100, 100, 100), //Linenumber color
-    Color.FromArgb(0, 0, 0, 0) //Linenumber background
+    Color.FromArgb(0, 0, 0, 0), //Linenumber background
+    Color.FromArgb(100,255,150,0) //Search highlight color
     );
 ```
 
