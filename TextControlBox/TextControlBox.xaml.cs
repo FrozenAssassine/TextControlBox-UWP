@@ -1105,6 +1105,7 @@ namespace TextControlBox
                 if (CurPosX > CanvasWidth - 100)
                 {
                     ScrollIntoViewHorizontal();
+                    UpdateAll();
                 }
                 else if (CurPosX < 100)
                 {

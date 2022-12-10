@@ -58,9 +58,7 @@ namespace TextControlBox_TestApp
             }
             if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.E)
             {
-                textbox.UseSpacesInsteadTabs = true;
-                textbox.NumberOfSpacesForTab = 12;
-                //Load();
+                Load();
             }
             if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.D)
             {
