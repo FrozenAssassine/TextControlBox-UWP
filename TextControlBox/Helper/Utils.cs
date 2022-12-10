@@ -27,9 +27,8 @@ namespace TextControlBox.Helper
             return new Size(layout.DrawBounds.Width, layout.DrawBounds.Height);
         }
 
-        public static Size MeasureLineLenght(CanvasDevice device, Line line, CanvasTextFormat textFormat)
+        public static Size MeasureLineLenght(CanvasDevice device, string text, CanvasTextFormat textFormat)
         {
-            string text = line.Content;
             if (text.Length == 0)
                 return new Size(0, 0);
 
@@ -53,7 +52,7 @@ namespace TextControlBox.Helper
         }
 
         //Get the longest line and create a string with all the content, that is in the textbox, to save performance by iterating just one time throught the list
-        public static int GetLongestLineIndex(PooledList<Line> TotalLines)
+        public static int GetLongestLineIndex(PooledList<string> TotalLines)
         {
             int LongestIndex = 0;
             int OldLenght = 0;
@@ -73,7 +72,7 @@ namespace TextControlBox.Helper
         {
             return First.LineNumber == Second.LineNumber && First.CharacterPosition == Second.CharacterPosition;
         }
-        public static bool IndexIsInRangeOf(PooledList<Line> Lines, int Index)
+        public static bool IndexIsInRangeOf(PooledList<string> Lines, int Index)
         {
             return Index < Lines.Count && Index > -1;
         }
@@ -88,7 +87,7 @@ namespace TextControlBox.Helper
         {
             return new Rect(element.TransformToVisual(null).TransformPoint(new Point()), new Size(element.ActualWidth, element.ActualHeight));
         }
-        public static int CountCharacters(PooledList<Line> TotalLines)
+        public static int CountCharacters(PooledList<string> TotalLines)
         {
             int Count = 0;
             for (int i = 0; i < TotalLines.Count; i++)

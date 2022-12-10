@@ -1,4 +1,5 @@
 ﻿using Collections.Pooled;
+using TextControlBox.Extensions;
 using TextControlBox.Helper;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
@@ -9,13 +10,13 @@ namespace TextControlBox.Text
     {
         private static bool ControlIsPressed { get => Window.Current.CoreWindow.GetKeyState(Windows.System.VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down); }
 
-        public static int CursorPositionToIndex(PooledList<Line> TotalLines, CursorPosition CursorPosition)
+        public static int CursorPositionToIndex(PooledList<string> TotalLines, CursorPosition CursorPosition)
         {
             int CursorIndex = CursorPosition.CharacterPosition;
             int LineNumber = CursorPosition.LineNumber < TotalLines.Count ? CursorIndex : TotalLines.Count - 1;
             for (int i = 0; i < LineNumber; i++)
             {
-                CursorIndex += ListHelper.GetLine(TotalLines, i).Length + 1;
+                CursorIndex += TotalLines.GetLineLength(i) + 1;
             }
             return CursorIndex;
         }
@@ -37,12 +38,12 @@ namespace TextControlBox.Text
         }
 
         //Calculate the number of characters from the cursorposition to the next character or digit to the left and to the right
-        public static int CalculateStepsToMoveLeft2(Line CurrentLine, int CursorCharPosition)
+        public static int CalculateStepsToMoveLeft2(string CurrentLine, int CursorCharPosition)
         {
             int Count = 0;
             for (int i = CursorCharPosition - 1; i >= 0; i--)
             {
-                char CurrentCharacter = CurrentLine.Content[i < CurrentLine.Length ? i : CurrentLine.Length - 1];
+                char CurrentCharacter = CurrentLine[i < CurrentLine.Length ? i : CurrentLine.Length - 1];
                 if (char.IsLetterOrDigit(CurrentCharacter) || CurrentCharacter == '_')
                     Count++;
                 else if (i == CursorCharPosition - 1 && char.IsWhiteSpace(CurrentCharacter))
@@ -52,12 +53,12 @@ namespace TextControlBox.Text
             }
             return Count;
         }
-        public static int CalculateStepsToMoveRight2(Line CurrentLine, int CursorCharPosition)
+        public static int CalculateStepsToMoveRight2(string CurrentLine, int CursorCharPosition)
         {
             int Count = 0;
             for (int i = CursorCharPosition; i < CurrentLine.Length; i++)
             {
-                char CurrentCharacter = CurrentLine.Content[i < CurrentLine.Length ? i : CurrentLine.Length - 1];
+                char CurrentCharacter = CurrentLine[i < CurrentLine.Length ? i : CurrentLine.Length - 1];
                 if (char.IsLetterOrDigit(CurrentCharacter) || CurrentCharacter == '_')
                     Count++;
                 else if (i == CursorCharPosition && char.IsWhiteSpace(CurrentCharacter))
@@ -70,14 +71,14 @@ namespace TextControlBox.Text
 
         //Calculates how many characters the cursor needs to move if control is pressed
         //Returns 1 when control is not pressed
-        public static int CalculateStepsToMoveLeft(Line CurrentLine, int CursorCharPosition)
+        public static int CalculateStepsToMoveLeft(string CurrentLine, int CursorCharPosition)
         {
             if (!ControlIsPressed)
                 return 1;
             int Count = 0;
             for (int i = CursorCharPosition - 1; i >= 0; i--)
             {
-                char CurrentCharacter = CurrentLine.Content[i < CurrentLine.Length ? i : CurrentLine.Length - 1];
+                char CurrentCharacter = CurrentLine[i < CurrentLine.Length ? i : CurrentLine.Length - 1];
                 if (char.IsLetterOrDigit(CurrentCharacter) || CurrentCharacter == '_')
                     Count++;
                 else if (i == CursorCharPosition - 1 && char.IsWhiteSpace(CurrentCharacter))
@@ -89,14 +90,14 @@ namespace TextControlBox.Text
             //return 1 if Count is 0
             return Count == 0 ? 1 : Count;
         }
-        public static int CalculateStepsToMoveRight(Line CurrentLine, int CursorCharPosition)
+        public static int CalculateStepsToMoveRight(string CurrentLine, int CursorCharPosition)
         {
             if (!ControlIsPressed)
                 return 1;
             int Count = 0;
             for (int i = CursorCharPosition; i < CurrentLine.Length; i++)
             {
-                char CurrentCharacter = CurrentLine.Content[i < CurrentLine.Length ? i : CurrentLine.Length - 1];
+                char CurrentCharacter = CurrentLine[i < CurrentLine.Length ? i : CurrentLine.Length - 1];
                 if (char.IsLetterOrDigit(CurrentCharacter) || CurrentCharacter == '_')
                     Count++;
                 else if (i == CursorCharPosition && char.IsWhiteSpace(CurrentCharacter))
@@ -110,7 +111,7 @@ namespace TextControlBox.Text
         }
 
         //Move cursor:
-        public static CursorPosition MoveLeft(CursorPosition CurrentCursorPosition, PooledList<Line> TotalLines, Line CurrentLine)
+        public static CursorPosition MoveLeft(CursorPosition CurrentCursorPosition, PooledList<string> TotalLines, string CurrentLine)
         {
             CursorPosition ReturnValue = new CursorPosition(CurrentCursorPosition);
             if (ReturnValue.LineNumber < 0)
@@ -121,7 +122,7 @@ namespace TextControlBox.Text
             {
                 if (ReturnValue.CharacterPosition == 0 && ReturnValue.LineNumber > 0)
                 {
-                    ReturnValue.CharacterPosition = ListHelper.GetLine(TotalLines, ReturnValue.LineNumber - 1).Length;
+                    ReturnValue.CharacterPosition = TotalLines.GetLineLength(ReturnValue.LineNumber - 1);
                     ReturnValue.LineNumber -= 1;
                 }
                 else if (ReturnValue.CharacterPosition > 0)
@@ -132,10 +133,10 @@ namespace TextControlBox.Text
 
             return ReturnValue;
         }
-        public static CursorPosition MoveRight(CursorPosition CurrentCursorPosition, PooledList<Line> TotalLines, Line CurrentLine)
+        public static CursorPosition MoveRight(CursorPosition CurrentCursorPosition, PooledList<string> TotalLines, string CurrentLine)
         {
             CursorPosition ReturnValue = new CursorPosition(CurrentCursorPosition);
-            int LineLength = ListHelper.GetLine(TotalLines, ReturnValue.LineNumber).Length;
+            int LineLength = TotalLines.GetLineLength(ReturnValue.LineNumber);
 
             if (ReturnValue.LineNumber > TotalLines.Count - 1)
             {
@@ -173,7 +174,7 @@ namespace TextControlBox.Text
             return ReturnValue;
         }
 
-        public static CursorPosition MoveToLineEnd(CursorPosition CursorPosition, Line CurrentLine)
+        public static CursorPosition MoveToLineEnd(CursorPosition CursorPosition, string CurrentLine)
         {
             CursorPosition.CharacterPosition = CurrentLine.Length;
             return CursorPosition;

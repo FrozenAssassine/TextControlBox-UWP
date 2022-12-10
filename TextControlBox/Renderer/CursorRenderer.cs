@@ -24,7 +24,7 @@ namespace TextControlBox.Renderer
 
             return Linenumber;
         }
-        public static int GetCharacterPositionFromPoint(Line CurrentLine, CanvasTextLayout TextLayout, Point CursorPosition, float MarginLeft)
+        public static int GetCharacterPositionFromPoint(string CurrentLine, CanvasTextLayout TextLayout, Point CursorPosition, float MarginLeft)
         {
             if (CurrentLine == null || TextLayout == null)
                 return 0;
