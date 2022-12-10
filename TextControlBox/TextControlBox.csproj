@@ -127,6 +127,7 @@
   <ItemGroup>
     <Compile Include="Extensions\ColorExtension.cs" />
     <Compile Include="Extensions\IntExtension.cs" />
+    <Compile Include="Extensions\ListExtension.cs" />
     <Compile Include="Extensions\PointExtension.cs" />
     <Compile Include="Helper\FlyoutHelper.cs" />
     <Compile Include="Helper\SearchHelper.cs" />
@@ -148,7 +149,6 @@
     <Compile Include="Text\Cursor.cs" />
     <Compile Include="Text\CursorPosition.cs" />
     <Compile Include="Text\EventClasses.cs" />
-    <Compile Include="Text\Line.cs" />
     <Compile Include="Text\LineEndings.cs" />
     <Compile Include="Text\Selection.cs" />
     <Compile Include="Text\StringManager.cs" />

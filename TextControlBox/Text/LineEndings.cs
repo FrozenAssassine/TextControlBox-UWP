@@ -36,6 +36,9 @@ namespace TextControlBox.Text
             return Regex.Replace(Text, "(\r\n|\r|\n)", LineEndingToString(lineEnding));
         }
     }
+    /// <summary>
+    /// Represents the three default lineendings LF, CRLF, CR
+    /// </summary>
     public enum LineEnding
     {
         LF, CRLF, CR

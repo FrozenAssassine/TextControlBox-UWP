@@ -11,12 +11,14 @@ using System.Linq;
 using System.Runtime;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using TextControlBox.Extensions;
 using TextControlBox.Helper;
 using TextControlBox.Renderer;
 using TextControlBox.Text;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
+using Windows.Storage;
 using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Text.Core;
@@ -26,6 +28,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using static System.Net.Mime.MediaTypeNames;
 using Color = Windows.UI.Color;
 
 namespace TextControlBox
@@ -87,6 +90,7 @@ namespace TextControlBox
         bool NeedsTextFormatUpdate = false;
         bool DragDropSelection = false;
         bool HasFocus = true;
+        bool ZoomIsChanged = false;
 
         CanvasTextFormat TextFormat = null;
         CanvasTextLayout DrawnTextLayout = null;
@@ -94,6 +98,7 @@ namespace TextControlBox
 
         string RenderedText = "";
         string LineNumberTextToRender = "";
+        string OldRenderedText = null;
 
         //Handle double and triple -clicks:
         int PointerClickCount = 0;
@@ -102,18 +107,17 @@ namespace TextControlBox
         //CursorPosition
         CursorPosition _CursorPosition = new CursorPosition(0, 0);
         CursorPosition OldCursorPosition = null;
-        Line CurrentLine = null;
         CanvasTextLayout CurrentLineTextLayout = null;
         TextSelection TextSelection = null;
         TextSelection OldTextSelection = null;
         CoreTextEditContext EditContext;
 
         //Store the lines in Lists
-        private PooledList<Line> TotalLines = new PooledList<Line>(0);
-        private List<Line> RenderedLines = new List<Line>(0);
+        private PooledList<string> TotalLines = new PooledList<string>(0);
+        private IEnumerable<string> RenderedLines;
         private int NumberOfRenderedLines = 0;
+        private string CurrentLine { get => TotalLines.GetCurrentLineText(); set => TotalLines.SetCurrentLineText(value); }
         StringBuilder LineNumberContent = new StringBuilder();
-        StringBuilder TextToRender = new StringBuilder();
 
         //Classes
         private readonly SelectionRenderer selectionrenderer;
@@ -170,9 +174,10 @@ namespace TextControlBox
                 _ZoomFactor = 400;
             if (_ZoomFactor < 4)
                 _ZoomFactor = 4;
-
+            
             if (_ZoomFactor != OldZoomFactor)
             {
+                ZoomIsChanged = true;
                 OldZoomFactor = _ZoomFactor;
                 ZoomChanged?.Invoke(this, _ZoomFactor);
             }
@@ -203,7 +208,7 @@ namespace TextControlBox
         private void UpdateCurrentLineTextLayout()
         {
             if (CursorPosition.LineNumber < TotalLines.Count)
-                CurrentLineTextLayout = TextRenderer.CreateTextLayout(Canvas_Text, TextFormat, ListHelper.GetLine(TotalLines, CursorPosition.LineNumber).Content + "|", Canvas_Text.Size);
+                CurrentLineTextLayout = TextRenderer.CreateTextLayout(Canvas_Text, TextFormat, TotalLines.GetLineText(CursorPosition.LineNumber) + "|", Canvas_Text.Size);
             else
                 CurrentLineTextLayout = null;
         }
@@ -215,7 +220,11 @@ namespace TextControlBox
             CursorPosition.LineNumber = CursorRenderer.GetCursorLineFromPoint(Point, SingleLineHeight, NumberOfRenderedLines, NumberOfStartLine);
 
             UpdateCurrentLineTextLayout();
-            CursorPosition.CharacterPosition = CursorRenderer.GetCharacterPositionFromPoint(GetCurrentLine(), CurrentLineTextLayout, Point, (float)-HorizontalScroll);
+            CursorPosition.CharacterPosition = CursorRenderer.GetCharacterPositionFromPoint(TotalLines.GetCurrentLineText(), CurrentLineTextLayout, Point, (float)-HorizontalScroll);
+        }
+        private void UpdateCurrentLine()
+        {
+            TotalLines.UpdateCurrentLine(CursorPosition.LineNumber);
         }
         #endregion
 
@@ -233,7 +242,7 @@ namespace TextControlBox
         }
         private void AddCharacter(string text, bool IgnoreSelection = false)
         {
-            if (CurrentLine == null || IsReadonly)
+            if (IsReadonly)
                 return;
 
             if (IgnoreSelection)
@@ -243,15 +252,14 @@ namespace TextControlBox
 
             if (TextSelection == null && SplittedTextLength == 1)
             {
-
                 undoRedo.RecordUndoAction(() =>
                 {
                     var CharacterPos = GetCurPosInLine();
 
-                    if (CharacterPos > CurrentLine.Length - 1)
-                        CurrentLine.AddToEnd(text);
+                    if (CharacterPos > TotalLines.CurrentLineLength() - 1)
+                        CurrentLine = CurrentLine.AddToEnd(text);
                     else
-                        CurrentLine.AddText(text, CharacterPos);
+                        CurrentLine = CurrentLine.AddText(text, CharacterPos);
                     CursorPosition.CharacterPosition = text.Length + CharacterPos;
 
                 }, TotalLines, CursorPosition.LineNumber, 1, 1, NewLineCharacter);
@@ -260,7 +268,7 @@ namespace TextControlBox
             {
                 undoRedo.RecordUndoAction(() =>
                 {
-                    CursorPosition = Selection.InsertText(TextSelection, CursorPosition, TotalLines, text, NewLineCharacter);
+                    CursorPosition = Selection.InsertText(TextSelection, CursorPosition, TotalLines,  text, NewLineCharacter);
                 }, TotalLines, CursorPosition.LineNumber, 1, SplittedTextLength, NewLineCharacter);
             }
             else if (text.Length == 0) //delete selection
@@ -285,19 +293,21 @@ namespace TextControlBox
         }
         private void RemoveText(bool ControlIsPressed = false)
         {
-            CurrentLine = GetCurrentLine();
-            if (CurrentLine == null || IsReadonly)
+            UpdateCurrentLine();
+
+            if (IsReadonly)
                 return;
 
             if (TextSelection == null)
             {
+                string curLine = CurrentLine;
                 var charPos = GetCurPosInLine();
                 var stepsToMove = ControlIsPressed ? Cursor.CalculateStepsToMoveLeft(CurrentLine, charPos) : 1;
                 if (charPos - stepsToMove >= 0)
                 {
                     undoRedo.RecordUndoAction(() =>
                     {
-                        CurrentLine.Remove(charPos - stepsToMove, stepsToMove);
+                        CurrentLine = curLine.Remove(charPos - stepsToMove, stepsToMove);
                         CursorPosition.CharacterPosition -= stepsToMove;
 
                     }, TotalLines, CursorPosition.LineNumber, 1, 1, NewLineCharacter);
@@ -309,12 +319,12 @@ namespace TextControlBox
 
                     undoRedo.RecordUndoAction(() =>
                     {
-                        Line LineOnTop = ListHelper.GetLine(TotalLines, CursorPosition.LineNumber - 1);
-                        LineOnTop.AddToEnd(CurrentLine.Content);
+                        TotalLines.String_AddToEnd(CursorPosition.LineNumber, curLine);
+
                         TotalLines.Remove(CurrentLine);
 
                         CursorPosition.LineNumber -= 1;
-                        CursorPosition.CharacterPosition = LineOnTop.Length - CurrentLine.Length;
+                        CursorPosition.CharacterPosition = TotalLines.GetLineText(CursorPosition.LineNumber).Length;
 
                     }, TotalLines, CursorPosition.LineNumber, 3, 2, NewLineCharacter);
                 }
@@ -331,23 +341,22 @@ namespace TextControlBox
         }
         private void DeleteText(bool ControlIsPressed = false)
         {
-            if (CurrentLine == null || IsReadonly)
+            string curLine = CurrentLine;
+            if (IsReadonly)
                 return;
 
             if (TextSelection == null)
             {
                 int CharacterPos = GetCurPosInLine();
-                int StepsToMove = ControlIsPressed ? Cursor.CalculateStepsToMoveRight(CurrentLine, CharacterPos) : 1;
-
-                //delete lines if cursor in at position 0 and the line is emty OR cursor is at the end of a line and the line has content
-                if (CharacterPos == CurrentLine.Length)
+                //delete lines if cursor is at position 0 and the line is emty OR cursor is at the end of a line and the line has content
+                if (CharacterPos == curLine.Length)
                 {
-                    Line LineToAdd = CursorPosition.LineNumber + 1 < TotalLines.Count ? ListHelper.GetLine(TotalLines, CursorPosition.LineNumber + 1) : null;
+                    string LineToAdd = CursorPosition.LineNumber + 1 < TotalLines.Count ? TotalLines.GetLineText(CursorPosition.LineNumber + 1) : null;
                     if (LineToAdd != null)
                     {
                         undoRedo.RecordUndoAction(() =>
                         {
-                            CurrentLine.Content += LineToAdd.Content;
+                            CurrentLine = curLine + LineToAdd;
                             TotalLines.Remove(LineToAdd);
                         }, TotalLines, CursorPosition.LineNumber, 2, 1, NewLineCharacter);
                     }
@@ -355,9 +364,11 @@ namespace TextControlBox
                 //delete text in line
                 else if (TotalLines.Count > CursorPosition.LineNumber)
                 {
+                    int StepsToMove = ControlIsPressed ? Cursor.CalculateStepsToMoveRight(curLine, CharacterPos) : 1;
+                    
                     undoRedo.RecordUndoAction(() =>
                     {
-                        CurrentLine.Remove(CharacterPos, StepsToMove);
+                        CurrentLine = curLine.SafeRemove(CharacterPos, StepsToMove);
                     }, TotalLines, CursorPosition.LineNumber, 1, 1, NewLineCharacter);
                 }
             }
@@ -378,7 +389,7 @@ namespace TextControlBox
 
             if (TotalLines.Count == 0)
             {
-                TotalLines.Add(new Line());
+                TotalLines.AddLine();
                 return;
             }
 
@@ -390,7 +401,7 @@ namespace TextControlBox
                 undoRedo.RecordUndoAction(() =>
                 {
                     ListHelper.Clear(TotalLines, true);
-                    ListHelper.Insert(TotalLines, new Line(), -1);
+                    TotalLines.InsertNewLine(-1);
                     CursorPosition = new CursorPosition(0, 1);
                 }, TotalLines, 0, TotalLines.Count, 2, NewLineCharacter);
                 ForceClearSelection();
@@ -401,16 +412,15 @@ namespace TextControlBox
 
             if (TextSelection == null) //No selection
             {
-                Line StartLine = ListHelper.GetLine(TotalLines, StartLinePos.LineNumber);
-                Line EndLine = new Line();
+                string StartLine = TotalLines.GetLineText(StartLinePos.LineNumber);
 
                 undoRedo.RecordUndoAction(() =>
                 {
-                    string[] SplittedLine = Utils.SplitAt(StartLine.Content, StartLinePos.CharacterPosition);
-                    StartLine.SetText(SplittedLine[1]);
-                    EndLine.SetText(SplittedLine[0]);
+                    string[] SplittedLine = Utils.SplitAt(TotalLines.GetLineText(StartLinePos.LineNumber), StartLinePos.CharacterPosition);
+                    
+                    TotalLines.SetLineText(StartLinePos.LineNumber, SplittedLine[1]);
+                    TotalLines.InsertOrAdd(StartLinePos.LineNumber, SplittedLine[0]);
 
-                    ListHelper.Insert(TotalLines, EndLine, StartLinePos.LineNumber);
                 }, TotalLines, StartLinePos.LineNumber, 1, 2, NewLineCharacter);
 
             }
@@ -442,12 +452,8 @@ namespace TextControlBox
             UpdateZoom();
             if (TotalLines.Count == 0)
             {
-                TotalLines.Add(new Line());
+                TotalLines.AddLine();
             }
-        }
-        private Line GetCurrentLine()
-        {
-            return ListHelper.GetLine(TotalLines, CursorPosition.LineNumber);
         }
         private void ClearSelectionIfNeeded()
         {
@@ -551,8 +557,10 @@ namespace TextControlBox
         }
         private int GetCurPosInLine()
         {
-            if (CursorPosition.CharacterPosition > CurrentLine.Length)
-                return CurrentLine.Length;
+            int curLineLength = CurrentLine.Length;
+
+            if (CursorPosition.CharacterPosition > curLineLength)
+                return curLineLength;
             return CursorPosition.CharacterPosition;
         }
         private void ScrollIntoViewHorizontal()
@@ -601,6 +609,7 @@ namespace TextControlBox
         }
         private void InitialiseTextService()
         {
+
             CoreTextServicesManager manager = CoreTextServicesManager.GetForCurrentView();
             EditContext = manager.CreateEditContext();
             EditContext.InputPaneDisplayPolicy = CoreTextInputPaneDisplayPolicy.Manual;
@@ -649,7 +658,7 @@ namespace TextControlBox
         {
             try
             {
-                return string.Join(NewLineCharacter, TotalLines.Select(x => x.Content));
+                return TotalLines.GetString(NewLineCharacter);
             }
             catch (OutOfMemoryException)
             {
@@ -707,6 +716,32 @@ namespace TextControlBox
                 throw new OutOfMemoryException();
             }
         }
+        private void Safe_LoadLines(IEnumerable<string> lines, LineEnding LineEnding = LineEnding.CRLF, bool HandleException = true)
+        {
+            try
+            {
+                selectionrenderer.ClearSelection();
+                undoRedo.ClearAll();
+
+                TotalLines.Clear();
+                TotalLines.AddRange(lines);
+                TotalLines.TrimExcess();
+
+                this.LineEnding = LineEnding;
+
+                UpdateAll();
+            }
+            catch (OutOfMemoryException)
+            {
+                if (HandleException)
+                {
+                    CleanUp();
+                    Safe_LoadLines(lines, LineEnding, false);
+                    return;
+                }
+                throw new OutOfMemoryException();
+            }
+        }
         private async void Safe_LoadText(string text, bool HandleException = true)
         {
             try
@@ -724,6 +759,8 @@ namespace TextControlBox
                     ListHelper.Clear(TotalLines, true);
                 else
                     Selection.ReplaceLines(TotalLines, 0, TotalLines.Count, stringManager.CleanUpString(text).Split(NewLineCharacter));
+
+                GC.Collect();
 
                 UpdateAll();
             }
@@ -752,7 +789,7 @@ namespace TextControlBox
                     Selection.ReplaceLines(TotalLines, 0, TotalLines.Count, stringManager.CleanUpString(text).Split(NewLineCharacter));
                     if (text.Length == 0) //Create a new line when the text gets cleared
                     {
-                        TotalLines.Add(new Line());
+                        TotalLines.AddLine();
                     }
                 }, TotalLines, 0, TotalLines.Count, Utils.CountLines(text, NewLineCharacter), NewLineCharacter);
 
@@ -920,7 +957,7 @@ namespace TextControlBox
                             if (selectionrenderer.HasSelection && TextSelection != null)
                                 CursorPosition = Selection.GetMax(TextSelection);
                             else
-                                CursorPosition = Cursor.MoveRight(CursorPosition, TotalLines, GetCurrentLine());
+                                CursorPosition = Cursor.MoveRight(CursorPosition, TotalLines, TotalLines.GetCurrentLineText());
 
                             ClearSelectionIfNeeded();
                         }
@@ -1332,54 +1369,53 @@ namespace TextControlBox
             VerticalScrollbar.ViewportSize = sender.ActualHeight;
 
             //Calculate number of lines that needs to be rendered
-            int NumberOfLinesToBeRendered = (int)(sender.ActualHeight / SingleLineHeight);
+            NumberOfRenderedLines = (int)(sender.ActualHeight / SingleLineHeight);
             NumberOfStartLine = (int)(VerticalScrollbar.Value / SingleLineHeight);
 
-            //Clear rendered lines, to fill it with new lines
-            RenderedLines.Clear();
-
             //Get all the lines, that need to be rendered, from the list
-            int count = NumberOfLinesToBeRendered + NumberOfStartLine > TotalLines.Count ? TotalLines.Count : NumberOfLinesToBeRendered + NumberOfStartLine;
-            for (int i = NumberOfStartLine; i < count; i++)
-            {
-                if (i < TotalLines.Count)
-                {
-                    Line item = TotalLines[i];
+            NumberOfRenderedLines = NumberOfRenderedLines + NumberOfStartLine > TotalLines.Count ? TotalLines.Count : NumberOfRenderedLines;
 
-                    RenderedLines.Add(item);
-                    TextToRender.AppendLine(item.Content);
-                    if (_ShowLineNumbers)
-                        LineNumberContent.AppendLine((i + 1).ToString());
-                }
-            }
-            NumberOfRenderedLines = RenderedLines.Count;
+            RenderedLines = TotalLines.GetLines_Small(NumberOfStartLine, NumberOfRenderedLines);
+            RenderedText = RenderedLines.GetString("\n");
 
             if (_ShowLineNumbers)
+            {
+                for (int i = 0; i < NumberOfRenderedLines; i++)
+                {
+                    LineNumberContent.AppendLine((i + 1 + NumberOfStartLine).ToString());
+                }
                 LineNumberTextToRender = LineNumberContent.ToString();
-            RenderedText = TextToRender.ToString();
-
-            //Clear the StringBuilder:
-            TextToRender.Clear();
-            LineNumberContent.Clear();
-
+                LineNumberContent.Clear();
+            }
             //Get length of longest line in whole text
-            Size LineLength = Utils.MeasureLineLenght(CanvasDevice.GetSharedDevice(), ListHelper.GetLine(TotalLines, Utils.GetLongestLineIndex(TotalLines)), TextFormat);
-            //Measure horizontal Width of longest line and apply to scrollbar
+           Size LineLength = Utils.MeasureLineLenght(CanvasDevice.GetSharedDevice(), TotalLines.GetLineText(Utils.GetLongestLineIndex(TotalLines)), TextFormat);
+                //Measure horizontal Width of longest line and apply to scrollbar
             HorizontalScrollbar.Maximum = (LineLength.Width <= sender.ActualWidth ? 0 : LineLength.Width - sender.ActualWidth + 50);
             HorizontalScrollbar.ViewportSize = sender.ActualWidth;
 
             ScrollIntoViewHorizontal();
 
-            //Create the textlayout --> apply the Syntaxhighlighting --> render it
-            DrawnTextLayout = TextRenderer.CreateTextResource(sender, DrawnTextLayout, TextFormat, RenderedText, new Size { Height = sender.Size.Height, Width = this.ActualWidth }, ZoomedFontSize);
-            SyntaxHighlightingRenderer.UpdateSyntaxHighlighting(DrawnTextLayout, _AppTheme, _CodeLanguage, SyntaxHighlighting, RenderedText);
+            //Create the textlayout --> apply the Syntaxhighlighting --> render it:
+
+            //Only update the textformat when the text changes:
+            bool UpdateLinenumbers = false;
+            if (OldRenderedText != RenderedText || ZoomIsChanged)
+            {
+                ZoomIsChanged = false;
+                OldRenderedText = RenderedText;
+                UpdateLinenumbers = true;
+
+                DrawnTextLayout = TextRenderer.CreateTextResource(sender, DrawnTextLayout, TextFormat, RenderedText, new Size { Height = sender.Size.Height, Width = this.ActualWidth }, ZoomedFontSize);
+                SyntaxHighlightingRenderer.UpdateSyntaxHighlighting(DrawnTextLayout, _AppTheme, _CodeLanguage, SyntaxHighlighting, RenderedText);
+            }
+
             //render the search highlights
             if (SearchIsOpen)
                 SearchHighlightsRenderer.RenderHighlights(args, DrawnTextLayout, RenderedText, searchHelper.MatchingSearchLines, searchHelper.SearchParameter.SearchExpression, (float)-HorizontalScroll, SingleLineHeight / 4, _Design.SearchHighlightColor);
 
             args.DrawingSession.DrawTextLayout(DrawnTextLayout, (float)-HorizontalScroll, SingleLineHeight, TextColorBrush);
 
-            if (_ShowLineNumbers)
+            if (_ShowLineNumbers && UpdateLinenumbers)
                 Canvas_LineNumber.Invalidate();
         }
         private void Canvas_Selection_Draw(CanvasControl sender, CanvasDrawEventArgs args)
@@ -1407,14 +1443,16 @@ namespace TextControlBox
         }
         private void Canvas_Cursor_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
-            CurrentLine = GetCurrentLine();
-            if (CurrentLine == null || DrawnTextLayout == null || !HasFocus)
+            UpdateCurrentLine();
+            if (DrawnTextLayout == null || !HasFocus)
                 return;
+
+            int CurrentLineLength = CurrentLine.Length;
 
             if (CursorPosition.LineNumber >= TotalLines.Count)
             {
                 CursorPosition.LineNumber = TotalLines.Count - 1;
-                CursorPosition.CharacterPosition = CurrentLine.Length;
+                CursorPosition.CharacterPosition = CurrentLineLength;
             }
 
             //Calculate the distance to the top for the cursorposition and render the cursor
@@ -1427,8 +1465,8 @@ namespace TextControlBox
             UpdateCurrentLineTextLayout();
 
             int CharacterPos = CursorPosition.CharacterPosition;
-            if (CharacterPos > CurrentLine.Length)
-                CharacterPos = CurrentLine.Length;
+            if (CharacterPos > CurrentLineLength)
+                CharacterPos = CurrentLineLength;
 
             CursorRenderer.RenderCursor(
                 CurrentLineTextLayout,
@@ -1573,7 +1611,7 @@ namespace TextControlBox
         /// <param name="index">The index of the line to select</param>
         public void SelectLine(int index)
         {
-            selectionrenderer.SetSelection(new CursorPosition(0, index), new CursorPosition(ListHelper.GetLine(TotalLines, index).Length, index));
+            selectionrenderer.SetSelection(new CursorPosition(0, index), new CursorPosition(TotalLines.GetLineLength(index), index));
             CursorPosition = selectionrenderer.SelectionEndPosition;
 
             UpdateSelection();
@@ -1610,6 +1648,17 @@ namespace TextControlBox
         public void SetText(string text)
         {
             Safe_SetText(text);
+        }
+
+        /// <summary>
+        /// Load lines to the textbox everything will reset. Use this to load text on application start
+        /// Use this in combination with the FileIO.ReadLinesAsync function or similar
+        /// This will drastically improve loading time and ram usage
+        /// </summary>
+        /// <param name="lines">A string array containing the lines</param>
+        public void LoadLines(IEnumerable<string> lines, LineEnding lineEnding = LineEnding.CRLF)
+        {
+            Safe_LoadLines(lines, lineEnding);
         }
 
         /// <summary>
@@ -1672,7 +1721,7 @@ namespace TextControlBox
             //No selection can be shown
             if (TotalLines.Count == 1 && TotalLines[0].Length == 0)
                 return;
-            selectionrenderer.SetSelection(new CursorPosition(0, 0), new CursorPosition(ListHelper.GetLine(TotalLines, -1).Length, TotalLines.Count - 1));
+            selectionrenderer.SetSelection(new CursorPosition(0, 0), new CursorPosition(TotalLines.GetLineLength(-1), TotalLines.Count - 1));
             CursorPosition = selectionrenderer.SelectionEndPosition;
             UpdateSelection();
             UpdateCursor();
@@ -1827,22 +1876,27 @@ namespace TextControlBox
         /// <returns>The text from the line specified by the index</returns>
         public string GetLineText(int index)
         {
-            return ListHelper.GetLine(TotalLines, index).Content;
+            return TotalLines.GetLineText(index);
         }
 
         /// <summary>
-        /// Gets the text of multiple lines, starting by startLine
+        /// Gets the text of multiple lines, starting by start
         /// </summary>
         /// <param name="start">The line to start with</param>
         /// <param name="length">The number of lines to get</param>
         /// <returns>The text from the lines specified by index and count</returns>
         public string GetLinesText(int start, int length)
         {
-            return ListHelper.GetLinesAsString(TotalLines, start, length, NewLineCharacter);
+            if (start + length >= TotalLines.Count)
+                return TotalLines.GetString(NewLineCharacter);
+
+            if (length > 200)
+                return TotalLines.GetLines_Large(start, length).GetString(NewLineCharacter);
+            return TotalLines.GetLines_Small(start, length).GetString(NewLineCharacter);
         }
 
         /// <summary>
-        /// Sets the content of the line specified by the index
+        /// Sets the content of the line specified by the index. First line has the index 0
         /// </summary>
         /// <param name="index">The index of the line to change the content</param>
         /// <param name="text">The text to set to the line</param>
@@ -1853,7 +1907,7 @@ namespace TextControlBox
                 return false;
             undoRedo.RecordUndoAction(() =>
             {
-                ListHelper.GetLine(TotalLines, index).Content = stringManager.CleanUpString(text);
+                TotalLines.SetLineText(index, stringManager.CleanUpString(text));
             }, TotalLines, index, 1, 1, NewLineCharacter);
             UpdateText();
             return true;
@@ -1891,7 +1945,8 @@ namespace TextControlBox
 
             undoRedo.RecordUndoAction(() =>
             {
-                ListHelper.Insert(TotalLines, new Line(stringManager.CleanUpString(text)), index);
+                TotalLines.InsertOrAdd(index, stringManager.CleanUpString(text));
+
             }, TotalLines, index, 1, 2, NewLineCharacter);
 
             UpdateText();
@@ -1929,8 +1984,7 @@ namespace TextControlBox
         {
             undoRedo.RecordUndoAction(() =>
             {
-                var content = new Line(ListHelper.GetLine(TotalLines, index).Content);
-                ListHelper.Insert(TotalLines, content, index);
+                TotalLines.InsertOrAdd(index, TotalLines.GetLineText(index));
                 CursorPosition.LineNumber += 1;
             }, TotalLines, index, 1, 2, NewLineCharacter);
 
@@ -1960,7 +2014,7 @@ namespace TextControlBox
                 {
                     if (TotalLines[i].Contains(searchParameter))
                     {
-                        TotalLines[i].Content = Regex.Replace(TotalLines[i].Content, searchParameter.SearchExpression, replaceWord);
+                        SetLineText(i, Regex.Replace(TotalLines[i], searchParameter.SearchExpression, replaceWord));
                     }
                 }
             }, TotalLines, 0, TotalLines.Count, TotalLines.Count, NewLineCharacter);
@@ -2049,7 +2103,7 @@ namespace TextControlBox
             TotalLines.Dispose();
             RenderedLines = null;
             LineNumberTextToRender = RenderedText = null;
-            LineNumberContent = TextToRender = null;
+            LineNumberContent = null;
             undoRedo.NullAll();
         }
 
@@ -2332,17 +2386,24 @@ namespace TextControlBox
         /// <summary>
         /// Indicates whether to use spaces or tabs
         /// </summary>
-        public bool UseSpacesInsteadTabs { get => tabSpaceHelper.UseSpacesInsteadTabs; set { tabSpaceHelper.UseSpacesInsteadTabs = value; tabSpaceHelper.UpdateTabs(TotalLines); UpdateText(); } }
+        public bool UseSpacesInsteadTabs { get => tabSpaceHelper.UseSpacesInsteadTabs; set { tabSpaceHelper.UseSpacesInsteadTabs = value; tabSpaceHelper.UpdateTabs(TotalLines); UpdateAll(); } }
 
         /// <summary>
         /// The number of spaces to use instead of one tab
         /// </summary>
-        public int NumberOfSpacesForTab { get => tabSpaceHelper.NumberOfSpaces; set { tabSpaceHelper.NumberOfSpaces = value; tabSpaceHelper.UpdateTabs(TotalLines); } }
+        public int NumberOfSpacesForTab { get => tabSpaceHelper.NumberOfSpaces; set { tabSpaceHelper.NumberOfSpaces = value; tabSpaceHelper.UpdateNumberOfSpaces(TotalLines); UpdateAll(); } }
 
         /// <summary>
         /// Get whether the search is currently active
         /// </summary>
         public bool SearchIsOpen { get => searchHelper.IsSearchOpen; }
+
+        /// <summary>
+        /// A reference to all the lines in the textbox.
+        /// Use this to save the lines to a file using the FileIO.WriteLinesAsync function or similar
+        /// This will drastically improve ram usage when saving
+        /// </summary>
+        public IEnumerable<string> Lines { get => TotalLines; }
 
         #endregion
 
@@ -2423,7 +2484,7 @@ namespace TextControlBox
         /// <returns></returns>
         public static CodeLanguage GetCodeLanguageFromId(string Identifier)
         {
-            CodeLanguages.TryGetValue(Identifier, out CodeLanguage codelanguage);
+            CodeLanguages.TryGetValue(Identifier.ToLower(), out CodeLanguage codelanguage);
             return codelanguage;
         }
 

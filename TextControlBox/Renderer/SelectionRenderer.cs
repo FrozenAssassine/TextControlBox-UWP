@@ -3,6 +3,7 @@ using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using TextControlBox.Text;
 using Windows.Foundation;
 using Windows.UI;
@@ -31,7 +32,7 @@ namespace TextControlBox.Renderer
         }
 
         //Draw the actual selection and return the cursorposition. Return -1 if no selection was drawn
-        public TextSelection DrawSelection(CanvasTextLayout TextLayout, List<Line> RenderedLines, CanvasDrawEventArgs args, float MarginLeft, float MarginTop, int UnrenderedLinesToRenderStart, int NumberOfRenderedLines, float FontSize, Color SelectionColor)
+        public TextSelection DrawSelection(CanvasTextLayout TextLayout, IEnumerable<string> RenderedLines, CanvasDrawEventArgs args, float MarginLeft, float MarginTop, int UnrenderedLinesToRenderStart, int NumberOfRenderedLines, float FontSize, Color SelectionColor)
         {
             if (HasSelection && SelectionEndPosition != null && SelectionStartPosition != null)
             {
@@ -68,9 +69,9 @@ namespace TextControlBox.Renderer
                     int LenghtToLine = 0;
                     for (int i = 0; i < SelectionStartPosition.LineNumber - UnrenderedLinesToRenderStart; i++)
                     {
-                        if (i < RenderedLines.Count)
+                        if (i < NumberOfRenderedLines)
                         {
-                            LenghtToLine += RenderedLines[i].Length + 2;
+                            LenghtToLine += RenderedLines.ElementAt(i).Length + 1;
                         }
                     }
 
@@ -84,7 +85,7 @@ namespace TextControlBox.Renderer
                     {
                         if (i >= NumberOfRenderedLines) //Out of range of the List (do nothing)
                             break;
-                        SelStartIndex += RenderedLines[i].Length + 2;
+                        SelStartIndex += RenderedLines.ElementAt(i).Length + 1;
                     }
                     SelStartIndex += CharacterPosStart;
 
@@ -93,7 +94,7 @@ namespace TextControlBox.Renderer
                         if (i >= NumberOfRenderedLines) //Out of range of the List (do nothing)
                             break;
                         
-                        SelEndIndex += RenderedLines[i].Length + 2;
+                        SelEndIndex += RenderedLines.ElementAt(i).Length + 1;
                     }
                     SelEndIndex += CharacterPosEnd;
                 }

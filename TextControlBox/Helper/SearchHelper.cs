@@ -3,8 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using TextControlBox.Text;
+using TextControlBox.Extensions;
 
 namespace TextControlBox.Helper
 {
@@ -23,7 +23,7 @@ namespace TextControlBox.Helper
             return i >= MatchingSearchLines.Length ? MatchingSearchLines.Length - 1 : i < 0 ? 0 : i;
         }
 
-        public InternSearchResult FindNext(PooledList<Line> TotalLines, CursorPosition CursorPosition)
+        public InternSearchResult FindNext(PooledList<string> TotalLines, CursorPosition CursorPosition)
         {
             if (IsSearchOpen && MatchingSearchLines != null && MatchingSearchLines.Length > 0)
             {
@@ -57,7 +57,7 @@ namespace TextControlBox.Helper
                     {
                         CurrentSearchArrayIndex++;
                         CurrentSearchLine = CursorPosition.LineNumber = MatchingSearchLines[CurrentSearchArrayIndex];
-                        CurrentLineMatches = Regex.Matches(TotalLines[CurrentSearchLine].Content, SearchParameter.SearchExpression);
+                        CurrentLineMatches = Regex.Matches(TotalLines[CurrentSearchLine], SearchParameter.SearchExpression);
                     }
                     else
                         return new InternSearchResult(SearchResult.ReachedEnd, null);
@@ -78,7 +78,7 @@ namespace TextControlBox.Helper
             }
             return new InternSearchResult(SearchResult.NotFound, null);
         }
-        public InternSearchResult FindPrevious(PooledList<Line> Lines, CursorPosition CursorPosition)
+        public InternSearchResult FindPrevious(PooledList<string> Lines, CursorPosition CursorPosition)
         {
             if (IsSearchOpen && MatchingSearchLines != null)
             {
@@ -115,7 +115,7 @@ namespace TextControlBox.Helper
                     if (CurrentSearchLine < MatchingSearchLines[MatchingSearchLines.Length - 1])
                     {
                         CurrentSearchLine = CursorPosition.LineNumber = MatchingSearchLines[CheckIndexValue(CurrentSearchArrayIndex - 1)];
-                        CurrentLineMatches = Regex.Matches(Lines[CurrentSearchLine].Content, SearchParameter.SearchExpression);
+                        CurrentLineMatches = Regex.Matches(Lines[CurrentSearchLine], SearchParameter.SearchExpression);
                         RegexIndexInLine = CurrentLineMatches.Count - 1;
                         CurrentSearchArrayIndex--;
                     }
@@ -137,12 +137,12 @@ namespace TextControlBox.Helper
             return new InternSearchResult(SearchResult.NotFound, null);
         }
 
-        public void UpdateSearchLines(PooledList<Line> TotalLines)
+        public void UpdateSearchLines(PooledList<string> TotalLines)
         {
             MatchingSearchLines = FindIndexes(TotalLines);
         }
 
-        public SearchResult BeginSearch(PooledList<Line> TotalLines, string Word, bool MatchCase, bool WholeWord)
+        public SearchResult BeginSearch(PooledList<string> TotalLines, string Word, bool MatchCase, bool WholeWord)
         {
             SearchParameter = new SearchParameter(Word, WholeWord, MatchCase);
             UpdateSearchLines(TotalLines);
@@ -164,7 +164,7 @@ namespace TextControlBox.Helper
             MatchingSearchLines = null;
         }
 
-        private int[] FindIndexes(PooledList<Line> Lines)
+        private int[] FindIndexes(PooledList<string> Lines)
         {
             List<int> results = new List<int>();
             for (int i = 0; i < Lines.Count; i++)

@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using TextControlBox;
 using TextControlBox.Helper;
+using TextControlBox.Text;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.UI;
@@ -36,16 +38,15 @@ namespace TextControlBox_TestApp
         private void Load()
         {
             textbox.CodeLanguage = TextControlBox.TextControlBox.GetCodeLanguageFromId("CSharp");
+            textbox.LoadLines(GenerateContent());
         }
-        private string GenerateContent()
+        private IEnumerable<string> GenerateContent()
         {
-            int Limit = 10;
-            StringBuilder sb = new StringBuilder();
+            int Limit = 20;
             for (int i = 1; i < Limit; i++)
             {
-                sb.Append("Line" + i + (i == Limit - 1 ? "" : "\n"));
+                yield return "Line" + i + (i == Limit - 1 ? "" : "");
             }
-            return sb.ToString();
         }
 
         private async void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
@@ -53,11 +54,13 @@ namespace TextControlBox_TestApp
             bool ControlKey = Window.Current.CoreWindow.GetKeyState(Windows.System.VirtualKey.Control).HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Down);
             if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.R)
             {
-                textbox.LoadText(GenerateContent());
+                textbox.LoadLines(GenerateContent());
             }
             if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.E)
             {
-                Load();
+                textbox.UseSpacesInsteadTabs = true;
+                textbox.NumberOfSpacesForTab = 12;
+                //Load();
             }
             if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.D)
             {
@@ -80,8 +83,20 @@ namespace TextControlBox_TestApp
                 var file = await openPicker.PickSingleFileAsync();
                 if(file != null)
                 {
-                    string text = await FileIO.ReadTextAsync(file);
-                    textbox.LoadText(text);
+                    textbox.LoadLines(await FileIO.ReadLinesAsync(file));
+                }
+            }
+            if(ControlKey && args.VirtualKey == Windows.System.VirtualKey.S)
+            {
+                FileSavePicker savepicker = new FileSavePicker();
+                savepicker.SuggestedStartLocation = PickerLocationId.Desktop;
+                savepicker.FileTypeChoices.Add("Plain Text", new List<string>() { ".txt" });
+
+                var file = await savepicker.PickSaveFileAsync();
+                if (file != null)
+                {
+                    //await FileIO.WriteLinesAsync(file, GenerateContent());
+                    await FileIO.WriteLinesAsync(file, textbox.Lines);
                 }
             }
         }

@@ -11,6 +11,7 @@ namespace TextControlBox.Renderer
         {
             if (TextLayout != null)
                 TextLayout.Dispose();
+
             return CreateTextLayout(ResourceCreator, TextFormat, Text, targetSize);
         }
         public static CanvasTextFormat CreateCanvasTextFormat(float ZoomedFontSize, FontFamily FontFamily)

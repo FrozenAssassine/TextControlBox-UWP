@@ -6,7 +6,7 @@ namespace TextControlBox.Helper
 {
     internal class DebugHelper
     {
-        public static void DebugList(PooledList<Line> List, string DebugTitle = "--DebugList--")
+        public static void DebugList(PooledList<string> List, string DebugTitle = "--DebugList--")
         {
             Debug.WriteLine(DebugTitle);
             if (List == null)
@@ -16,7 +16,7 @@ namespace TextControlBox.Helper
             }
             for (int i = 0; i < List.Count; i++)
             {
-                Debug.WriteLine("\t" + List[i].Content);
+                Debug.WriteLine("\t" + List[i]);
             }
         }
     }
