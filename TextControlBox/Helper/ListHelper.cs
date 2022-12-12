@@ -1,4 +1,6 @@
 ﻿using Collections.Pooled;
+using System.Collections;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -45,11 +47,16 @@ namespace TextControlBox.Helper
             return new ValueResult(Index, Count);
         }
 
+        public static void GCList(PooledList<string> TotalLines)
+        {
+            int identificador = GC.GetGeneration(TotalLines);
+            GC.Collect(identificador, GCCollectionMode.Forced);
+        }
+
         public static void Clear(PooledList<string> TotalLines, bool AddNewLine = false)
         {
             TotalLines.Clear();
-            TotalLines.TrimExcess();
-
+            GCList(TotalLines);
             if (AddNewLine)
             {
                 TotalLines.Add("");

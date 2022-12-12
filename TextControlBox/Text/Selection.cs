@@ -128,7 +128,7 @@ namespace TextControlBox.Text
 
             return new CursorPosition(CursorPosition.CharacterPosition + lines.Length > 0 ? lines[lines.Length - 1].Length : 0, CursorPosition.LineNumber + lines.Length - 1);
         }
-       
+        
         public static CursorPosition Replace(TextSelection Selection, PooledList<string> TotalLines, string Text, string NewLineCharacter)
         {
             //Just delete the text if the string is emty
@@ -136,8 +136,6 @@ namespace TextControlBox.Text
             {
                 return Remove(Selection, TotalLines);
             }
-
-            Debug.WriteLine("TEXT is: " + Text);
 
             Selection = OrderTextSelection(Selection);
             int StartLine = Selection.StartPosition.LineNumber;
@@ -174,7 +172,15 @@ namespace TextControlBox.Text
             }
             else if (WholeTextSelected(Selection, TotalLines))
             {
-                ReplaceLines(TotalLines, 0, TotalLines.Count, lines);
+                Debug.WriteLine("Replace whole text");
+                if (lines.Length < TotalLines.Count)
+                {
+                    ListHelper.Clear(TotalLines);
+                    TotalLines.InsertOrAddRange(lines, 0);
+                }
+                else
+                    ReplaceLines(TotalLines, 0, TotalLines.Count, lines);
+
                 return new CursorPosition(TotalLines.GetLineLength(-1), TotalLines.Count - 1);
             }
             else

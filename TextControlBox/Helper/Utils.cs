@@ -2,6 +2,8 @@
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
@@ -51,7 +53,7 @@ namespace TextControlBox.Helper
             return new Size(layout.DrawBounds.Width - WidthOfPlaceHolder, layout.DrawBounds.Height);
         }
 
-        //Get the longest line and create a string with all the content, that is in the textbox, to save performance by iterating just one time throught the list
+        //Get the longest line in the textbox
         public static int GetLongestLineIndex(PooledList<string> TotalLines)
         {
             int LongestIndex = 0;
@@ -66,6 +68,20 @@ namespace TextControlBox.Helper
                 }
             }
             return LongestIndex;
+        }
+        public static int GetLongestLineLength(string text)
+        {
+            var splitted = text.Split("\n");
+            int OldLenght = 0;
+            for (int i = 0; i < splitted.Length; i++)
+            {
+                var lenght = splitted[i].Length;
+                if (lenght > OldLenght)
+                {
+                    OldLenght = lenght;
+                }
+            }
+            return OldLenght;
         }
 
         public static bool CursorPositionsAreEqual(CursorPosition First, CursorPosition Second)
