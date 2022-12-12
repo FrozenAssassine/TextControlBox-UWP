@@ -55,6 +55,8 @@ namespace TextControlBox
         private int MinFontSize = 3;
         private int OldZoomFactor = 0;
         private int NumberOfStartLine = 0;
+        private int LongestLineLength = 0;
+        private int LongestLineIndex = 0;
         private float OldHorizontalScrollValue = 0;
         private float _SpaceBetweenLineNumberAndText = 30;
         private ElementTheme _RequestedTheme = ElementTheme.Default;
@@ -91,6 +93,7 @@ namespace TextControlBox
         bool DragDropSelection = false;
         bool HasFocus = true;
         bool ZoomIsChanged = false;
+        bool NeedsRecalculateLongestLineIndex = true;
 
         CanvasTextFormat TextFormat = null;
         CanvasTextLayout DrawnTextLayout = null;
@@ -116,6 +119,7 @@ namespace TextControlBox
         private PooledList<string> TotalLines = new PooledList<string>(0);
         private IEnumerable<string> RenderedLines;
         private int NumberOfRenderedLines = 0;
+
         private string CurrentLine { get => TotalLines.GetCurrentLineText(); set => TotalLines.SetCurrentLineText(value); }
         StringBuilder LineNumberContent = new StringBuilder();
 
@@ -226,11 +230,27 @@ namespace TextControlBox
         {
             TotalLines.UpdateCurrentLine(CursorPosition.LineNumber);
         }
+        private void CheckRecalculateLongestLine(string text)
+        {
+            if (Utils.GetLongestLineLength(text) > LongestLineLength)
+            {
+                NeedsRecalculateLongestLineIndex = true;
+            }
+        }
         #endregion
 
         #region Textediting
         private void DeleteSelection()
         {
+            if (TextSelection == null)
+                return;
+
+            //line gets deleted -> recalculate
+            if (TextSelection.IsLineInSelection(LongestLineIndex))
+            {
+                NeedsRecalculateLongestLineIndex = true;
+            }
+
             undoRedo.RecordUndoAction(() =>
             {
                 CursorPosition = Selection.Remove(TextSelection, TotalLines);
@@ -263,9 +283,15 @@ namespace TextControlBox
                     CursorPosition.CharacterPosition = text.Length + CharacterPos;
 
                 }, TotalLines, CursorPosition.LineNumber, 1, 1, NewLineCharacter);
+
+                if (TotalLines.GetCurrentLineText().Length > LongestLineLength)
+                {
+                    LongestLineIndex = CursorPosition.LineNumber;
+                }
             }
             else if (TextSelection == null && SplittedTextLength > 1)
             {
+                CheckRecalculateLongestLine(text);
                 undoRedo.RecordUndoAction(() =>
                 {
                     CursorPosition = Selection.InsertText(TextSelection, CursorPosition, TotalLines,  text, NewLineCharacter);
@@ -277,6 +303,7 @@ namespace TextControlBox
             }
             else if (TextSelection != null)
             {
+                CheckRecalculateLongestLine(text);
                 undoRedo.RecordUndoAction(() =>
                 {
                     CursorPosition = Selection.Replace(TextSelection, TotalLines, text, NewLineCharacter);
@@ -305,6 +332,9 @@ namespace TextControlBox
                 var stepsToMove = ControlIsPressed ? Cursor.CalculateStepsToMoveLeft(CurrentLine, charPos) : 1;
                 if (charPos - stepsToMove >= 0)
                 {
+                    if (CursorPosition.LineNumber == LongestLineIndex)
+                        NeedsRecalculateLongestLineIndex = true;
+
                     undoRedo.RecordUndoAction(() =>
                     {
                         CurrentLine = curLine.Remove(charPos - stepsToMove, stepsToMove);
@@ -316,6 +346,9 @@ namespace TextControlBox
                 {
                     if (CursorPosition.LineNumber <= 0)
                         return;
+
+                    if (CursorPosition.LineNumber == LongestLineIndex)
+                        NeedsRecalculateLongestLineIndex = true;
 
                     undoRedo.RecordUndoAction(() =>
                     {
@@ -351,9 +384,13 @@ namespace TextControlBox
                 //delete lines if cursor is at position 0 and the line is emty OR cursor is at the end of a line and the line has content
                 if (CharacterPos == curLine.Length)
                 {
+
                     string LineToAdd = CursorPosition.LineNumber + 1 < TotalLines.Count ? TotalLines.GetLineText(CursorPosition.LineNumber + 1) : null;
                     if (LineToAdd != null)
-                    {
+                    {                    
+                        if (CursorPosition.LineNumber == LongestLineIndex)
+                            NeedsRecalculateLongestLineIndex = true;
+
                         undoRedo.RecordUndoAction(() =>
                         {
                             CurrentLine = curLine + LineToAdd;
@@ -365,7 +402,10 @@ namespace TextControlBox
                 else if (TotalLines.Count > CursorPosition.LineNumber)
                 {
                     int StepsToMove = ControlIsPressed ? Cursor.CalculateStepsToMoveRight(curLine, CharacterPos) : 1;
-                    
+
+                    if (CursorPosition.LineNumber == LongestLineIndex)
+                        NeedsRecalculateLongestLineIndex = true;
+
                     undoRedo.RecordUndoAction(() =>
                     {
                         CurrentLine = curLine.SafeRemove(CharacterPos, StepsToMove);
@@ -723,12 +763,12 @@ namespace TextControlBox
                 selectionrenderer.ClearSelection();
                 undoRedo.ClearAll();
 
-                TotalLines.Clear();
+                ListHelper.Clear(TotalLines);
                 TotalLines.AddRange(lines);
-                TotalLines.TrimExcess();
 
                 this.LineEnding = LineEnding;
-
+                
+                NeedsRecalculateLongestLineIndex = true;
                 UpdateAll();
             }
             catch (OutOfMemoryException)
@@ -755,12 +795,12 @@ namespace TextControlBox
                 selectionrenderer.ClearSelection();
                 undoRedo.ClearAll();
 
+                NeedsRecalculateLongestLineIndex = true;
+
                 if (text.Length == 0)
                     ListHelper.Clear(TotalLines, true);
                 else
                     Selection.ReplaceLines(TotalLines, 0, TotalLines.Count, stringManager.CleanUpString(text).Split(NewLineCharacter));
-
-                GC.Collect();
 
                 UpdateAll();
             }
@@ -783,7 +823,7 @@ namespace TextControlBox
                     return;
 
                 selectionrenderer.ClearSelection();
-
+                NeedsRecalculateLongestLineIndex = true;
                 undoRedo.RecordUndoAction(() =>
                 {
                     Selection.ReplaceLines(TotalLines, 0, TotalLines.Count, stringManager.CleanUpString(text).Split(NewLineCharacter));
@@ -809,13 +849,7 @@ namespace TextControlBox
         private void CleanUp()
         {
             Debug.WriteLine("Collect GC");
-
-            GCSettings.LargeObjectHeapCompactionMode =
-              GCLargeObjectHeapCompactionMode.CompactOnce;
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
+            ListHelper.GCList(TotalLines);
         }
 
         #endregion
@@ -1092,12 +1126,12 @@ namespace TextControlBox
 
                 if (CurPosY > CanvasHeight - 50)
                 {
-                    VerticalScrollbar.Value += (CurPosY > CanvasHeight + 30 ? 20 : (CanvasHeight - CurPosY) / 150);
+                    VerticalScrollbar.Value += (CurPosY > CanvasHeight + 30 ? 20 : (CanvasHeight - CurPosY) / 180);
                     UpdateWhenScrolled();
                 }
                 else if (CurPosY < 50)
                 {
-                    VerticalScrollbar.Value += CurPosY < -30 ? -20 : -(50 - CurPosY) / 10;
+                    VerticalScrollbar.Value += CurPosY < -30 ? -20 : -(50 - CurPosY) / 20;
                     UpdateWhenScrolled();
                 }
 
@@ -1276,7 +1310,7 @@ namespace TextControlBox
             //Scroll vertical using mousewheel
             else
             {
-                VerticalScrollbar.Value -= delta * VerticalScrollSensitivity;
+                VerticalScrollbar.Value -= (delta * VerticalScrollSensitivity) / 4;
                 //Only update when a line was scrolled
                 if ((int)(VerticalScrollbar.Value / SingleLineHeight) != NumberOfStartLine)
                 {
@@ -1366,12 +1400,12 @@ namespace TextControlBox
             CreateColorResources(args.DrawingSession);
 
             //Measure textposition and apply the value to the scrollbar
-            VerticalScrollbar.Maximum = ((TotalLines.Count + 1) * SingleLineHeight - Scroll.ActualHeight);
+            VerticalScrollbar.Maximum = ((TotalLines.Count + 1) * SingleLineHeight - Scroll.ActualHeight) / 4;
             VerticalScrollbar.ViewportSize = sender.ActualHeight;
 
             //Calculate number of lines that needs to be rendered
             NumberOfRenderedLines = (int)(sender.ActualHeight / SingleLineHeight);
-            NumberOfStartLine = (int)(VerticalScrollbar.Value / SingleLineHeight);
+            NumberOfStartLine = (int)((VerticalScrollbar.Value * 4) / SingleLineHeight);
 
             //Get all the lines, that need to be rendered, from the list
             NumberOfRenderedLines = NumberOfRenderedLines + NumberOfStartLine > TotalLines.Count ? TotalLines.Count : NumberOfRenderedLines;
@@ -1388,12 +1422,22 @@ namespace TextControlBox
                 LineNumberTextToRender = LineNumberContent.ToString();
                 LineNumberContent.Clear();
             }
-            //Get length of longest line in whole text
-           Size LineLength = Utils.MeasureLineLenght(CanvasDevice.GetSharedDevice(), TotalLines.GetLineText(Utils.GetLongestLineIndex(TotalLines)), TextFormat);
-                //Measure horizontal Width of longest line and apply to scrollbar
+
+            //Get the longest line in the text:
+            if (NeedsRecalculateLongestLineIndex)
+            {
+                NeedsRecalculateLongestLineIndex = false;
+                Debug.WriteLine("recalculate...");
+                LongestLineIndex = Utils.GetLongestLineIndex(TotalLines);
+            }
+
+            string longestLineText = TotalLines.GetLineText(LongestLineIndex);
+            LongestLineLength = longestLineText.Length;
+            Size LineLength = Utils.MeasureLineLenght(CanvasDevice.GetSharedDevice(), longestLineText, TextFormat);
+
+            //Measure horizontal Width of longest line and apply to scrollbar
             HorizontalScrollbar.Maximum = (LineLength.Width <= sender.ActualWidth ? 0 : LineLength.Width - sender.ActualWidth + 50);
             HorizontalScrollbar.ViewportSize = sender.ActualWidth;
-
             ScrollIntoViewHorizontal();
 
             //Create the textlayout --> apply the Syntaxhighlighting --> render it:
@@ -1405,6 +1449,7 @@ namespace TextControlBox
                 ZoomIsChanged = false;
                 OldRenderedText = RenderedText;
                 UpdateLinenumbers = true;
+
 
                 DrawnTextLayout = TextRenderer.CreateTextResource(sender, DrawnTextLayout, TextFormat, RenderedText, new Size { Height = sender.Size.Height, Width = this.ActualWidth }, ZoomedFontSize);
                 SyntaxHighlightingRenderer.UpdateSyntaxHighlighting(DrawnTextLayout, _AppTheme, _CodeLanguage, SyntaxHighlighting, RenderedText);
@@ -1746,10 +1791,11 @@ namespace TextControlBox
 
             //Do the Undo
             Utils.ChangeCursor(CoreCursorType.Wait);
-
             var sel = undoRedo.Undo(TotalLines, stringManager, NewLineCharacter);
             Internal_TextChanged();
             Utils.ChangeCursor(CoreCursorType.IBeam);
+
+            NeedsRecalculateLongestLineIndex = true;
 
             if (sel != null)
             {
@@ -1775,6 +1821,7 @@ namespace TextControlBox
             Internal_TextChanged();
             Utils.ChangeCursor(CoreCursorType.IBeam);
 
+            NeedsRecalculateLongestLineIndex = true;
 
             if (sel != null)
             {
@@ -1906,6 +1953,10 @@ namespace TextControlBox
         {
             if (index >= TotalLines.Count || index < 0)
                 return false;
+
+            if (text.Length > LongestLineLength)
+                LongestLineIndex = index;
+
             undoRedo.RecordUndoAction(() =>
             {
                 TotalLines.SetLineText(index, stringManager.CleanUpString(text));
@@ -1923,6 +1974,9 @@ namespace TextControlBox
         {
             if (index >= TotalLines.Count || index < 0)
                 return false;
+
+            if(index == LongestLineIndex)
+                NeedsRecalculateLongestLineIndex = true;
 
             undoRedo.RecordUndoAction(() =>
             {
@@ -1943,6 +1997,9 @@ namespace TextControlBox
         {
             if (index > TotalLines.Count || index < 0)
                 return false;
+
+            if (text.Length > LongestLineLength)
+                LongestLineIndex = index;
 
             undoRedo.RecordUndoAction(() =>
             {

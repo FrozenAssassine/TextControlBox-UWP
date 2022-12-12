@@ -39,6 +39,22 @@
         {
             return StartPosition.LineNumber + ":" + StartPosition.CharacterPosition + " | " + EndPosition.LineNumber + ":" + EndPosition.CharacterPosition;
         }
+
+        public bool IsLineInSelection(int index)
+        {
+            if (this.StartPosition != null && this.EndPosition != null)
+            {
+                if (this.StartPosition.LineNumber > this.EndPosition.LineNumber)
+                {
+                    return this.StartPosition.LineNumber < index && this.EndPosition.LineNumber > index;
+                }
+                else if(this.StartPosition.LineNumber == this.EndPosition.LineNumber)
+                    return this.StartPosition.LineNumber != index;
+                else
+                    return this.StartPosition.LineNumber > index && this.EndPosition.LineNumber < index;
+            }
+            return false;
+        }
     }
 
     public class TextSelectionPosition

@@ -130,6 +130,10 @@ namespace TextControlBox.Extensions
             var res = ListHelper.CheckValues(TotalLines, Index, Count);
             TotalLines.RemoveRange(res.Index, res.Count);
             TotalLines.TrimExcess();
+
+            //clear up the memory of the list when more than 1mio items are removed
+            if (res.Count > 1_000_000)
+                ListHelper.GCList(TotalLines);
         }
         public static string[] GetLines(this string[] lines, int start, int count)
         {

@@ -107,6 +107,12 @@ namespace TextControlBox.Text
             {
                 HasRedone = false;
                 RedoStack.Clear();
+                while (RedoStack.Count > 0)
+                {
+                    Debug.WriteLine("Pop");
+                    var redoItem = RedoStack.Pop();
+                    redoItem.UndoText = redoItem.RedoText = null;
+                }
             }
 
 
@@ -170,6 +176,9 @@ namespace TextControlBox.Text
             RedoStack.Clear();
             UndoStack.TrimExcess();
             RedoStack.TrimExcess();
+
+            GC.Collect(GC.GetGeneration(UndoStack), GCCollectionMode.Optimized);
+            GC.Collect(GC.GetGeneration(RedoStack), GCCollectionMode.Optimized);
         }
 
         public void NullAll()
