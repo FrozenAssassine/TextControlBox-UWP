@@ -111,79 +111,71 @@ namespace TextControlBox.Text
         }
 
         //Move cursor:
-        public static CursorPosition MoveLeft(CursorPosition CurrentCursorPosition, PooledList<string> TotalLines, string CurrentLine)
+        public static void MoveLeft(CursorPosition CurrentCursorPosition, PooledList<string> TotalLines, string CurrentLine)
         {
-            CursorPosition ReturnValue = new CursorPosition(CurrentCursorPosition);
-            if (ReturnValue.LineNumber < 0)
+            if (CurrentCursorPosition.LineNumber < 0)
+                return;
+            else
             {
-                return ReturnValue;
+                int currentLineLength = TotalLines.GetLineLength(CurrentCursorPosition.LineNumber);
+                if (CurrentCursorPosition.CharacterPosition == 0 && CurrentCursorPosition.LineNumber > 0)
+                {
+                    CurrentCursorPosition.CharacterPosition = TotalLines.GetLineLength(CurrentCursorPosition.LineNumber - 1);
+                    CurrentCursorPosition.LineNumber -= 1;
+                }
+                else if (CurrentCursorPosition.CharacterPosition > currentLineLength)
+                {
+                    CurrentCursorPosition.CharacterPosition = currentLineLength - 1;
+                }
+                else if (CurrentCursorPosition.CharacterPosition > 0)
+                {
+                    CurrentCursorPosition.CharacterPosition -= CalculateStepsToMoveLeft(CurrentLine, CurrentCursorPosition.CharacterPosition);
+                }
+            }
+        }
+        public static void MoveRight(CursorPosition CurrentCursorPosition, PooledList<string> TotalLines, string CurrentLine)
+        {
+            int LineLength = TotalLines.GetLineLength(CurrentCursorPosition.LineNumber);
+
+            if (CurrentCursorPosition.LineNumber > TotalLines.Count - 1)
+            {
+                return;
             }
             else
             {
-                if (ReturnValue.CharacterPosition == 0 && ReturnValue.LineNumber > 0)
+                if (CurrentCursorPosition.CharacterPosition == LineLength && CurrentCursorPosition.LineNumber < TotalLines.Count - 1)
                 {
-                    ReturnValue.CharacterPosition = TotalLines.GetLineLength(ReturnValue.LineNumber - 1);
-                    ReturnValue.LineNumber -= 1;
+                    CurrentCursorPosition.CharacterPosition = 0;
+                    CurrentCursorPosition.LineNumber += 1;
                 }
-                else if (ReturnValue.CharacterPosition > 0)
+                else if (CurrentCursorPosition.CharacterPosition < LineLength)
                 {
-                    ReturnValue.CharacterPosition -= CalculateStepsToMoveLeft(CurrentLine, CurrentCursorPosition.CharacterPosition);
+                    CurrentCursorPosition.CharacterPosition += CalculateStepsToMoveRight(CurrentLine, CurrentCursorPosition.CharacterPosition);
                 }
             }
 
-            return ReturnValue;
+            if (CurrentCursorPosition.CharacterPosition > LineLength)
+                CurrentCursorPosition.CharacterPosition = LineLength;
         }
-        public static CursorPosition MoveRight(CursorPosition CurrentCursorPosition, PooledList<string> TotalLines, string CurrentLine)
+        public static void MoveDown(CursorPosition CurrentCursorPosition, int TotalLinesLength)
         {
-            CursorPosition ReturnValue = new CursorPosition(CurrentCursorPosition);
-            int LineLength = TotalLines.GetLineLength(ReturnValue.LineNumber);
-
-            if (ReturnValue.LineNumber > TotalLines.Count - 1)
-            {
-                return ReturnValue;
-            }
-            else
-            {
-                if (ReturnValue.CharacterPosition == LineLength && ReturnValue.LineNumber < TotalLines.Count - 1)
-                {
-                    ReturnValue.CharacterPosition = 0;
-                    ReturnValue.LineNumber += 1;
-                }
-                else if (ReturnValue.CharacterPosition < LineLength)
-                {
-                    ReturnValue.CharacterPosition += CalculateStepsToMoveRight(CurrentLine, CurrentCursorPosition.CharacterPosition);
-                }
-            }
-
-            if (ReturnValue.CharacterPosition > LineLength)
-                ReturnValue.CharacterPosition = LineLength;
-            return ReturnValue;
-        }
-        public static CursorPosition MoveDown(CursorPosition CurrentCursorPosition, int TotalLinesLength)
-        {
-            CursorPosition ReturnValue = new CursorPosition(CurrentCursorPosition);
             if (CurrentCursorPosition.LineNumber < TotalLinesLength - 1)
-                ReturnValue = CursorPosition.ChangeLineNumber(CurrentCursorPosition, CurrentCursorPosition.LineNumber + 1);
-            return ReturnValue;
+                CurrentCursorPosition.ChangeLineNumber(CurrentCursorPosition.LineNumber + 1);
         }
-        public static CursorPosition MoveUp(CursorPosition CurrentCursorPosition)
+        public static void MoveUp(CursorPosition CurrentCursorPosition)
         {
-            CursorPosition ReturnValue = new CursorPosition(CurrentCursorPosition);
             if (CurrentCursorPosition.LineNumber > 0)
-                ReturnValue = CursorPosition.ChangeLineNumber(ReturnValue, CurrentCursorPosition.LineNumber - 1);
-            return ReturnValue;
+                CurrentCursorPosition.ChangeLineNumber(CurrentCursorPosition.LineNumber - 1);
         }
 
-        public static CursorPosition MoveToLineEnd(CursorPosition CursorPosition, string CurrentLine)
+        public static void MoveToLineEnd(CursorPosition CursorPosition, string CurrentLine)
         {
             CursorPosition.CharacterPosition = CurrentLine.Length;
-            return CursorPosition;
         }
 
-        public static CursorPosition MoveToLineStart(CursorPosition CursorPosition)
+        public static void MoveToLineStart(CursorPosition CursorPosition)
         {
             CursorPosition.CharacterPosition = 0;
-            return CursorPosition;
         }
     }
 }
