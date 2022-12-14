@@ -42,11 +42,14 @@ namespace TextControlBox_TestApp
         }
         private IEnumerable<string> GenerateContent()
         {
-            int Limit = 20;
+            int Length = 0;
+            int Limit = 50;
             for (int i = 1; i < Limit; i++)
             {
-                yield return "Line" + i + (i == Limit - 1 ? "" : "");
+                Length += ("Line LOL: " + i).Length;
+                yield return "Line LOL: " + i;
             }
+            Debug.WriteLine("Length: " + Length);
         }
 
         private async void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)

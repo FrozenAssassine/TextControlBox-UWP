@@ -7,8 +7,6 @@ using System.IO.Compression;
 using System.Text;
 using TextControlBox.Extensions;
 using TextControlBox.Helper;
-using Windows.Networking.NetworkOperators;
-using static System.Collections.Specialized.BitVector32;
 
 namespace TextControlBox.Text
 {
@@ -49,7 +47,7 @@ namespace TextControlBox.Text
             AddUndoItem(null, startline, lineBefore, lineAfter, 1, 1);
         }
 
-        public void RecordUndoAction(Action action, PooledList<string> TotalLines, int startline, int undocount, int redoCount, string NewLineCharacter)
+        public void RecordUndoAction(Action action, PooledList<string> TotalLines, int startline, int undocount, int redoCount, string NewLineCharacter, CursorPosition cursorposition = null)
         {
             if (undocount == redoCount && redoCount == 1)
             {
@@ -61,7 +59,9 @@ namespace TextControlBox.Text
             action.Invoke();
             var linesAfter = TotalLines.GetLines_Large(startline, redoCount).GetString(NewLineCharacter);
 
-            AddUndoItem(null, startline, linesBefore, linesAfter, undocount, redoCount);
+            Debug.WriteLine("Undo Action");
+
+            AddUndoItem(cursorposition == null ? null : new TextSelection(new CursorPosition(cursorposition), null), startline, linesBefore, linesAfter, undocount, redoCount);
         }
         public void RecordUndoAction(Action action, PooledList<string> TotalLines, TextSelection selection, int NumberOfAddedLines, string NewLineCharacter)
         {
@@ -106,15 +106,12 @@ namespace TextControlBox.Text
             if (HasRedone)
             {
                 HasRedone = false;
-                RedoStack.Clear();
                 while (RedoStack.Count > 0)
                 {
-                    Debug.WriteLine("Pop");
                     var redoItem = RedoStack.Pop();
                     redoItem.UndoText = redoItem.RedoText = null;
                 }
             }
-
 
             UndoRedoItem item = UndoStack.Pop();
             RecordRedo(item);
@@ -164,7 +161,7 @@ namespace TextControlBox.Text
 
                 //Selection.ReplaceLines(TotalLines, item.StartLine, item.UndoCount, StringManager.CleanUpString(Decompress(item.RedoText)).Split(NewLineCharacter));
             }
-            return null;
+            return item.Selection;
         }
 
         /// <summary>
