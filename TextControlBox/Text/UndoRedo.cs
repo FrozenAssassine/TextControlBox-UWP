@@ -73,10 +73,10 @@ namespace TextControlBox.Text
             }
 
             int NumberOfRemovedLines = orderedSel.EndPosition.LineNumber - orderedSel.StartPosition.LineNumber + 1;
-            if (NumberOfAddedLines == 0 && !Selection.WholeLinesAreSelected(selection, TotalLines))
-            {
+            
+            if (NumberOfAddedLines == 0 && !Selection.WholeLinesAreSelected(selection, TotalLines) ||
+                orderedSel.StartPosition.LineNumber == orderedSel.EndPosition.LineNumber && orderedSel.Length == TotalLines.GetLineLength(orderedSel.StartPosition.LineNumber))
                 NumberOfAddedLines += 1;
-            }
 
             var linesBefore = TotalLines.GetLines_Large(orderedSel.StartPosition.LineNumber, NumberOfRemovedLines).GetString(NewLineCharacter);
             action.Invoke();
