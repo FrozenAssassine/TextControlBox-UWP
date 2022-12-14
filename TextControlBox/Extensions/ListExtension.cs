@@ -139,5 +139,12 @@ namespace TextControlBox.Extensions
         {
             return lines.Skip(start).Take(count).ToArray();
         }
+
+        public static void SwapLines(this PooledList<string> lines, int originalindex, int newindex)
+        {
+            string oldLine = lines.GetLineText(originalindex);
+            lines.SetLineText(originalindex, lines.GetLineText(newindex));
+            lines.SetLineText(newindex, oldLine);
+        }
     }
 }

@@ -17,7 +17,6 @@ using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Popups;
 using Windows.UI.Xaml;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace TextControlBox.Helper
 {
@@ -88,21 +87,14 @@ namespace TextControlBox.Helper
         {
             return First.LineNumber == Second.LineNumber && First.CharacterPosition == Second.CharacterPosition;
         }
-        public static bool IndexIsInRangeOf(PooledList<string> Lines, int Index)
-        {
-            return Index < Lines.Count && Index > -1;
-        }
 
         public static string[] SplitAt(string Text, int Index)
         {
-            string First = Index < Text.Length ? Text.Remove(Index) : Text;
-            string Second = Index < Text.Length ? Text.Substring(Index) : "";
+            string First = Index < Text.Length ? Text.SafeRemove(Index) : Text;
+            string Second = Index < Text.Length ? Text.Safe_Substring(Index) : "";
             return new string[] { First, Second };
         }
-        public static Rect GetElementRect(FrameworkElement element)
-        {
-            return new Rect(element.TransformToVisual(null).TransformPoint(new Point()), new Size(element.ActualWidth, element.ActualHeight));
-        }
+
         public static int CountCharacters(PooledList<string> TotalLines)
         {
             int Count = 0;

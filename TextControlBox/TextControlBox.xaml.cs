@@ -337,7 +337,7 @@ namespace TextControlBox
 
                     undoRedo.RecordUndoAction(() =>
                     {
-                        CurrentLine = curLine.Remove(charPos - stepsToMove, stepsToMove);
+                        CurrentLine = curLine.SafeRemove(charPos - stepsToMove, stepsToMove);
                         CursorPosition.CharacterPosition -= stepsToMove;
 
                     }, TotalLines, CursorPosition.LineNumber, 1, 1, NewLineCharacter);
@@ -901,7 +901,8 @@ namespace TextControlBox
 
             var ctrl = Utils.IsKeyPressed(VirtualKey.Control);
             var shift = Utils.IsKeyPressed(VirtualKey.Shift);
-            if (ctrl && !shift)
+            var menu = Utils.IsKeyPressed(VirtualKey.Menu);
+            if (ctrl && !shift && !menu)
             {
                 switch (e.Key)
                 {
@@ -936,6 +937,31 @@ namespace TextControlBox
 
                 if (e.Key != VirtualKey.Left && e.Key != VirtualKey.Right && e.Key != VirtualKey.Back && e.Key != VirtualKey.Delete)
                     return;
+            }
+
+            if (menu)
+            {
+                if (e.Key == VirtualKey.Down || e.Key == VirtualKey.Up)
+                {
+                    var selection = 
+                        MoveLine.Move(
+                            TotalLines, 
+                            TextSelection, 
+                            CursorPosition, 
+                            undoRedo, 
+                            NewLineCharacter, 
+                            e.Key == VirtualKey.Down ? MoveDirection.Down : MoveDirection.Up
+                            );
+
+                    if (selection == null)
+                        ForceClearSelection();
+                    else
+                    {
+                        selectionrenderer.SetSelection(selection);
+                    }
+                        UpdateAll();
+                    return;
+                }
             }
 
             switch (e.Key)
@@ -1807,6 +1833,14 @@ namespace TextControlBox
 
             if (sel != null)
             {
+                //only set cursorposition
+                if (sel.StartPosition != null && sel.EndPosition == null)
+                {
+                    CursorPosition = sel.StartPosition;
+                    UpdateAll();
+                    return;
+                }
+
                 selectionrenderer.SetSelection(sel);
                 CursorPosition = sel.EndPosition;
             }
@@ -1832,7 +1866,15 @@ namespace TextControlBox
             NeedsRecalculateLongestLineIndex = true;
 
             if (sel != null)
-            {
+            {               
+                //only set cursorposition
+                if (sel.StartPosition != null && sel.EndPosition == null)
+                {
+                    CursorPosition = sel.StartPosition;
+                    UpdateAll();
+                    return;
+                }
+
                 selectionrenderer.SetSelection(sel);
                 CursorPosition = sel.EndPosition;
             }

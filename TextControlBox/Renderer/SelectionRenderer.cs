@@ -184,6 +184,9 @@ namespace TextControlBox.Renderer
 
         public void SetSelection(TextSelection selection)
         {
+            if (selection == null)
+                return;
+
             SetSelection(selection.StartPosition, selection.EndPosition);
         }
         public void SetSelection(CursorPosition StartPosition, CursorPosition EndPosition)

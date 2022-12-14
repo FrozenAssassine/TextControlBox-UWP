@@ -150,6 +150,7 @@
     <Compile Include="Text\CursorPosition.cs" />
     <Compile Include="Text\EventClasses.cs" />
     <Compile Include="Text\LineEndings.cs" />
+    <Compile Include="Text\MoveLine.cs" />
     <Compile Include="Text\Selection.cs" />
     <Compile Include="Text\StringManager.cs" />
     <Compile Include="Text\TabKey.cs" />
