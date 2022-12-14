@@ -1,4 +1,4 @@
-﻿using Collections.Pooled;
+using Collections.Pooled;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -203,7 +203,6 @@ namespace TextControlBox.Text
                 //Only the endline is completely selected
                 else if (StartPosition != 0 && EndPosition == End_Line.Length)
                 {
-
                     TotalLines.SetLineText(StartLine, Start_Line.SafeRemove(StartPosition).AddToEnd(lines[0]));
 
                     TotalLines.Safe_RemoveRange(StartLine + 1, EndLine - StartLine);
@@ -270,7 +269,7 @@ namespace TextControlBox.Text
                 //Only the startline is completely selected
                 else if (StartPosition == 0 && EndPosition != End_Line.Length)
                 {
-                    TotalLines.SetLineText(EndLine, End_Line.Substring(EndPosition));
+                    TotalLines.SetLineText(EndLine, End_Line.Safe_Substring(EndPosition));
                     TotalLines.Safe_RemoveRange(StartLine, EndLine - StartLine);
                 }
                 //Only the endline is completely selected
@@ -282,7 +281,7 @@ namespace TextControlBox.Text
                 //Both startline and endline are not completely selected
                 else
                 {
-                    TotalLines.SetLineText(StartLine, Start_Line.SafeRemove(StartPosition) + End_Line.Substring(EndPosition));
+                    TotalLines.SetLineText(StartLine, Start_Line.SafeRemove(StartPosition) + End_Line.Safe_Substring(EndPosition));
                     TotalLines.Safe_RemoveRange(StartLine + 1, EndLine - StartLine);
                 }
             }

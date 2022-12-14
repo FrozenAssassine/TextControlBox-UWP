@@ -981,7 +981,8 @@ namespace TextControlBox
                         {
                             StartSelectionIfNeeded();
                             selectionrenderer.IsSelecting = true;
-                            CursorPosition = selectionrenderer.SelectionEndPosition = Cursor.MoveLeft(selectionrenderer.SelectionEndPosition, TotalLines, CurrentLine);
+                            Cursor.MoveLeft(selectionrenderer.SelectionEndPosition, TotalLines, CurrentLine);
+                            CursorPosition = selectionrenderer.SelectionEndPosition;
                             selectionrenderer.IsSelecting = false;
                         }
                         else
@@ -990,7 +991,7 @@ namespace TextControlBox
                             if (selectionrenderer.HasSelection && TextSelection != null)
                                 CursorPosition = Selection.GetMin(TextSelection);
                             else
-                                CursorPosition = Cursor.MoveLeft(CursorPosition, TotalLines, CurrentLine);
+                                Cursor.MoveLeft(CursorPosition, TotalLines, CurrentLine);
 
                             ClearSelectionIfNeeded();
                         }
@@ -1008,7 +1009,8 @@ namespace TextControlBox
                             StartSelectionIfNeeded();
 
                             selectionrenderer.IsSelecting = true;
-                            CursorPosition = selectionrenderer.SelectionEndPosition = Cursor.MoveRight(selectionrenderer.SelectionEndPosition, TotalLines, CurrentLine);
+                            Cursor.MoveRight(selectionrenderer.SelectionEndPosition, TotalLines, CurrentLine);
+                            CursorPosition = selectionrenderer.SelectionEndPosition;
                             selectionrenderer.IsSelecting = false;
                         }
                         else
@@ -1017,7 +1019,7 @@ namespace TextControlBox
                             if (selectionrenderer.HasSelection && TextSelection != null)
                                 CursorPosition = Selection.GetMax(TextSelection);
                             else
-                                CursorPosition = Cursor.MoveRight(CursorPosition, TotalLines, TotalLines.GetCurrentLineText());
+                                Cursor.MoveRight(CursorPosition, TotalLines, TotalLines.GetCurrentLineText());
 
                             ClearSelectionIfNeeded();
                         }
@@ -1032,13 +1034,14 @@ namespace TextControlBox
                         {
                             StartSelectionIfNeeded();
                             selectionrenderer.IsSelecting = true;
-                            CursorPosition = selectionrenderer.SelectionEndPosition = Cursor.MoveDown(selectionrenderer.SelectionEndPosition, TotalLines.Count);
+                            Cursor.MoveDown(selectionrenderer.SelectionEndPosition, TotalLines.Count);
+                            CursorPosition = selectionrenderer.SelectionEndPosition;
                             selectionrenderer.IsSelecting = false;
                         }
                         else
                         {
                             ClearSelectionIfNeeded();
-                            CursorPosition = Cursor.MoveDown(CursorPosition, TotalLines.Count);
+                            Cursor.MoveDown(CursorPosition, TotalLines.Count);
                         }
 
                         UpdateScrollToShowCursor(false);
@@ -1051,13 +1054,14 @@ namespace TextControlBox
                         {
                             StartSelectionIfNeeded();
                             selectionrenderer.IsSelecting = true;
-                            CursorPosition = selectionrenderer.SelectionEndPosition = Cursor.MoveUp(selectionrenderer.SelectionEndPosition);
+                            Cursor.MoveUp(selectionrenderer.SelectionEndPosition);
+                            CursorPosition = selectionrenderer.SelectionEndPosition;
                             selectionrenderer.IsSelecting = false;
                         }
                         else
                         {
                             ClearSelectionIfNeeded();
-                            CursorPosition = Cursor.MoveUp(CursorPosition);
+                            Cursor.MoveUp(CursorPosition);
                         }
 
                         UpdateScrollToShowCursor(false);
@@ -1084,13 +1088,15 @@ namespace TextControlBox
 
                             if (selectionrenderer.SelectionStartPosition == null)
                                 selectionrenderer.SelectionStartPosition = new CursorPosition(CursorPosition);
-                            selectionrenderer.SelectionEndPosition = Cursor.MoveToLineEnd(CursorPosition, CurrentLine);
+                            
+                            Cursor.MoveToLineEnd(CursorPosition, CurrentLine);
+                            selectionrenderer.SelectionEndPosition = CursorPosition;
                             UpdateSelection();
                             UpdateCursor();
                         }
                         else
                         {
-                            CursorPosition = Cursor.MoveToLineEnd(CursorPosition, CurrentLine);
+                             Cursor.MoveToLineEnd(CursorPosition, CurrentLine);
                             UpdateCursor();
                             UpdateText();
                         }
@@ -1104,13 +1110,15 @@ namespace TextControlBox
 
                             if (selectionrenderer.SelectionStartPosition == null)
                                 selectionrenderer.SelectionStartPosition = new CursorPosition(CursorPosition);
-                            selectionrenderer.SelectionEndPosition = Cursor.MoveToLineStart(CursorPosition);
+                            Cursor.MoveToLineStart(CursorPosition);
+                            selectionrenderer.SelectionEndPosition = CursorPosition;
+
                             UpdateSelection();
                             UpdateCursor();
                         }
                         else
                         {
-                            CursorPosition = Cursor.MoveToLineStart(CursorPosition);
+                            Cursor.MoveToLineStart(CursorPosition);
                             UpdateCursor();
                             UpdateText();
                         }
