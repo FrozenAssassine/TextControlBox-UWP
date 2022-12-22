@@ -161,7 +161,8 @@ namespace TextControlBox.Text
 
                 //Selection.ReplaceLines(TotalLines, item.StartLine, item.UndoCount, StringManager.CleanUpString(Decompress(item.RedoText)).Split(NewLineCharacter));
             }
-            return item.Selection;
+            return null;
+            //return item.Selection;
         }
 
         /// <summary>

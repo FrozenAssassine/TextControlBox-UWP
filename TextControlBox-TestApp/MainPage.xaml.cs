@@ -37,7 +37,10 @@ namespace TextControlBox_TestApp
         }
         private void Load()
         {
-            textbox.CodeLanguage = TextControlBox.TextControlBox.GetCodeLanguageFromId("CSharp");
+
+var res = TextControlBox.TextControlBox.GetCodeLanguageFromId("CSharp");
+            Debug.WriteLine("DO: " + res);
+            textbox.CodeLanguage = res;
             textbox.LoadLines(GenerateContent());
         }
         private IEnumerable<string> GenerateContent()

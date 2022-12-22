@@ -1484,7 +1484,6 @@ namespace TextControlBox
                 OldRenderedText = RenderedText;
                 UpdateLinenumbers = true;
 
-
                 DrawnTextLayout = TextRenderer.CreateTextResource(sender, DrawnTextLayout, TextFormat, RenderedText, new Size { Height = sender.Size.Height, Width = this.ActualWidth }, ZoomedFontSize);
                 SyntaxHighlightingRenderer.UpdateSyntaxHighlighting(DrawnTextLayout, _AppTheme, _CodeLanguage, SyntaxHighlighting, RenderedText);
             }
@@ -1820,7 +1819,7 @@ namespace TextControlBox
         /// </summary>
         public void Undo()
         {
-            if (IsReadonly)
+            if (IsReadonly || !undoRedo.CanUndo)
                 return;
 
             //Do the Undo
@@ -1854,7 +1853,7 @@ namespace TextControlBox
         /// </summary>
         public void Redo()
         {
-            if (IsReadonly)
+            if (IsReadonly || !undoRedo.CanRedo)
                 return;
 
             //Do the Redo
@@ -2250,6 +2249,7 @@ namespace TextControlBox
             set
             {
                 _CodeLanguage = value;
+                ZoomIsChanged = true; //set to true to force update the textlayout
                 UpdateText();
             }
         }
@@ -2566,7 +2566,7 @@ namespace TextControlBox
             for (int i = 0; i < files.Length; i++)
             {
                 var codeLanguage = SyntaxHighlightingRenderer.GetCodeLanguageFromJson(File.ReadAllText(files[i]));
-                _CodeLanguages.Add(codeLanguage.CodeLanguage.Name, codeLanguage.CodeLanguage);
+                _CodeLanguages.Add(codeLanguage.CodeLanguage.Name.ToLower(), codeLanguage.CodeLanguage);
             }
         }
         private static Dictionary<string, CodeLanguage> _CodeLanguages = null;
