@@ -22,7 +22,7 @@ UWP has a default Textbox and a RichTextBox. Both of them are very slow in rende
 
 ## Info:
 The textbox is mostly done, but there are still some bugs, I'm working on.
-I also would like to have a Winui3 variant, but I don't have a idea how to use the CoreTextServicesManager in it
+I also would like to have a Winui3 variant, but the CoreTextServicesManager is not available yet
 
 ## Features:
 - Viewing files with a million lines or more without performance issues
@@ -37,7 +37,7 @@ I also would like to have a Winui3 variant, but I don't have a idea how to use t
 ## Problems:
 - Current text limit is 100 million characters
 - Currently there is no textwrapping
-- Not available for Winui3, because I have no idea how to use the CoreTextServicesManager in it 
+- Not available for Winui3, because CoreTextServicesManager is not available
 
 ## Available languages:
 - Batch
