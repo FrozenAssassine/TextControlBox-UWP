@@ -18,6 +18,7 @@
     DragOver="UserControl_DragOver"
     GotFocus="UserControl_GotFocus"
     LostFocus="UserControl_LostFocus"
+    LosingFocus="UserControl_LosingFocus"
     >
 
     <Grid x:Name="MainGrid">
