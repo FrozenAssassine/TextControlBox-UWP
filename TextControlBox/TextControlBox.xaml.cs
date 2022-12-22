@@ -1623,6 +1623,16 @@ namespace TextControlBox
             SelectionChanged?.Invoke(this, args);
         }
         //Focus:
+        private void UserControl_LosingFocus(UIElement sender, LosingFocusEventArgs args)
+        {
+            //Prevent the focus switching to the RootScrollViewer when double clicking.
+            //It was the only way, I could think of.
+            //https://stackoverflow.com/questions/74802534/double-tap-on-uwp-usercontrol-removes-focus
+            if (args.NewFocusedElement is ScrollViewer sv && sv.Content is Border brd)
+            {
+                args.TryCancel();
+            }
+        }
         private void EditContext_FocusRemoved(CoreTextEditContext sender, object args)
         {
             RemoveFocus();           
@@ -2608,17 +2618,6 @@ namespace TextControlBox
 
         #endregion
 
-        //Prevent the focus switching to the RootScrollViewer when double clicking.
-        //It was the only way, I could think of.
-        //https://stackoverflow.com/questions/74802534/double-tap-on-uwp-usercontrol-removes-focus
-        private void UserControl_LosingFocus(UIElement sender, LosingFocusEventArgs args)
-        {
-            //When the focus wants to move to the rootScrollViewer -> prevent it
-            if (args.NewFocusedElement is ScrollViewer sv && sv.Content is Border brd)
-            {
-                args.TryCancel();
-            }
-        }
     }
     public class TextControlBoxDesign
     {
