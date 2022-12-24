@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -189,8 +190,7 @@ namespace TextControlBox
             NeedsTextFormatUpdate = true;
 
             int Line = CursorPosition.LineNumber;
-            //Check whether the current line is outside the bounds of the visible area
-            if (Line < NumberOfStartLine || Line >= NumberOfStartLine + NumberOfRenderedLines)
+            if (OutOfRenderedArea(Line))
             {
                 VerticalScrollbar.Value = (Line - NumberOfRenderedLines / 2) * SingleLineHeight;
             }
@@ -667,7 +667,12 @@ namespace TextControlBox
                 UpdateAll();
             }
         }
-
+        
+        private bool OutOfRenderedArea(int line)
+        {
+            //Check whether the current line is outside the bounds of the visible area
+            return line < NumberOfStartLine || line >= NumberOfStartLine + NumberOfRenderedLines;
+        }
         //Trys running the code and clears the memory if OutOfMemoryException gets thrown
         private async void Safe_Paste(bool HandleException = true)
         {
@@ -1898,11 +1903,8 @@ namespace TextControlBox
         /// <param name="index">The line to center</param>
         public void ScrollLineToCenter(int index)
         {
-            //Check whether the current line is outside the bounds of the visible area
-            if (index < NumberOfStartLine || index >= NumberOfStartLine + NumberOfRenderedLines)
-            {
+            if (OutOfRenderedArea(index))
                 ScrollLineIntoView(index);
-            }
         }
 
         /// <summary>
@@ -2105,7 +2107,9 @@ namespace TextControlBox
                 CursorPosition.LineNumber += 1;
             }, TotalLines, index, 1, 2, NewLineCharacter);
 
-            ScrollOneLineDown();
+            if(OutOfRenderedArea(index))
+                ScrollOneLineDown();
+
             UpdateText();
             UpdateCursor();
         }
