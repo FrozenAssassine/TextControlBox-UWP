@@ -980,10 +980,8 @@ namespace TextControlBox
                         if (shift)
                         {
                             StartSelectionIfNeeded();
-                            selectionrenderer.IsSelecting = true;
-                            Cursor.MoveLeft(selectionrenderer.SelectionEndPosition, TotalLines, CurrentLine);
-                            CursorPosition = selectionrenderer.SelectionEndPosition;
-                            selectionrenderer.IsSelecting = false;
+                            Cursor.MoveLeft(CursorPosition, TotalLines, CurrentLine);
+                            selectionrenderer.SetSelectionEnd(CursorPosition);
                         }
                         else
                         {
@@ -1007,11 +1005,8 @@ namespace TextControlBox
                         if (shift)
                         {
                             StartSelectionIfNeeded();
-
-                            selectionrenderer.IsSelecting = true;
-                            Cursor.MoveRight(selectionrenderer.SelectionEndPosition, TotalLines, CurrentLine);
-                            CursorPosition = selectionrenderer.SelectionEndPosition;
-                            selectionrenderer.IsSelecting = false;
+                            Cursor.MoveRight(CursorPosition, TotalLines, CurrentLine);
+                            selectionrenderer.SetSelectionEnd(CursorPosition);
                         }
                         else
                         {
@@ -1030,18 +1025,13 @@ namespace TextControlBox
                     }
                 case VirtualKey.Down:
                     {
+                        Cursor.MoveDown(CursorPosition, TotalLines.Count);
+                        
+                        //When selecting
                         if (shift)
                         {
                             StartSelectionIfNeeded();
-                            selectionrenderer.IsSelecting = true;
-                            Cursor.MoveDown(selectionrenderer.SelectionEndPosition, TotalLines.Count);
-                            CursorPosition = selectionrenderer.SelectionEndPosition;
-                            selectionrenderer.IsSelecting = false;
-                        }
-                        else
-                        {
-                            ClearSelectionIfNeeded();
-                            Cursor.MoveDown(CursorPosition, TotalLines.Count);
+                            selectionrenderer.SetSelectionEnd(CursorPosition);
                         }
 
                         UpdateScrollToShowCursor(false);
@@ -1050,19 +1040,15 @@ namespace TextControlBox
                     }
                 case VirtualKey.Up:
                     {
+                        Cursor.MoveUp(CursorPosition);
+
                         if (shift)
                         {
                             StartSelectionIfNeeded();
-                            selectionrenderer.IsSelecting = true;
-                            Cursor.MoveUp(selectionrenderer.SelectionEndPosition);
-                            CursorPosition = selectionrenderer.SelectionEndPosition;
-                            selectionrenderer.IsSelecting = false;
+                            selectionrenderer.SetSelectionEnd(CursorPosition);
                         }
                         else
-                        {
                             ClearSelectionIfNeeded();
-                            Cursor.MoveUp(CursorPosition);
-                        }
 
                         UpdateScrollToShowCursor(false);
                         UpdateAll();
