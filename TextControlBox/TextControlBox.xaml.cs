@@ -29,6 +29,7 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Shapes;
 using static System.Net.Mime.MediaTypeNames;
 using Color = Windows.UI.Color;
 
@@ -190,11 +191,8 @@ namespace TextControlBox
 
             NeedsTextFormatUpdate = true;
 
-            int Line = CursorPosition.LineNumber;
-            if (OutOfRenderedArea(Line))
-            {
-                VerticalScrollbar.Value = (Line - NumberOfRenderedLines / 2) * SingleLineHeight;
-            }
+            ScrollLineIntoView(CursorPosition.LineNumber);
+
             UpdateAll();
         }
         private void UpdateCursor()
@@ -1321,6 +1319,7 @@ namespace TextControlBox
             {
                 _ZoomFactor += delta / 20;
                 UpdateZoom();
+                return;
             }
             //Scroll horizontal using mousewheel
             else if (Utils.IsKeyPressed(VirtualKey.Shift))
@@ -1339,7 +1338,7 @@ namespace TextControlBox
             {
                 VerticalScrollbar.Value -= (delta * VerticalScrollSensitivity) / DefaultVerticalScrollSensitivity;
                 //Only update when a line was scrolled
-                if ((int)(VerticalScrollbar.Value / SingleLineHeight * 4) != NumberOfStartLine)
+                if ((int)(VerticalScrollbar.Value / SingleLineHeight * DefaultVerticalScrollSensitivity) != NumberOfStartLine)
                 {
                     NeedsUpdate = true;
                 }
@@ -1408,7 +1407,7 @@ namespace TextControlBox
         private void VerticalScrollbar_Scroll(object sender, ScrollEventArgs e)
         {
             //only update when a line was scrolled
-            if ((int)(VerticalScrollbar.Value / SingleLineHeight * 4) != NumberOfStartLine)
+            if ((int)(VerticalScrollbar.Value / SingleLineHeight * DefaultVerticalScrollSensitivity) != NumberOfStartLine)
             {
                 UpdateAll();
             }
@@ -1432,7 +1431,7 @@ namespace TextControlBox
 
             //Calculate number of lines that needs to be rendered
             NumberOfRenderedLines = (int)(sender.ActualHeight / SingleLineHeight);
-            NumberOfStartLine = (int)((VerticalScrollbar.Value * 4) / SingleLineHeight);
+            NumberOfStartLine = (int)((VerticalScrollbar.Value * DefaultVerticalScrollSensitivity) / SingleLineHeight);
 
             //Get all the lines, that need to be rendered, from the list
             NumberOfRenderedLines = NumberOfRenderedLines + NumberOfStartLine > TotalLines.Count ? TotalLines.Count : NumberOfRenderedLines;
