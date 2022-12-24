@@ -94,7 +94,7 @@ namespace TextControlBox
         bool NeedsTextFormatUpdate = false;
         bool DragDropSelection = false;
         bool HasFocus = true;
-        bool ZoomIsChanged = false;
+        bool NeedsUpdateTextFormat = false;
         bool NeedsRecalculateLongestLineIndex = true;
 
         CanvasTextFormat TextFormat = null;
@@ -183,7 +183,7 @@ namespace TextControlBox
             
             if (_ZoomFactor != OldZoomFactor)
             {
-                ZoomIsChanged = true;
+                NeedsUpdateTextFormat = true;
                 OldZoomFactor = _ZoomFactor;
                 ZoomChanged?.Invoke(this, _ZoomFactor);
             }
@@ -1471,11 +1471,11 @@ namespace TextControlBox
 
             //Only update the textformat when the text changes:
             bool UpdateLinenumbers = false;
-            if (OldRenderedText != RenderedText || ZoomIsChanged)
+            if (OldRenderedText != RenderedText || NeedsUpdateTextFormat)
             {
-                ZoomIsChanged = false;
-                OldRenderedText = RenderedText;
                 UpdateLinenumbers = true;
+                NeedsUpdateTextFormat = false;
+                OldRenderedText = RenderedText;
 
                 DrawnTextLayout = TextRenderer.CreateTextResource(sender, DrawnTextLayout, TextFormat, RenderedText, new Size { Height = sender.Size.Height, Width = this.ActualWidth }, ZoomedFontSize);
                 SyntaxHighlightingRenderer.UpdateSyntaxHighlighting(DrawnTextLayout, _AppTheme, _CodeLanguage, SyntaxHighlighting, RenderedText);
@@ -1487,7 +1487,7 @@ namespace TextControlBox
 
             args.DrawingSession.DrawTextLayout(DrawnTextLayout, (float)-HorizontalScroll, SingleLineHeight, TextColorBrush);
 
-            if (_ShowLineNumbers && UpdateLinenumbers)
+            if(UpdateLinenumbers)
                 Canvas_LineNumber.Invalidate();
         }
         private void Canvas_Selection_Draw(CanvasControl sender, CanvasDrawEventArgs args)
@@ -1563,11 +1563,11 @@ namespace TextControlBox
         }
         private void Canvas_LineNumber_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
-            if (LineNumberTextToRender == null || LineNumberTextToRender.Length == 0)
-                return;
-
             if (_ShowLineNumbers)
             {
+                if (LineNumberTextToRender == null || LineNumberTextToRender.Length == 0)
+                    return;
+
                 //Calculate the linenumbers             
                 float LineNumberWidth = (float)Utils.MeasureTextSize(CanvasDevice.GetSharedDevice(), (TotalLines.Count).ToString(), LineNumberTextFormat).Width;
                 Canvas_LineNumber.Width = LineNumberWidth + 10 + SpaceBetweenLineNumberAndText;
@@ -1575,6 +1575,7 @@ namespace TextControlBox
             else
             {
                 Canvas_LineNumber.Width = SpaceBetweenLineNumberAndText;
+                LineNumberTextToRender = null;
                 return;
             }
 
@@ -2251,7 +2252,7 @@ namespace TextControlBox
             set
             {
                 _CodeLanguage = value;
-                ZoomIsChanged = true; //set to true to force update the textlayout
+                NeedsUpdateTextFormat = true; //set to true to force update the textlayout
                 UpdateText();
             }
         }
@@ -2361,6 +2362,7 @@ namespace TextControlBox
             set
             {
                 _ShowLineNumbers = value;
+                NeedsUpdateTextFormat = true;
                 UpdateAll();
             }
         }
