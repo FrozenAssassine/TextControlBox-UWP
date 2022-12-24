@@ -50,6 +50,7 @@ namespace TextControlBox
         private int _ZoomFactor = 100; //%
         private double _HorizontalScrollSensitivity = 1;
         private double _VerticalScrollSensitivity = 1;
+        private int DefaultVerticalScrollSensitivity = 4;
         private float SingleLineHeight { get => TextFormat == null ? 0 : TextFormat.LineSpacing; }
         private float ZoomedFontSize = 0;
         private int MaxFontsize = 125;
@@ -589,9 +590,10 @@ namespace TextControlBox
         private void UpdateScrollToShowCursor(bool Update = true)
         {
             if (NumberOfStartLine + NumberOfRenderedLines <= CursorPosition.LineNumber)
-                VerticalScrollbar.Value = (CursorPosition.LineNumber - NumberOfRenderedLines + 1) * SingleLineHeight;
+                VerticalScrollbar.Value = (CursorPosition.LineNumber - NumberOfRenderedLines + 1) * SingleLineHeight / DefaultVerticalScrollSensitivity;
             else if (NumberOfStartLine > CursorPosition.LineNumber)
-                VerticalScrollbar.Value = (CursorPosition.LineNumber - 1) * SingleLineHeight;
+                VerticalScrollbar.Value = (CursorPosition.LineNumber - 1) * SingleLineHeight / DefaultVerticalScrollSensitivity;
+                
             if (Update)
                 UpdateAll();
         }
@@ -1349,7 +1351,7 @@ namespace TextControlBox
             //Scroll vertical using mousewheel
             else
             {
-                VerticalScrollbar.Value -= (delta * VerticalScrollSensitivity) / 4;
+                VerticalScrollbar.Value -= (delta * VerticalScrollSensitivity) / DefaultVerticalScrollSensitivity;
                 //Only update when a line was scrolled
                 if ((int)(VerticalScrollbar.Value / SingleLineHeight * 4) != NumberOfStartLine)
                 {
@@ -1439,7 +1441,7 @@ namespace TextControlBox
             CreateColorResources(args.DrawingSession);
 
             //Measure textposition and apply the value to the scrollbar
-            VerticalScrollbar.Maximum = ((TotalLines.Count + 1) * SingleLineHeight - Scroll.ActualHeight) / 4;
+            VerticalScrollbar.Maximum = ((TotalLines.Count + 1) * SingleLineHeight - Scroll.ActualHeight) / DefaultVerticalScrollSensitivity;
             VerticalScrollbar.ViewportSize = sender.ActualHeight;
 
             //Calculate number of lines that needs to be rendered
@@ -1495,7 +1497,7 @@ namespace TextControlBox
 
             //render the search highlights
             if (SearchIsOpen)
-                SearchHighlightsRenderer.RenderHighlights(args, DrawnTextLayout, RenderedText, searchHelper.MatchingSearchLines, searchHelper.SearchParameter.SearchExpression, (float)-HorizontalScroll, SingleLineHeight / 4, _Design.SearchHighlightColor);
+                SearchHighlightsRenderer.RenderHighlights(args, DrawnTextLayout, RenderedText, searchHelper.MatchingSearchLines, searchHelper.SearchParameter.SearchExpression, (float)-HorizontalScroll, SingleLineHeight / DefaultVerticalScrollSensitivity, _Design.SearchHighlightColor);
 
             args.DrawingSession.DrawTextLayout(DrawnTextLayout, (float)-HorizontalScroll, SingleLineHeight, TextColorBrush);
 
@@ -1515,7 +1517,7 @@ namespace TextControlBox
 
             if (selectionrenderer.HasSelection)
             {
-                TextSelection = selectionrenderer.DrawSelection(DrawnTextLayout, RenderedLines, args, (float)-HorizontalScroll, SingleLineHeight / 4, NumberOfStartLine, NumberOfRenderedLines, ZoomedFontSize, _Design.SelectionColor);
+                TextSelection = selectionrenderer.DrawSelection(DrawnTextLayout, RenderedLines, args, (float)-HorizontalScroll, SingleLineHeight / DefaultVerticalScrollSensitivity, NumberOfStartLine, NumberOfRenderedLines, ZoomedFontSize, _Design.SelectionColor);
             }
 
             if (TextSelection != null && !Selection.Equals(OldTextSelection, TextSelection))
@@ -1540,7 +1542,7 @@ namespace TextControlBox
             }
 
             //Calculate the distance to the top for the cursorposition and render the cursor
-            float RenderPosY = (float)((CursorPosition.LineNumber - NumberOfStartLine) * SingleLineHeight) + SingleLineHeight / 4;
+            float RenderPosY = (float)((CursorPosition.LineNumber - NumberOfStartLine) * SingleLineHeight) + SingleLineHeight / DefaultVerticalScrollSensitivity;
 
             //Out of display-region:
             if (RenderPosY > NumberOfRenderedLines * SingleLineHeight || RenderPosY < 0)
@@ -1912,7 +1914,7 @@ namespace TextControlBox
         /// </summary>
         public void ScrollOneLineUp()
         {
-            VerticalScrollbar.Value -= SingleLineHeight;
+            VerticalScrollbar.Value -= SingleLineHeight / DefaultVerticalScrollSensitivity;
             UpdateAll();
         }
 
@@ -1921,7 +1923,7 @@ namespace TextControlBox
         /// </summary>
         public void ScrollOneLineDown()
         {
-            VerticalScrollbar.Value += SingleLineHeight;
+            VerticalScrollbar.Value += SingleLineHeight / DefaultVerticalScrollSensitivity;
             UpdateAll();
         }
 
@@ -1931,7 +1933,7 @@ namespace TextControlBox
         /// <param name="index">The line to center</param>
         public void ScrollLineIntoView(int index)
         {
-            VerticalScrollbar.Value = (index - NumberOfRenderedLines / 2) * SingleLineHeight;
+            VerticalScrollbar.Value = (index - NumberOfRenderedLines / 2) * SingleLineHeight / DefaultVerticalScrollSensitivity;
             UpdateAll();
         }
 
@@ -1940,7 +1942,7 @@ namespace TextControlBox
         /// </summary>
         public void ScrollTopIntoView()
         {
-            VerticalScrollbar.Value = (CursorPosition.LineNumber - 1) * SingleLineHeight;
+            VerticalScrollbar.Value = (CursorPosition.LineNumber - 1) * SingleLineHeight / DefaultVerticalScrollSensitivity;
             UpdateAll();
         }
 
@@ -1949,7 +1951,7 @@ namespace TextControlBox
         /// </summary>
         public void ScrollBottomIntoView()
         {
-            VerticalScrollbar.Value = (CursorPosition.LineNumber - NumberOfRenderedLines + 1) * SingleLineHeight;
+            VerticalScrollbar.Value = (CursorPosition.LineNumber - NumberOfRenderedLines + 1) * SingleLineHeight / DefaultVerticalScrollSensitivity;
             UpdateAll();
         }
 
@@ -1962,7 +1964,7 @@ namespace TextControlBox
             if (CursorPosition.LineNumber < 0)
                 CursorPosition.LineNumber = 0;
 
-            VerticalScrollbar.Value -= NumberOfRenderedLines * SingleLineHeight;
+            VerticalScrollbar.Value -= NumberOfRenderedLines * SingleLineHeight / DefaultVerticalScrollSensitivity;
             UpdateAll();
         }
 
@@ -1974,7 +1976,7 @@ namespace TextControlBox
             CursorPosition.LineNumber += NumberOfRenderedLines;
             if (CursorPosition.LineNumber > TotalLines.Count - 1)
                 CursorPosition.LineNumber = TotalLines.Count - 1;
-            VerticalScrollbar.Value += NumberOfRenderedLines * SingleLineHeight;
+            VerticalScrollbar.Value += NumberOfRenderedLines * SingleLineHeight / DefaultVerticalScrollSensitivity;
             UpdateAll();
         }
 
@@ -2244,7 +2246,7 @@ namespace TextControlBox
         {
             return new Point
             {
-                Y = (float)((CursorPosition.LineNumber - NumberOfStartLine) * SingleLineHeight) + SingleLineHeight / 4,
+                Y = (float)((CursorPosition.LineNumber - NumberOfStartLine) * SingleLineHeight) + SingleLineHeight / DefaultVerticalScrollSensitivity,
                 X = CursorRenderer.GetCursorPositionInLine(CurrentLineTextLayout, CursorPosition, 0)
             };
         }
