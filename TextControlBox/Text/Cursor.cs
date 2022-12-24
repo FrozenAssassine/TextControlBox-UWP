@@ -157,17 +157,20 @@ namespace TextControlBox.Text
             if (CurrentCursorPosition.CharacterPosition > LineLength)
                 CurrentCursorPosition.CharacterPosition = LineLength;
         }
-        public static void MoveDown(CursorPosition CurrentCursorPosition, int TotalLinesLength)
+        public static CursorPosition MoveDown(CursorPosition CurrentCursorPosition, int TotalLinesLength)
         {
+            CursorPosition ReturnValue = new CursorPosition(CurrentCursorPosition);
             if (CurrentCursorPosition.LineNumber < TotalLinesLength - 1)
-                CurrentCursorPosition.ChangeLineNumber(CurrentCursorPosition.LineNumber + 1);
+                ReturnValue = CursorPosition.ChangeLineNumber(CurrentCursorPosition, CurrentCursorPosition.LineNumber + 1);
+            return ReturnValue;
         }
-        public static void MoveUp(CursorPosition CurrentCursorPosition)
+        public static CursorPosition MoveUp(CursorPosition CurrentCursorPosition)
         {
+            CursorPosition ReturnValue = new CursorPosition(CurrentCursorPosition);
             if (CurrentCursorPosition.LineNumber > 0)
-                CurrentCursorPosition.ChangeLineNumber(CurrentCursorPosition.LineNumber - 1);
+                ReturnValue = CursorPosition.ChangeLineNumber(ReturnValue, CurrentCursorPosition.LineNumber - 1);
+            return ReturnValue;
         }
-
         public static void MoveToLineEnd(CursorPosition CursorPosition, string CurrentLine)
         {
             CursorPosition.CharacterPosition = CurrentLine.Length;

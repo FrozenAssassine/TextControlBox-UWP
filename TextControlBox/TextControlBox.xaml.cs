@@ -1030,13 +1030,17 @@ namespace TextControlBox
                     }
                 case VirtualKey.Down:
                     {
-                        Cursor.MoveDown(CursorPosition, TotalLines.Count);
-                        
-                        //When selecting
                         if (shift)
                         {
                             StartSelectionIfNeeded();
-                            selectionrenderer.SetSelectionEnd(CursorPosition);
+                            selectionrenderer.IsSelecting = true;
+                            CursorPosition = selectionrenderer.SelectionEndPosition = Cursor.MoveDown(selectionrenderer.SelectionEndPosition, TotalLines.Count);
+                            selectionrenderer.IsSelecting = false;
+                        }
+                        else
+                        {
+                            ClearSelectionIfNeeded();
+                            CursorPosition = Cursor.MoveDown(CursorPosition, TotalLines.Count);
                         }
 
                         UpdateScrollToShowCursor(false);
@@ -1045,15 +1049,18 @@ namespace TextControlBox
                     }
                 case VirtualKey.Up:
                     {
-                        Cursor.MoveUp(CursorPosition);
-
                         if (shift)
                         {
                             StartSelectionIfNeeded();
-                            selectionrenderer.SetSelectionEnd(CursorPosition);
+                            selectionrenderer.IsSelecting = true;
+                            CursorPosition = selectionrenderer.SelectionEndPosition = Cursor.MoveUp(selectionrenderer.SelectionEndPosition);
+                            selectionrenderer.IsSelecting = false;
                         }
                         else
+                        {
                             ClearSelectionIfNeeded();
+                            CursorPosition = Cursor.MoveUp(CursorPosition);
+                        }
 
                         UpdateScrollToShowCursor(false);
                         UpdateAll();
