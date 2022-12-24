@@ -72,7 +72,8 @@ namespace TextControlBox_TestApp
             }
             if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.L)
             {
-                textbox.DuplicateLine(textbox.CurrentLineIndex);
+                textbox.ShowLineNumbers = !textbox.ShowLineNumbers;
+                //TextControlBox.DuplicateLine(TextControlBox.CurrentLineIndex);
             }
             if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.O)
             {

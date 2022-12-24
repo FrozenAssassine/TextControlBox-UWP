@@ -1476,8 +1476,10 @@ namespace TextControlBox
             //Create the textlayout --> apply the Syntaxhighlighting --> render it:
 
             //Only update the textformat when the text changes:
+            bool UpdateLinenumbers = false;
             if (OldRenderedText != RenderedText || NeedsUpdateTextFormat)
             {
+                UpdateLinenumbers = true;
                 NeedsUpdateTextFormat = false;
                 OldRenderedText = RenderedText;
 
@@ -1491,7 +1493,8 @@ namespace TextControlBox
 
             args.DrawingSession.DrawTextLayout(DrawnTextLayout, (float)-HorizontalScroll, SingleLineHeight, TextColorBrush);
 
-            Canvas_LineNumber.Invalidate();
+            if(UpdateLinenumbers)
+                Canvas_LineNumber.Invalidate();
         }
         private void Canvas_Selection_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
@@ -2100,7 +2103,7 @@ namespace TextControlBox
             }, TotalLines, index, 1, 2, NewLineCharacter);
 
             if(OutOfRenderedArea(index))
-                ScrollBottomIntoView();
+                ScrollOneLineDown();
 
             UpdateText();
             UpdateCursor();
