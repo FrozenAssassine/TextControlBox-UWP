@@ -1346,7 +1346,7 @@ namespace TextControlBox
             {
                 VerticalScrollbar.Value -= (delta * VerticalScrollSensitivity) / 4;
                 //Only update when a line was scrolled
-                if ((int)(VerticalScrollbar.Value / SingleLineHeight) != NumberOfStartLine)
+                if ((int)(VerticalScrollbar.Value / SingleLineHeight * 4) != NumberOfStartLine)
                 {
                     NeedsUpdate = true;
                 }
@@ -1415,7 +1415,7 @@ namespace TextControlBox
         private void VerticalScrollbar_Scroll(object sender, ScrollEventArgs e)
         {
             //only update when a line was scrolled
-            if ((int)(VerticalScrollbar.Value / SingleLineHeight) != NumberOfStartLine)
+            if ((int)(VerticalScrollbar.Value / SingleLineHeight * 4) != NumberOfStartLine)
             {
                 UpdateAll();
             }
