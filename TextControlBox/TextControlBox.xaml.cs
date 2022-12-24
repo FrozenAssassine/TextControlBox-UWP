@@ -1710,7 +1710,8 @@ namespace TextControlBox
         /// <param name="index">The index of the line to go to</param>
         public void GoToLine(int index)
         {
-            CursorPosition = selectionrenderer.SelectionEndPosition = selectionrenderer.SelectionStartPosition = new CursorPosition(0, index);
+            selectionrenderer.SelectionEndPosition = null;
+            CursorPosition = selectionrenderer.SelectionStartPosition = new CursorPosition(0, index);
 
             UpdateSelection();
             UpdateCursor();
