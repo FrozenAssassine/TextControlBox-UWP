@@ -1675,8 +1675,9 @@ namespace TextControlBox
         }
         private void UserControl_DragOver(object sender, DragEventArgs e)
         {
-            if (selectionrenderer.IsSelecting || IsReadonly)
+            if (selectionrenderer.IsSelecting || IsReadonly || !e.DataView.Contains(StandardDataFormats.Text))
                 return;
+         
             var deferral = e.GetDeferral();
 
             e.AcceptedOperation = DataPackageOperation.Copy;
