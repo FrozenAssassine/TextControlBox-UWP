@@ -2617,6 +2617,11 @@ namespace TextControlBox
 
         #endregion
 
+        private void VerticalScrollbar_Loaded(object sender, RoutedEventArgs e)
+        {
+            VerticalScrollbar.Maximum = ((TotalLines.Count + 1) * SingleLineHeight - Scroll.ActualHeight) / DefaultVerticalScrollSensitivity;
+            VerticalScrollbar.ViewportSize = this.ActualHeight;
+        }
     }
     public class TextControlBoxDesign
     {
