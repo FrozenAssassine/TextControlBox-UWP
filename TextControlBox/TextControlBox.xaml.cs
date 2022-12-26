@@ -353,7 +353,7 @@ namespace TextControlBox
                     {
                         TotalLines.String_AddToEnd(CursorPosition.LineNumber, curLine);
 
-                        TotalLines.Remove(CurrentLine);
+                        TotalLines.RemoveAt(CursorPosition.LineNumber - 1);
 
                         CursorPosition.LineNumber -= 1;
                         CursorPosition.CharacterPosition = TotalLines.GetLineText(CursorPosition.LineNumber).Length;
@@ -373,7 +373,10 @@ namespace TextControlBox
         }
         private void DeleteText(bool ControlIsPressed = false)
         {
+            UpdateCurrentLine();
             string curLine = CurrentLine;
+            int currentLineIndex = CursorPosition.LineNumber;
+
             if (IsReadonly)
                 return;
 
@@ -383,7 +386,6 @@ namespace TextControlBox
                 //delete lines if cursor is at position 0 and the line is emty OR cursor is at the end of a line and the line has content
                 if (CharacterPos == curLine.Length)
                 {
-
                     string LineToAdd = CursorPosition.LineNumber + 1 < TotalLines.Count ? TotalLines.GetLineText(CursorPosition.LineNumber + 1) : null;
                     if (LineToAdd != null)
                     {                    
@@ -393,7 +395,7 @@ namespace TextControlBox
                         undoRedo.RecordUndoAction(() =>
                         {
                             CurrentLine = curLine + LineToAdd;
-                            TotalLines.Remove(LineToAdd);
+                            TotalLines.RemoveAt(currentLineIndex);
                         }, TotalLines, CursorPosition.LineNumber, 2, 1, NewLineCharacter);
                     }
                 }
@@ -1675,8 +1677,9 @@ namespace TextControlBox
         }
         private void UserControl_DragOver(object sender, DragEventArgs e)
         {
-            if (selectionrenderer.IsSelecting || IsReadonly)
+            if (selectionrenderer.IsSelecting || IsReadonly || !e.DataView.Contains(StandardDataFormats.Text))
                 return;
+         
             var deferral = e.GetDeferral();
 
             e.AcceptedOperation = DataPackageOperation.Copy;
@@ -2616,6 +2619,11 @@ namespace TextControlBox
 
         #endregion
 
+        private void VerticalScrollbar_Loaded(object sender, RoutedEventArgs e)
+        {
+            VerticalScrollbar.Maximum = ((TotalLines.Count + 1) * SingleLineHeight - Scroll.ActualHeight) / DefaultVerticalScrollSensitivity;
+            VerticalScrollbar.ViewportSize = this.ActualHeight;
+        }
     }
     public class TextControlBoxDesign
     {
