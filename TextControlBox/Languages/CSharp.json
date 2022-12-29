@@ -73,7 +73,7 @@
       "ColorLight": "#888888"
     }
   ],
-  "Name": "CSharp",
-  "Description": "Syntaxhighlighting for CSharp language",
+  "Name": "C#",
+  "Description": "Syntaxhighlighting for C# language",
   "Author": "Julius Kirsch"
 }
