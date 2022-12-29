@@ -26,7 +26,7 @@
         }
     ],
     "Name": "QSharp",
-    "Filter": "qs",
+    "Filter": ".qs",
     "Description": "Syntaxhighlighting for QSharp language.",
     "Author": "Finn Freitag"
 }

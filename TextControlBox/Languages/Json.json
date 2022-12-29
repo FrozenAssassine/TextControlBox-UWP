@@ -50,6 +50,6 @@
   ],
   "Name": "Json",
   "Description": "Syntax highlighting for Json language",
-  "Filter":  "json",
+  "Filter":  ".json",
   "Author": "Julius Kirsch"
 }

@@ -56,7 +56,17 @@ namespace TextControlBox.Renderer
         {
             try
             {
-                return new JsonLoadResult(true, JsonConvert.DeserializeObject<CodeLanguage>(Json));
+                var jsonCodeLanguage = JsonConvert.DeserializeObject<JsonCodeLanguage>(Json);
+                //Apply the filter as an array
+                var codelanguage = new CodeLanguage
+                {
+                    Author = jsonCodeLanguage.Author,
+                    Description = jsonCodeLanguage.Description,
+                    Highlights = jsonCodeLanguage.Highlights,
+                    Name = jsonCodeLanguage.Name,
+                    Filter = jsonCodeLanguage.Filter.Split("|", StringSplitOptions.RemoveEmptyEntries),
+                };
+                return new JsonLoadResult(true, codelanguage);
             }
             catch (JsonReaderException)
             {
@@ -125,6 +135,16 @@ namespace TextControlBox.Renderer
     {
         public string Name { get; set; }
         public string Description { get; set; }
+        public string[] Filter { get; set; }
+        public string Author { get; set; }
+        public SyntaxHighlights[] Highlights;
+    }
+    //Used to create a CodeLanguage class from the JsonCodeLanguage class returned by the json load function:
+    internal class JsonCodeLanguage
+    {
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public string Filter { get; set; }
         public string Author { get; set; }
         public SyntaxHighlights[] Highlights;
     }
