@@ -14,6 +14,7 @@ namespace TextControlBox.Renderer
     {
         public bool HasSelection = false;
         public bool IsSelecting = false;
+        public bool IsSelectingOverLinenumbers = false;
         public CursorPosition SelectionStartPosition = null;
         public CursorPosition SelectionEndPosition = null;
         public int SelectionLength = 0;
