@@ -1592,13 +1592,13 @@ namespace TextControlBox
             args.DrawingSession.DrawTextLayout(LineNumberLayout, 10, SingleLineHeight, LineNumberColorBrush);
         }
         //Internal events:
-        private void Internal_TextChanged(string text = null)
+        private void Internal_TextChanged()
         {
             //update the possible lines if the search is open
             if (searchHelper.IsSearchOpen)
                 searchHelper.UpdateSearchLines(TotalLines);
 
-            TextChanged?.Invoke(this, text ?? GetText());
+            TextChanged?.Invoke(this);
         }
         private void Internal_CursorChanged()
         {
@@ -2533,7 +2533,7 @@ namespace TextControlBox
         /// </summary>
         /// <param name="sender">The textbox in which the text was changed</param>
         /// <param name="text">The text of the textbox</param>
-        public delegate void TextChangedEvent(TextControlBox sender, string text);
+        public delegate void TextChangedEvent(TextControlBox sender);
         public event TextChangedEvent TextChanged;
 
         /// <summary>
