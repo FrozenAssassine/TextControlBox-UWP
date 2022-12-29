@@ -76,7 +76,7 @@
     }
   ],
   "Name": "PHP",
-  "Filter": "php",
+  "Filter": ".php",
   "Description": "Syntaxhighlighting for PHP language.",
   "Author": "Finn Freitag"
 }

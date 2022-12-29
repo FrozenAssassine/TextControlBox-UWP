@@ -74,6 +74,7 @@
     }
   ],
   "Name": "CSharp",
+  "Filter": ".cs",
   "Description": "Syntaxhighlighting for CSharp language",
   "Author": "Julius Kirsch"
 }

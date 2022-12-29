@@ -53,7 +53,7 @@
     }
   ],
   "Name": "HexFile",
-  "Filter": "hex|bin",
+  "Filter": ".hex|.bin",
   "Description": "Syntaxhighlighting for hex and binary code.",
   "Author": "Finn Freitag"
 }

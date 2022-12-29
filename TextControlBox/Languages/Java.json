@@ -50,6 +50,7 @@
     }
   ],
   "Name": "Java",
+  "Filter": ".java|.class",
   "Description": "Syntaxhighlighting for Java language",
   "Author": "Julius Kirsch"
 }

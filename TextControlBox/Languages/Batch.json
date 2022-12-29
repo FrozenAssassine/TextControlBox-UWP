@@ -42,6 +42,7 @@
     }
   ],
   "Name": "Batch",
+  "Filter": ".bat",
   "Description": "Syntax highlighting for Batch language",
   "Author": "Julius Kirsch"
 }

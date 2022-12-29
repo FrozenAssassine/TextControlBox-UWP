@@ -2576,8 +2576,9 @@ namespace TextControlBox
             var files = Directory.GetFiles("TextControlBox/Languages");
             for (int i = 0; i < files.Length; i++)
             {
-                var codeLanguage = SyntaxHighlightingRenderer.GetCodeLanguageFromJson(File.ReadAllText(files[i]));
-                _CodeLanguages.Add(codeLanguage.CodeLanguage.Name.ToLower(), codeLanguage.CodeLanguage);
+                var result = SyntaxHighlightingRenderer.GetCodeLanguageFromJson(File.ReadAllText(files[i]));
+                if(result.Succeed)
+                    _CodeLanguages.Add(result.CodeLanguage.Name.ToLower(), result.CodeLanguage);
             }
         }
         private static Dictionary<string, CodeLanguage> _CodeLanguages = null;

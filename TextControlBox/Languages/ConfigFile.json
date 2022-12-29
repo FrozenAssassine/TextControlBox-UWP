@@ -38,7 +38,7 @@
     }
   ],
   "Name": "ConfigFile",
-  "Filter": "ini|inf",
+  "Filter": ".ini",
   "Description": "Syntaxhighlighting for configuration files.",
   "Author": "Finn Freitag"
 }
