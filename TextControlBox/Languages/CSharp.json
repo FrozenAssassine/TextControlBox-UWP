@@ -74,6 +74,7 @@
     }
   ],
   "Name": "C#",
+  "Filter": ".cs",
   "Description": "Syntaxhighlighting for C# language",
   "Author": "Julius Kirsch"
 }

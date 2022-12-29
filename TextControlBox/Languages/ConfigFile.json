@@ -1,5 +1,6 @@
 ﻿{
   "Highlights": [
+
     {
       "Description": "brackets",
       "Pattern": "[\\[\\]]",
@@ -26,19 +27,13 @@
     },
     {
       "Description": "comments",
-      "Pattern": "#.*\\n",
-      "ColorDark": "#00FF00",
-      "ColorLight": "#00FF00"
-    },
-    {
-      "Description": "comments",
-      "Pattern": "(;|\/\/|\brem\b).*",
+      "Pattern": ";.*",
       "ColorDark": "#888888",
       "ColorLight": "#888888"
     }
   ],
   "Name": "ConfigFile",
-  "Filter": "ini|inf",
+  "Filter": ".ini",
   "Description": "Syntaxhighlighting for configuration files.",
   "Author": "Finn Freitag"
 }

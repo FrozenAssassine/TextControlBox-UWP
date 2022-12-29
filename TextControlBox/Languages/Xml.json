@@ -50,6 +50,7 @@
     }
   ],
   "Name": "Xml",
+  "Filter": ".xml|.xaml",
   "Description": "Syntax highlighting for Xml language",
   "Author": "Julius Kirsch"
 }

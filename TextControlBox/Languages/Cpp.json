@@ -55,7 +55,7 @@
     }
   ],
   "Name": "C++",
-  "Filter": "cpp|cxx|cc|hpp|h",
+  "Filter": ".cpp|.cxx|.cc|.hpp|.h|.c",
   "Description": "Syntax highlighting for C++ language",
   "Author": "Julius Kirsch"
 }

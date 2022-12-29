@@ -19,6 +19,7 @@ using TextControlBox.Renderer;
 using TextControlBox.Text;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
+using Windows.Networking.Vpn;
 using Windows.Storage;
 using Windows.System;
 using Windows.UI.Core;
@@ -215,15 +216,15 @@ namespace TextControlBox
             else
                 CurrentLineTextLayout = null;
         }
-        private void UpdateCursorVariable(Point Point)
+        private void UpdateCursorVariable(Point point)
         {
             //Apply an offset to the cursorposition
-            Point.Subtract(-10, +10);
+            point = point.Subtract(-10, +5);
 
-            CursorPosition.LineNumber = CursorRenderer.GetCursorLineFromPoint(Point, SingleLineHeight, NumberOfRenderedLines, NumberOfStartLine);
+            CursorPosition.LineNumber = CursorRenderer.GetCursorLineFromPoint(point, SingleLineHeight, NumberOfRenderedLines, NumberOfStartLine);
 
             UpdateCurrentLineTextLayout();
-            CursorPosition.CharacterPosition = CursorRenderer.GetCharacterPositionFromPoint(TotalLines.GetCurrentLineText(), CurrentLineTextLayout, Point, (float)-HorizontalScroll);
+            CursorPosition.CharacterPosition = CursorRenderer.GetCharacterPositionFromPoint(TotalLines.GetCurrentLineText(), CurrentLineTextLayout, point, (float)-HorizontalScroll);
         }
         private void UpdateCurrentLine()
         {
@@ -351,14 +352,19 @@ namespace TextControlBox
 
                     undoRedo.RecordUndoAction(() =>
                     {
-                        TotalLines.String_AddToEnd(CursorPosition.LineNumber, curLine);
+                        int curpos = TotalLines.GetLineLength(CursorPosition.LineNumber - 1);
+                        
+                        //line still has text:
+                        if (curLine.Length > 0)
+                            TotalLines.String_AddToEnd(CursorPosition.LineNumber - 1, curLine);
 
-                        TotalLines.RemoveAt(CursorPosition.LineNumber - 1);
+                        TotalLines.RemoveAt(CursorPosition.LineNumber);
 
+                        //update the cursorposition
                         CursorPosition.LineNumber -= 1;
-                        CursorPosition.CharacterPosition = TotalLines.GetLineText(CursorPosition.LineNumber).Length;
+                        CursorPosition.CharacterPosition = curpos;
 
-                    }, TotalLines, CursorPosition.LineNumber, 3, 2, NewLineCharacter);
+                    }, TotalLines, CursorPosition.LineNumber - 1, 3, 2, NewLineCharacter);
                 }
             }
             else
@@ -375,7 +381,6 @@ namespace TextControlBox
         {
             UpdateCurrentLine();
             string curLine = CurrentLine;
-            int currentLineIndex = CursorPosition.LineNumber;
 
             if (IsReadonly)
                 return;
@@ -386,7 +391,7 @@ namespace TextControlBox
                 //delete lines if cursor is at position 0 and the line is emty OR cursor is at the end of a line and the line has content
                 if (CharacterPos == curLine.Length)
                 {
-                    string LineToAdd = CursorPosition.LineNumber + 1 < TotalLines.Count ? TotalLines.GetLineText(CursorPosition.LineNumber + 1) : null;
+                    string LineToAdd = CursorPosition.LineNumber + 1< TotalLines.Count ? TotalLines.GetLineText(CursorPosition.LineNumber +1) : null;
                     if (LineToAdd != null)
                     {                    
                         if (CursorPosition.LineNumber == LongestLineIndex)
@@ -394,8 +399,19 @@ namespace TextControlBox
 
                         undoRedo.RecordUndoAction(() =>
                         {
-                            CurrentLine = curLine + LineToAdd;
-                            TotalLines.RemoveAt(currentLineIndex);
+                            int curpos = TotalLines.GetLineLength(CursorPosition.LineNumber - 1);
+
+                            //line still has text
+                            if (curLine.Length > 0) 
+                                TotalLines.String_AddToEnd(CursorPosition.LineNumber, LineToAdd);
+                            else //line has no text
+                                CursorPosition.LineNumber -= 1;
+
+                            TotalLines.RemoveAt(CursorPosition.LineNumber + 1);
+
+                            //update the cursorposition
+                            CursorPosition.CharacterPosition = curpos;
+
                         }, TotalLines, CursorPosition.LineNumber, 2, 1, NewLineCharacter);
                     }
                 }
@@ -1129,6 +1145,8 @@ namespace TextControlBox
         //Pointer-events:
         private void CoreWindow_PointerReleased(CoreWindow sender, PointerEventArgs args)
         {
+            selectionrenderer.IsSelectingOverLinenumbers = false;
+
             var point = Utils.GetPointFromCoreWindowRelativeTo(args, Canvas_Text);
             //End text drag/drop -> insert text at cursorposition
             if (DragDropSelection && !DragDropOverSelection(point))
@@ -1191,42 +1209,33 @@ namespace TextControlBox
             }
             if (selectionrenderer.IsSelecting && !DragDropSelection)
             {
-                UpdateCursorVariable(point);
+                //selection started over the linenumbers:
+                if (selectionrenderer.IsSelectingOverLinenumbers)
+                {
+                    Point pointerPos = point;
+                    pointerPos.Y += SingleLineHeight; //add one more line
+
+                    //When the selection reaches the end of the textbox select the last line completely
+                    if (CursorPosition.LineNumber == TotalLines.Count - 1)
+                    {
+                        pointerPos.Y -= SingleLineHeight; //add one more line
+                        pointerPos.X = Utils.MeasureLineLenght(CanvasDevice.GetSharedDevice(), TotalLines.GetLineText(-1), TextFormat).Width + 10;
+                    }
+                    UpdateCursorVariable(pointerPos);
+                }
+                else //Default selection
+                    UpdateCursorVariable(point);
+
+                //Update:
                 UpdateCursor();
-
-                selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
-                UpdateSelection();
-            }
-        }
-        private void Canvas_Selection_PointerMoved(object sender, PointerRoutedEventArgs e)
-        {
-            if (!HasFocus)
-                return;
-
-            var point = e.GetCurrentPoint(Canvas_Selection);
-            //Drag drop text -> move the cursor to get the insertion point
-            if (DragDropSelection)
-            {
-                DragDropOverSelection(point.Position);
-                UpdateCursorVariable(point.Position);
-                UpdateCursor();
-            }
-            else if (point.Properties.IsLeftButtonPressed)
-            {
-                selectionrenderer.IsSelecting = true;
-            }
-
-            if (selectionrenderer.IsSelecting && !DragDropSelection)
-            {
-                UpdateCursorVariable(e.GetCurrentPoint(Canvas_Selection).Position);
-                UpdateCursor();
-
                 selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
                 UpdateSelection();
             }
         }
         private void Canvas_Selection_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
+            selectionrenderer.IsSelectingOverLinenumbers = false;
+
             Point PointerPosition = e.GetCurrentPoint(sender as UIElement).Position;
             bool LeftButtonPressed = e.GetCurrentPoint(sender as UIElement).Properties.IsLeftButtonPressed;
             bool RightButtonPressed = e.GetCurrentPoint(sender as UIElement).Properties.IsRightButtonPressed;
@@ -1364,40 +1373,13 @@ namespace TextControlBox
             if (NeedsUpdate)
                 UpdateAll();
         }
-        private void Canvas_LineNumber_PointerMoved(object sender, PointerRoutedEventArgs e)
-        {
-            if (selectionrenderer.IsSelecting)
-            {
-                var CurPoint = e.GetCurrentPoint(sender as UIElement).Position;
-                CurPoint.X = 0; //Set 0 to select whole lines
-
-                if (TextSelection == null)
-                    return;
-
-                if (TextSelection.StartPosition.LineNumber < TextSelection.EndPosition.LineNumber)
-                {
-                    CurPoint.Y += SingleLineHeight;
-                }
-
-                //Select the last line completely
-                if (CurPoint.Y / SingleLineHeight > NumberOfRenderedLines)
-                {
-                    CurPoint.X = Utils.MeasureLineLenght(CanvasDevice.GetSharedDevice(), CurrentLine, TextFormat).Width + 100;
-                }
-
-                UpdateCursorVariable(CurPoint);
-                UpdateCursor();
-
-                selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
-                UpdateSelection();
-            }
-        }
         private void Canvas_LineNumber_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
             //Select the line where the cursor is over
             SelectLine(CursorRenderer.GetCursorLineFromPoint(e.GetCurrentPoint(sender as UIElement).Position, SingleLineHeight, NumberOfRenderedLines, NumberOfStartLine));
 
             selectionrenderer.IsSelecting = true;
+            selectionrenderer.IsSelectingOverLinenumbers = true;
         }
         //Change the cursor when entering/leaving the control
         private void UserControl_PointerEntered(object sender, PointerRoutedEventArgs e)
@@ -1592,13 +1574,13 @@ namespace TextControlBox
             args.DrawingSession.DrawTextLayout(LineNumberLayout, 10, SingleLineHeight, LineNumberColorBrush);
         }
         //Internal events:
-        private void Internal_TextChanged(string text = null)
+        private void Internal_TextChanged()
         {
             //update the possible lines if the search is open
             if (searchHelper.IsSearchOpen)
                 searchHelper.UpdateSearchLines(TotalLines);
 
-            TextChanged?.Invoke(this, text ?? GetText());
+            TextChanged?.Invoke(this);
         }
         private void Internal_CursorChanged()
         {
@@ -2533,7 +2515,7 @@ namespace TextControlBox
         /// </summary>
         /// <param name="sender">The textbox in which the text was changed</param>
         /// <param name="text">The text of the textbox</param>
-        public delegate void TextChangedEvent(TextControlBox sender, string text);
+        public delegate void TextChangedEvent(TextControlBox sender);
         public event TextChangedEvent TextChanged;
 
         /// <summary>
@@ -2576,8 +2558,9 @@ namespace TextControlBox
             var files = Directory.GetFiles("TextControlBox/Languages");
             for (int i = 0; i < files.Length; i++)
             {
-                var codeLanguage = SyntaxHighlightingRenderer.GetCodeLanguageFromJson(File.ReadAllText(files[i]));
-                _CodeLanguages.Add(codeLanguage.CodeLanguage.Name.ToLower(), codeLanguage.CodeLanguage);
+                var result = SyntaxHighlightingRenderer.GetCodeLanguageFromJson(File.ReadAllText(files[i]));
+                if(result.Succeed)
+                    _CodeLanguages.Add(result.CodeLanguage.Name.ToLower(), result.CodeLanguage);
             }
         }
         private static Dictionary<string, CodeLanguage> _CodeLanguages = null;

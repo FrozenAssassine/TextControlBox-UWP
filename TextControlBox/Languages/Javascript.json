@@ -68,7 +68,7 @@
     }
   ],
   "Name": "Javascript",
-  "Filter": "js",
+  "Filter": ".js",
   "Description": "Syntaxhighlighting for Javascript language.",
   "Author": "Finn Freitag"
 }
