@@ -1145,6 +1145,8 @@ namespace TextControlBox
         //Pointer-events:
         private void CoreWindow_PointerReleased(CoreWindow sender, PointerEventArgs args)
         {
+            selectionrenderer.IsSelectingOverLinenumbers = false;
+
             var point = Utils.GetPointFromCoreWindowRelativeTo(args, Canvas_Text);
             //End text drag/drop -> insert text at cursorposition
             if (DragDropSelection && !DragDropOverSelection(point))
@@ -1207,42 +1209,33 @@ namespace TextControlBox
             }
             if (selectionrenderer.IsSelecting && !DragDropSelection)
             {
-                UpdateCursorVariable(point);
+                //selection started over the linenumbers:
+                if (selectionrenderer.IsSelectingOverLinenumbers)
+                {
+                    Point pointerPos = point;
+                    pointerPos.Y += SingleLineHeight; //add one more line
+
+                    //When the selection reaches the end of the textbox select the last line completely
+                    if (CursorPosition.LineNumber == TotalLines.Count - 1)
+                    {
+                        pointerPos.Y -= SingleLineHeight; //add one more line
+                        pointerPos.X = Utils.MeasureLineLenght(CanvasDevice.GetSharedDevice(), TotalLines.GetLineText(-1), TextFormat).Width + 10;
+                    }
+                    UpdateCursorVariable(pointerPos);
+                }
+                else //Default selection
+                    UpdateCursorVariable(point);
+
+                //Update:
                 UpdateCursor();
-
-                selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
-                UpdateSelection();
-            }
-        }
-        private void Canvas_Selection_PointerMoved(object sender, PointerRoutedEventArgs e)
-        {
-            if (!HasFocus)
-                return;
-
-            var point = e.GetCurrentPoint(Canvas_Selection);
-            //Drag drop text -> move the cursor to get the insertion point
-            if (DragDropSelection)
-            {
-                DragDropOverSelection(point.Position);
-                UpdateCursorVariable(point.Position);
-                UpdateCursor();
-            }
-            else if (point.Properties.IsLeftButtonPressed)
-            {
-                selectionrenderer.IsSelecting = true;
-            }
-
-            if (selectionrenderer.IsSelecting && !DragDropSelection)
-            {
-                UpdateCursorVariable(e.GetCurrentPoint(Canvas_Selection).Position);
-                UpdateCursor();
-
                 selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
                 UpdateSelection();
             }
         }
         private void Canvas_Selection_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
+            selectionrenderer.IsSelectingOverLinenumbers = false;
+
             Point PointerPosition = e.GetCurrentPoint(sender as UIElement).Position;
             bool LeftButtonPressed = e.GetCurrentPoint(sender as UIElement).Properties.IsLeftButtonPressed;
             bool RightButtonPressed = e.GetCurrentPoint(sender as UIElement).Properties.IsRightButtonPressed;
@@ -1380,40 +1373,13 @@ namespace TextControlBox
             if (NeedsUpdate)
                 UpdateAll();
         }
-        private void Canvas_LineNumber_PointerMoved(object sender, PointerRoutedEventArgs e)
-        {
-            if (selectionrenderer.IsSelecting)
-            {
-                var CurPoint = e.GetCurrentPoint(sender as UIElement).Position;
-                CurPoint.X = 0; //Set 0 to select whole lines
-
-                if (TextSelection == null)
-                    return;
-
-                if (TextSelection.StartPosition.LineNumber < TextSelection.EndPosition.LineNumber)
-                {
-                    CurPoint.Y += SingleLineHeight;
-                }
-
-                //Select the last line completely
-                if (CurPoint.Y / SingleLineHeight > NumberOfRenderedLines)
-                {
-                    CurPoint.X = Utils.MeasureLineLenght(CanvasDevice.GetSharedDevice(), CurrentLine, TextFormat).Width + 100;
-                }
-
-                UpdateCursorVariable(CurPoint);
-                UpdateCursor();
-
-                selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
-                UpdateSelection();
-            }
-        }
         private void Canvas_LineNumber_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
             //Select the line where the cursor is over
             SelectLine(CursorRenderer.GetCursorLineFromPoint(e.GetCurrentPoint(sender as UIElement).Position, SingleLineHeight, NumberOfRenderedLines, NumberOfStartLine));
 
             selectionrenderer.IsSelecting = true;
+            selectionrenderer.IsSelectingOverLinenumbers = true;
         }
         //Change the cursor when entering/leaving the control
         private void UserControl_PointerEntered(object sender, PointerRoutedEventArgs e)
