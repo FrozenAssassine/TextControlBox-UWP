@@ -358,7 +358,7 @@ namespace TextControlBox
                         if (curLine.Length > 0)
                             TotalLines.String_AddToEnd(CursorPosition.LineNumber - 1, curLine);
 
-                        TotalLines.RemoveAt(CursorPosition.LineNumber);
+                        TotalLines.DeleteAt(CursorPosition.LineNumber);
 
                         //update the cursorposition
                         CursorPosition.LineNumber -= 1;
@@ -399,15 +399,9 @@ namespace TextControlBox
 
                         undoRedo.RecordUndoAction(() =>
                         {
-                            int curpos = TotalLines.GetLineLength(CursorPosition.LineNumber - 1);
-
-                            //line still has text
-                            if (curLine.Length > 0) 
-                                TotalLines.String_AddToEnd(CursorPosition.LineNumber, LineToAdd);
-                            else //line has no text
-                                CursorPosition.LineNumber -= 1;
-
-                            TotalLines.RemoveAt(CursorPosition.LineNumber + 1);
+                            int curpos = TotalLines.GetLineLength(CursorPosition.LineNumber);
+                            CurrentLine += LineToAdd;
+                            TotalLines.DeleteAt(CursorPosition.LineNumber + 1);
 
                             //update the cursorposition
                             CursorPosition.CharacterPosition = curpos;
