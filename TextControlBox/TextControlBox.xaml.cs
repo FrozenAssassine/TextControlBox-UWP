@@ -1207,6 +1207,10 @@ namespace TextControlBox
                 UpdateCursorVariable(point);
                 UpdateCursor();
             }
+            else if(args.CurrentPoint.Properties.IsLeftButtonPressed)
+            {
+                selectionrenderer.IsSelecting = true;
+            }
             if (selectionrenderer.IsSelecting && !DragDropSelection)
             {
                 //selection started over the linenumbers:
