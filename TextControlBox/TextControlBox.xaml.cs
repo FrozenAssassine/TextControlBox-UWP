@@ -19,6 +19,7 @@ using TextControlBox.Renderer;
 using TextControlBox.Text;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
+using Windows.Networking.Vpn;
 using Windows.Storage;
 using Windows.System;
 using Windows.UI.Core;
@@ -351,14 +352,19 @@ namespace TextControlBox
 
                     undoRedo.RecordUndoAction(() =>
                     {
-                        TotalLines.String_AddToEnd(CursorPosition.LineNumber, curLine);
+                        int curpos = TotalLines.GetLineLength(CursorPosition.LineNumber - 1);
+                        
+                        //line still has text:
+                        if (curLine.Length > 0)
+                            TotalLines.String_AddToEnd(CursorPosition.LineNumber - 1, curLine);
 
-                        TotalLines.RemoveAt(CursorPosition.LineNumber - 1);
+                        TotalLines.RemoveAt(CursorPosition.LineNumber);
 
+                        //update the cursorposition
                         CursorPosition.LineNumber -= 1;
-                        CursorPosition.CharacterPosition = TotalLines.GetLineText(CursorPosition.LineNumber).Length;
+                        CursorPosition.CharacterPosition = curpos;
 
-                    }, TotalLines, CursorPosition.LineNumber, 3, 2, NewLineCharacter);
+                    }, TotalLines, CursorPosition.LineNumber - 1, 3, 2, NewLineCharacter);
                 }
             }
             else
@@ -375,7 +381,6 @@ namespace TextControlBox
         {
             UpdateCurrentLine();
             string curLine = CurrentLine;
-            int currentLineIndex = CursorPosition.LineNumber;
 
             if (IsReadonly)
                 return;
@@ -386,7 +391,7 @@ namespace TextControlBox
                 //delete lines if cursor is at position 0 and the line is emty OR cursor is at the end of a line and the line has content
                 if (CharacterPos == curLine.Length)
                 {
-                    string LineToAdd = CursorPosition.LineNumber + 1 < TotalLines.Count ? TotalLines.GetLineText(CursorPosition.LineNumber + 1) : null;
+                    string LineToAdd = CursorPosition.LineNumber + 1< TotalLines.Count ? TotalLines.GetLineText(CursorPosition.LineNumber +1) : null;
                     if (LineToAdd != null)
                     {                    
                         if (CursorPosition.LineNumber == LongestLineIndex)
@@ -394,8 +399,19 @@ namespace TextControlBox
 
                         undoRedo.RecordUndoAction(() =>
                         {
-                            CurrentLine = curLine + LineToAdd;
-                            TotalLines.RemoveAt(currentLineIndex);
+                            int curpos = TotalLines.GetLineLength(CursorPosition.LineNumber - 1);
+
+                            //line still has text
+                            if (curLine.Length > 0) 
+                                TotalLines.String_AddToEnd(CursorPosition.LineNumber, LineToAdd);
+                            else //line has no text
+                                CursorPosition.LineNumber -= 1;
+
+                            TotalLines.RemoveAt(CursorPosition.LineNumber + 1);
+
+                            //update the cursorposition
+                            CursorPosition.CharacterPosition = curpos;
+
                         }, TotalLines, CursorPosition.LineNumber, 2, 1, NewLineCharacter);
                     }
                 }
