@@ -216,15 +216,15 @@ namespace TextControlBox
             else
                 CurrentLineTextLayout = null;
         }
-        private void UpdateCursorVariable(Point Point)
+        private void UpdateCursorVariable(Point point)
         {
             //Apply an offset to the cursorposition
-            Point.Subtract(-10, +10);
+            point = point.Subtract(-10, +5);
 
-            CursorPosition.LineNumber = CursorRenderer.GetCursorLineFromPoint(Point, SingleLineHeight, NumberOfRenderedLines, NumberOfStartLine);
+            CursorPosition.LineNumber = CursorRenderer.GetCursorLineFromPoint(point, SingleLineHeight, NumberOfRenderedLines, NumberOfStartLine);
 
             UpdateCurrentLineTextLayout();
-            CursorPosition.CharacterPosition = CursorRenderer.GetCharacterPositionFromPoint(TotalLines.GetCurrentLineText(), CurrentLineTextLayout, Point, (float)-HorizontalScroll);
+            CursorPosition.CharacterPosition = CursorRenderer.GetCharacterPositionFromPoint(TotalLines.GetCurrentLineText(), CurrentLineTextLayout, point, (float)-HorizontalScroll);
         }
         private void UpdateCurrentLine()
         {
