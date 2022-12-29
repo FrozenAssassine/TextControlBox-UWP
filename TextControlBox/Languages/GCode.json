@@ -2,49 +2,49 @@
   "Highlights": [
     {
       //Axis Y
-      "Pattern": "Y+(?=[+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?",
+      "Pattern": "\\bY(?=([0-9]|(\\+|\\-)[0-9]))",
       "ColorDark": "#00ff00",
       "ColorLight": "#00ff00"
     },
     {
       //Axis X
-      "Pattern": "X+(?=[+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?",
+      "Pattern": "\\bX(?=([0-9]|(\\+|\\-)[0-9]))",
       "ColorDark": "#ff0000",
       "ColorLight": "#ff0000"
     },
     {
       //Axis Z
-      "Pattern": "Z+(?=[+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?",
+      "Pattern": "\\bZ(?=([0-9]|(\\+|\\-)[0-9]))",
       "ColorDark": "#0077ff",
       "ColorLight": "#0077ff"
     },
     {
       //Axis A
-      "Pattern": "A+(?=[+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?",
+      "Pattern": "\\bA(?=([0-9]|(\\+|\\-)[0-9]))",
       "ColorDark": "#ff00ff",
       "ColorLight": "#ff00ff"
     },
     {
       //Feedrate E | F
-      "Pattern": "(E|F)+(?=[+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?",
+      "Pattern": "\\b(E|F)(?=([0-9]|(\\+|\\-)[0-9]))",
       "ColorDark": "#ffAA00",
       "ColorLight": "#ffAA00"
     },
     {
       //Extruder
-      "Pattern": "(S|T)+(?=[+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?",
+      "Pattern": "\\b(S|T)(?=([0-9]|(\\+|\\-)[0-9]))",
       "ColorDark": "#ffff00",
       "ColorLight": "#ffff00"
     },
     {
       //-/+ floating numbers
-      "Pattern": "\\b([+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?\\b",
-      "ColorDark": "#990099",
+      "Pattern": "([+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?",
+      "ColorDark": "#9f009f",
       "ColorLight": "#ff00ff"
     },
     {
       //G0 - G999 & M0 - M999
-      "Pattern": "[G|M]+[0-999].*?[\\s|\\n]",
+      "Pattern": "[G|M][0-999].*?[\\s|\\n]",
       "ColorDark": "#00ffff",
       "ColorLight": "#00aaaa"
     },
