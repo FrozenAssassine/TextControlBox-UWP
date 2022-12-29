@@ -96,7 +96,7 @@ namespace TextControlBox
         bool NeedsTextFormatUpdate = false;
         bool DragDropSelection = false;
         bool HasFocus = true;
-        bool NeedsUpdateTextFormat = false;
+        bool NeedsUpdateTextLayout = false;
         bool NeedsRecalculateLongestLineIndex = true;
 
         CanvasTextFormat TextFormat = null;
@@ -185,7 +185,7 @@ namespace TextControlBox
             
             if (_ZoomFactor != OldZoomFactor)
             {
-                NeedsUpdateTextFormat = true;
+                NeedsUpdateTextLayout = true;
                 OldZoomFactor = _ZoomFactor;
                 ZoomChanged?.Invoke(this, _ZoomFactor);
             }
@@ -1460,9 +1460,9 @@ namespace TextControlBox
             //Create the textlayout --> apply the Syntaxhighlighting --> render it:
 
             //Only update the textformat when the text changes:
-            if (OldRenderedText != RenderedText || NeedsUpdateTextFormat)
+            if (OldRenderedText != RenderedText || NeedsUpdateTextLayout)
             {
-                NeedsUpdateTextFormat = false;
+                NeedsUpdateTextLayout = false;
                 OldRenderedText = RenderedText;
 
                 DrawnTextLayout = TextRenderer.CreateTextResource(sender, DrawnTextLayout, TextFormat, RenderedText, new Size { Height = sender.Size.Height, Width = this.ActualWidth }, ZoomedFontSize);
@@ -2241,7 +2241,7 @@ namespace TextControlBox
             set
             {
                 _CodeLanguage = value;
-                NeedsUpdateTextFormat = true; //set to true to force update the textlayout
+                NeedsUpdateTextLayout = true; //set to true to force update the textlayout
                 UpdateText();
             }
         }
@@ -2313,6 +2313,7 @@ namespace TextControlBox
 
                 this.Background = _Design.Background;
                 ColorResourcesCreated = false;
+                NeedsUpdateTextLayout = true;
                 UpdateAll();
             }
         }
@@ -2351,7 +2352,7 @@ namespace TextControlBox
             set
             {
                 _ShowLineNumbers = value;
-                NeedsUpdateTextFormat = true;
+                NeedsUpdateTextLayout = true;
                 UpdateAll();
             }
         }
