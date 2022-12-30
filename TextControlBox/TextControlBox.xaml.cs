@@ -477,10 +477,21 @@ namespace TextControlBox
             }
             else //Any kind of selection
             {
+                int remove = 2;
+                if (TextSelection.StartPosition.LineNumber == TextSelection.EndPosition.LineNumber)
+                {
+                    //line is selected completely: remove = 1
+                    if(Selection.GetMax(TextSelection.StartPosition, TextSelection.EndPosition).CharacterPosition == TotalLines.GetLineLength(CursorPosition.LineNumber) &&
+                        Selection.GetMin(TextSelection.StartPosition, TextSelection.EndPosition).CharacterPosition == 0)
+                    {
+                        remove = 1;
+                    }
+                }
+
                 undoRedo.RecordUndoAction(() =>
                 {
                     CursorPosition = Selection.Replace(TextSelection, TotalLines, NewLineCharacter, NewLineCharacter);
-                }, TotalLines, TextSelection, 1, NewLineCharacter);
+                }, TotalLines, TextSelection, remove, NewLineCharacter);
             }
 
             ClearSelection();
