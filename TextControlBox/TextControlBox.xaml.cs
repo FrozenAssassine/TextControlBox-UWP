@@ -1201,10 +1201,6 @@ namespace TextControlBox
                 UpdateCursorVariable(point);
                 UpdateCursor();
             }
-            else if(args.CurrentPoint.Properties.IsLeftButtonPressed)
-            {
-                selectionrenderer.IsSelecting = true;
-            }
             if (selectionrenderer.IsSelecting && !DragDropSelection)
             {
                 //selection started over the linenumbers:
@@ -1226,6 +1222,33 @@ namespace TextControlBox
 
                 //Update:
                 UpdateCursor();
+                selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
+                UpdateSelection();
+            }
+        }
+        private void Canvas_Selection_PointerMoved(object sender, PointerRoutedEventArgs e)
+        {
+            if (!HasFocus)
+                return;
+
+            var point = e.GetCurrentPoint(Canvas_Selection);
+            //Drag drop text -> move the cursor to get the insertion point
+            if (DragDropSelection)
+            {
+                DragDropOverSelection(point.Position);
+                UpdateCursorVariable(point.Position);
+                UpdateCursor();
+            }
+            else if (point.Properties.IsLeftButtonPressed)
+            {
+                selectionrenderer.IsSelecting = true;
+            }
+
+            if (selectionrenderer.IsSelecting && !DragDropSelection)
+            {
+                UpdateCursorVariable(e.GetCurrentPoint(Canvas_Selection).Position);
+                UpdateCursor();
+
                 selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
                 UpdateSelection();
             }
