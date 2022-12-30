@@ -480,7 +480,7 @@ namespace TextControlBox
                 undoRedo.RecordUndoAction(() =>
                 {
                     CursorPosition = Selection.Replace(TextSelection, TotalLines, NewLineCharacter, NewLineCharacter);
-                }, TotalLines, TextSelection, 2, NewLineCharacter);
+                }, TotalLines, TextSelection, 1, NewLineCharacter);
             }
 
             ClearSelection();
