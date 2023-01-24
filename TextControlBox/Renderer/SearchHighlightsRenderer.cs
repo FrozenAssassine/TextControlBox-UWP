@@ -24,7 +24,7 @@ namespace TextControlBox.Renderer
                     Math.Ceiling(r.Bottom + MarginTop))); //Height
         }
 
-        public static MatchCollection RenderHighlights(
+        public static void RenderHighlights(
             CanvasDrawEventArgs Event,
             CanvasTextLayout DrawnTextLayout,
             string RenderedText,
@@ -35,9 +35,16 @@ namespace TextControlBox.Renderer
             Color SearchHighlightColor)
         {
             if (SearchRegex == null || PossibleLines == null || PossibleLines.Length == 0)
-                return null;
-
-            var matches = Regex.Matches(RenderedText, SearchRegex);
+                return;
+            MatchCollection matches = null;
+            try
+            {
+                matches = Regex.Matches(RenderedText, SearchRegex);
+            }
+            catch (ArgumentException)
+            {
+                return;
+            }
             for (int j = 0; j < matches.Count; j++)
             {
                 var match = matches[j];
@@ -48,7 +55,7 @@ namespace TextControlBox.Renderer
                     Event.DrawingSession.FillRectangle(CreateRect(layoutRegion[0].LayoutBounds, ScrollOffsetX, OffsetTop), SearchHighlightColor);
                 }
             }
-            return matches;
+            return;
         }
     }
 }

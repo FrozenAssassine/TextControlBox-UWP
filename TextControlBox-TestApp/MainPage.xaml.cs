@@ -102,5 +102,20 @@ namespace TextControlBox_TestApp
                 }
             }
         }
+
+        private void searchInput_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            textbox.BeginSearch(searchInput.Text, false, false);
+        }
+
+        private void SearchUp_Click(object sender, RoutedEventArgs e)
+        {
+            textbox.FindPrevious();
+        }
+
+        private void SearchDown_Click(object sender, RoutedEventArgs e)
+        {
+            textbox.FindNext();
+        }
     }
 }
