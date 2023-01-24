@@ -882,6 +882,94 @@ namespace TextControlBox
 
         #endregion
 
+        private void PointerReleasedAction(Point point)
+        {
+            selectionrenderer.IsSelectingOverLinenumbers = false;
+
+            //End text drag/drop -> insert text at cursorposition
+            if (DragDropSelection && !DragDropOverSelection(point))
+            {
+                DoDragDropSelection();
+            }
+            else if (DragDropSelection)
+            {
+                EndDragDropSelection();
+            }
+
+            if (selectionrenderer.IsSelecting)
+            {
+                this.Focus(FocusState.Programmatic);
+                selectionrenderer.HasSelection = true;
+            }
+
+            selectionrenderer.IsSelecting = false;
+        }
+        private void PointerMovedAction(Point point)
+        {
+            if (selectionrenderer.IsSelecting)
+            {
+                double CanvasWidth = Math.Round(this.ActualWidth, 2);
+                double CanvasHeight = Math.Round(this.ActualHeight, 2);
+                double CurPosX = Math.Round(point.X, 2);
+                double CurPosY = Math.Round(point.Y, 2);
+
+                if (CurPosY > CanvasHeight - 50)
+                {
+                    VerticalScrollbar.Value += (CurPosY > CanvasHeight + 30 ? 20 : (CanvasHeight - CurPosY) / 180);
+                    UpdateWhenScrolled();
+                }
+                else if (CurPosY < 50)
+                {
+                    VerticalScrollbar.Value += CurPosY < -30 ? -20 : -(50 - CurPosY) / 20;
+                    UpdateWhenScrolled();
+                }
+
+                //Horizontal
+                if (CurPosX > CanvasWidth - 100)
+                {
+                    ScrollIntoViewHorizontal();
+                    UpdateAll();
+                }
+                else if (CurPosX < 100)
+                {
+                    ScrollIntoViewHorizontal();
+                    UpdateAll();
+                }
+            }
+
+            //Drag drop text -> move the cursor to get the insertion point
+            if (DragDropSelection)
+            {
+                DragDropOverSelection(point);
+                UpdateCursorVariable(point);
+                UpdateCursor();
+            }
+            if (selectionrenderer.IsSelecting && !DragDropSelection)
+            {
+                //selection started over the linenumbers:
+                if (selectionrenderer.IsSelectingOverLinenumbers)
+                {
+                    Point pointerPos = point;
+                    pointerPos.Y += SingleLineHeight; //add one more line
+
+                    //When the selection reaches the end of the textbox select the last line completely
+                    if (CursorPosition.LineNumber == TotalLines.Count - 1)
+                    {
+                        pointerPos.Y -= SingleLineHeight; //add one more line
+                        pointerPos.X = Utils.MeasureLineLenght(CanvasDevice.GetSharedDevice(), TotalLines.GetLineText(-1), TextFormat).Width + 10;
+                    }
+                    UpdateCursorVariable(pointerPos);
+                }
+                else //Default selection
+                    UpdateCursorVariable(point);
+
+                //Update:
+                UpdateCursor();
+                selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
+                UpdateSelection();
+            }
+        }
+
         #region Events
         //Handle keyinputs
         private void EditContext_TextUpdating(CoreTextEditContext sender, CoreTextTextUpdatingEventArgs args)
@@ -1148,94 +1236,25 @@ namespace TextControlBox
             }
         }
         //Pointer-events:
+
+        //Need both the Canvas event and the CoreWindow event, because:
+        //AppWindows does not handle CoreWindow events
+        //Without coreWindow the selection outside of the window would not work
         private void CoreWindow_PointerReleased(CoreWindow sender, PointerEventArgs args)
         {
-            selectionrenderer.IsSelectingOverLinenumbers = false;
+            Debug.WriteLine("CoreWindow_PointerReleased");
 
             var point = Utils.GetPointFromCoreWindowRelativeTo(args, Canvas_Text);
-            //End text drag/drop -> insert text at cursorposition
-            if (DragDropSelection && !DragDropOverSelection(point))
-            {
-                DoDragDropSelection();
-            }
-            else if (DragDropSelection)
-            {
-                EndDragDropSelection();
-            }
-
-            if (selectionrenderer.IsSelecting)
-            {
-                this.Focus(FocusState.Programmatic);
-                selectionrenderer.HasSelection = true;
-            }
-
-            selectionrenderer.IsSelecting = false;
+            PointerReleasedAction(point);
+        }
+        private void Canvas_Selection_PointerReleased(object sender, PointerRoutedEventArgs e)
+        {
+            Debug.WriteLine("Canvas_Selection_PointerReleased");
+            PointerReleasedAction(e.GetCurrentPoint(sender as UIElement).Position);
         }
         private void CoreWindow_PointerMoved(CoreWindow sender, PointerEventArgs args)
         {
-            var point = Utils.GetPointFromCoreWindowRelativeTo(args, Canvas_Text);
-            if (selectionrenderer.IsSelecting)
-            {
-                double CanvasWidth = Math.Round(this.ActualWidth, 2);
-                double CanvasHeight = Math.Round(this.ActualHeight, 2);
-                double CurPosX = Math.Round(point.X, 2);
-                double CurPosY = Math.Round(point.Y, 2);
-
-                if (CurPosY > CanvasHeight - 50)
-                {
-                    VerticalScrollbar.Value += (CurPosY > CanvasHeight + 30 ? 20 : (CanvasHeight - CurPosY) / 180);
-                    UpdateWhenScrolled();
-                }
-                else if (CurPosY < 50)
-                {
-                    VerticalScrollbar.Value += CurPosY < -30 ? -20 : -(50 - CurPosY) / 20;
-                    UpdateWhenScrolled();
-                }
-
-                //Horizontal
-                if (CurPosX > CanvasWidth - 100)
-                {
-                    ScrollIntoViewHorizontal();
-                    UpdateAll();
-                }
-                else if (CurPosX < 100)
-                {
-                    ScrollIntoViewHorizontal();
-                    UpdateAll();
-                }
-            }
-
-            //Drag drop text -> move the cursor to get the insertion point
-            if (DragDropSelection)
-            {
-                DragDropOverSelection(point);
-                UpdateCursorVariable(point);
-                UpdateCursor();
-            }
-            if (selectionrenderer.IsSelecting && !DragDropSelection)
-            {
-                //selection started over the linenumbers:
-                if (selectionrenderer.IsSelectingOverLinenumbers)
-                {
-                    Point pointerPos = point;
-                    pointerPos.Y += SingleLineHeight; //add one more line
-
-                    //When the selection reaches the end of the textbox select the last line completely
-                    if (CursorPosition.LineNumber == TotalLines.Count - 1)
-                    {
-                        pointerPos.Y -= SingleLineHeight; //add one more line
-                        pointerPos.X = Utils.MeasureLineLenght(CanvasDevice.GetSharedDevice(), TotalLines.GetLineText(-1), TextFormat).Width + 10;
-                    }
-                    UpdateCursorVariable(pointerPos);
-                }
-                else //Default selection
-                    UpdateCursorVariable(point);
-
-                //Update:
-                UpdateCursor();
-                selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
-                UpdateSelection();
-            }
+            PointerMovedAction(Utils.GetPointFromCoreWindowRelativeTo(args, Canvas_Text));
         }
         private void Canvas_Selection_PointerMoved(object sender, PointerRoutedEventArgs e)
         {
@@ -1243,27 +1262,15 @@ namespace TextControlBox
                 return;
 
             var point = e.GetCurrentPoint(Canvas_Selection);
-            //Drag drop text -> move the cursor to get the insertion point
-            if (DragDropSelection)
-            {
-                DragDropOverSelection(point.Position);
-                UpdateCursorVariable(point.Position);
-                UpdateCursor();
-            }
-            else if (point.Properties.IsLeftButtonPressed)
+
+            if (point.Properties.IsLeftButtonPressed)
             {
                 selectionrenderer.IsSelecting = true;
             }
+            PointerMovedAction(point.Position);
 
-            if (selectionrenderer.IsSelecting && !DragDropSelection)
-            {
-                UpdateCursorVariable(e.GetCurrentPoint(Canvas_Selection).Position);
-                UpdateCursor();
-
-                selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
-                UpdateSelection();
-            }
         }
+
         private void Canvas_Selection_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
             selectionrenderer.IsSelectingOverLinenumbers = false;
@@ -2649,6 +2656,7 @@ namespace TextControlBox
             VerticalScrollbar.Maximum = ((TotalLines.Count + 1) * SingleLineHeight - Scroll.ActualHeight) / DefaultVerticalScrollSensitivity;
             VerticalScrollbar.ViewportSize = this.ActualHeight;
         }
+
     }
     public class TextControlBoxDesign
     {
