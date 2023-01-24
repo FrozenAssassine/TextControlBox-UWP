@@ -2123,6 +2123,13 @@ namespace TextControlBox
             UpdateText();
             UpdateCursor();
         }
+        /// <summary>
+        /// Duplicates the line at the current cursor position
+        /// </summary>
+        public void DuplicateLine()
+        {
+            DuplicateLine(CursorPosition.LineNumber);
+        }
 
         /// <summary>
         /// Replaces all occurences in the text with another word
