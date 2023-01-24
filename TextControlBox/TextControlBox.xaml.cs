@@ -1730,6 +1730,8 @@ namespace TextControlBox
             selectionrenderer.SelectionEndPosition = null;
             CursorPosition = selectionrenderer.SelectionStartPosition = new CursorPosition(0, index);
 
+            ScrollLineIntoView(index);
+            this.Focus(FocusState.Programmatic);
             UpdateSelection();
             UpdateCursor();
         }
