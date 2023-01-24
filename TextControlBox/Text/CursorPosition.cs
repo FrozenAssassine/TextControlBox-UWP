@@ -29,6 +29,8 @@
         internal void SubtractFromCharacterPos(int Value)
         {
             CharacterPosition -= Value;
+            if (CharacterPosition < 0)
+                CharacterPosition = 0;
         }
         internal new string ToString()
         {
