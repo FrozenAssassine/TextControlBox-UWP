@@ -106,7 +106,7 @@ namespace TextControlBox
         string RenderedText = "";
         string LineNumberTextToRender = "";
         string OldRenderedText = null;
-
+        string OldLineNumberTextToRender = "";
         //Handle double and triple -clicks:
         int PointerClickCount = 0;
         DispatcherTimer PointerClickTimer = new DispatcherTimer { Interval = new TimeSpan(0, 0, 0, 0, 200) };
@@ -208,6 +208,10 @@ namespace TextControlBox
         private void UpdateSelection()
         {
             Canvas_Selection.Invalidate();
+        }
+        private void NeedsUpdateLineNumbers()
+        {
+            OldLineNumberTextToRender = "";
         }
         private void UpdateCurrentLineTextLayout()
         {
@@ -1514,7 +1518,12 @@ namespace TextControlBox
 
             args.DrawingSession.DrawTextLayout(DrawnTextLayout, (float)-HorizontalScroll, SingleLineHeight, TextColorBrush);
 
-            Canvas_LineNumber.Invalidate();
+            //Only update when old text != new text, to reduce updates when scrolling
+            if (!OldLineNumberTextToRender.Equals(LineNumberTextToRender, StringComparison.OrdinalIgnoreCase))
+            {
+                OldLineNumberTextToRender = LineNumberTextToRender;
+                Canvas_LineNumber.Invalidate();
+            }
         }
         private void Canvas_Selection_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
@@ -2313,7 +2322,7 @@ namespace TextControlBox
         /// <summary>
         /// The space between the linenumbers and the start of the text
         /// </summary>
-        public float SpaceBetweenLineNumberAndText { get => _SpaceBetweenLineNumberAndText; set { _SpaceBetweenLineNumberAndText = value; UpdateAll(); } }
+        public float SpaceBetweenLineNumberAndText { get => _SpaceBetweenLineNumberAndText; set { _SpaceBetweenLineNumberAndText = value; NeedsUpdateLineNumbers(); UpdateAll(); } }
 
         /// <summary>
         /// Get or set the current position of the cursor
@@ -2401,6 +2410,7 @@ namespace TextControlBox
             {
                 _ShowLineNumbers = value;
                 NeedsUpdateTextLayout = true;
+                NeedsUpdateLineNumbers();
                 UpdateAll();
             }
         }
