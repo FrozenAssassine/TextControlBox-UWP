@@ -704,11 +704,21 @@ namespace TextControlBox
                 DataPackageView dataPackageView = Clipboard.GetContent();
                 if (dataPackageView.Contains(StandardDataFormats.Text))
                 {
-                    string Text = await dataPackageView.GetTextAsync();
-                    if (await Utils.IsOverTextLimit(Text.Length))
+                    string text = null;
+                    try
+                    {
+                        text = await dataPackageView.GetTextAsync();
+                    }
+                    catch(Exception ex) //When longer holding Ctrl + V the clipboard may throw an exception:
+                    {
+                        Debug.WriteLine("Clipboard exception: " + ex.Message);
+                        return;
+                    }
+
+                    if (await Utils.IsOverTextLimit(text.Length))
                         return;
 
-                    AddCharacter(stringManager.CleanUpString(Text));
+                    AddCharacter(stringManager.CleanUpString(text));
                 }
             }
             catch (OutOfMemoryException)
