@@ -15,14 +15,15 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TextControlBox.Extensions;
 using TextControlBox.Helper;
+using TextControlBox.Languages;
 using TextControlBox.Renderer;
 using TextControlBox.Text;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
-using Windows.Networking.Vpn;
 using Windows.Storage;
 using Windows.System;
 using Windows.UI.Core;
+using Windows.UI.Popups;
 using Windows.UI.Text.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
@@ -30,8 +31,6 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Shapes;
-using static System.Net.Mime.MediaTypeNames;
 using Color = Windows.UI.Color;
 
 namespace TextControlBox
@@ -2610,43 +2609,36 @@ namespace TextControlBox
 
         #region Static functions
         //static functions
-        private static void GetLanguagesFromBuffer()
-        {
-            _CodeLanguages = new Dictionary<string, CodeLanguage>();
-
-            var files = Directory.GetFiles("TextControlBox/Languages");
-            for (int i = 0; i < files.Length; i++)
-            {
-                var result = SyntaxHighlightingRenderer.GetCodeLanguageFromJson(File.ReadAllText(files[i]));
-                if(result.Succeed)
-                    _CodeLanguages.Add(result.CodeLanguage.Name.ToLower(), result.CodeLanguage);
-            }
-        }
-        private static Dictionary<string, CodeLanguage> _CodeLanguages = null;
-
         /// <summary>
-        /// Get all the builtin codelanguages for syntaxhighlighting
+        /// Get all the builtin code languages for syntaxhighlighting
         /// </summary>
-        public static Dictionary<string, CodeLanguage> CodeLanguages
+        public static Dictionary<string, CodeLanguage> CodeLanguages => new Dictionary<string, CodeLanguage>(StringComparer.OrdinalIgnoreCase)
         {
-            get
-            {
-                if (_CodeLanguages == null)
-                    GetLanguagesFromBuffer();
-
-                return _CodeLanguages;
-            }
-        }
+            { "Batch", new Batch() },
+            { "ConfigFile", new ConfigFile() },
+            { "C++", new Cpp() },
+            { "C#", new CSharp() },
+            { "GCode", new GCode() },
+            { "HexFile", new HexFile() },
+            { "Html", new Html() },
+            { "Java", new Java() },
+            { "Javascript", new Javascript() },
+            { "Json", new Json() },
+            { "PHP", new PHP() },
+            { "QSharp", new QSharp() },
+            { "XML", new XML() },
+        };
 
         /// <summary>
         /// Get a CodeLanguage by the identifier from the list
         /// </summary>
         /// <param name="Identifier"></param>
-        /// <returns></returns>
+        /// <returns>When found the Codelanguage. Otherwise null</returns>
         public static CodeLanguage GetCodeLanguageFromId(string Identifier)
         {
-            CodeLanguages.TryGetValue(Identifier.ToLower(), out CodeLanguage codelanguage);
-            return codelanguage;
+            if(CodeLanguages.TryGetValue(Identifier, out CodeLanguage codelanguage))
+                return codelanguage;
+            return null;
         }
 
         /// <summary>
