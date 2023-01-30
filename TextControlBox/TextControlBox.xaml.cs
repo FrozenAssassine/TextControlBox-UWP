@@ -19,10 +19,12 @@ using TextControlBox.Languages;
 using TextControlBox.Renderer;
 using TextControlBox.Text;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Devices.Input;
 using Windows.Foundation;
 using Windows.Storage;
 using Windows.System;
 using Windows.UI.Core;
+using Windows.UI.Input;
 using Windows.UI.Popups;
 using Windows.UI.Text.Core;
 using Windows.UI.ViewManagement;
@@ -110,6 +112,8 @@ namespace TextControlBox
         int PointerClickCount = 0;
         DispatcherTimer PointerClickTimer = new DispatcherTimer { Interval = new TimeSpan(0, 0, 0, 0, 200) };
 
+        Point? OldTouchPosition = null;
+        
         //CursorPosition
         CursorPosition _CursorPosition = new CursorPosition(0, 0);
         CursorPosition OldCursorPosition = null;
@@ -892,11 +896,9 @@ namespace TextControlBox
             Debug.WriteLine("Collect GC");
             ListHelper.GCList(TotalLines);
         }
-
-        #endregion
-
         private void PointerReleasedAction(Point point)
         {
+            OldTouchPosition = null;
             selectionrenderer.IsSelectingOverLinenumbers = false;
 
             //End text drag/drop -> insert text at cursorposition
@@ -982,6 +984,36 @@ namespace TextControlBox
                 UpdateSelection();
             }
         }
+        private bool CheckTouchInput(PointerPoint point)
+        {
+            if (point.PointerDevice.PointerDeviceType == PointerDeviceType.Touch || point.PointerDevice.PointerDeviceType == PointerDeviceType.Pen)
+            {
+                //Get the touch start position:
+                if (!OldTouchPosition.HasValue)
+                    return true;
+
+                //GEt the dragged offset:
+                double scrollX = OldTouchPosition.Value.X - point.Position.X;
+                double scrollY = OldTouchPosition.Value.Y - point.Position.Y;
+                VerticalScrollbar.Value += scrollY > 2 ? 2 : scrollY < -2 ? -2 : scrollY;
+                HorizontalScrollbar.Value += scrollX > 2 ? 2 : scrollX < -2 ? -2 : scrollX;
+                UpdateAll();
+                return true;
+            }
+            return false;
+        }
+        private bool CheckTouchInput_Click(PointerPoint point)
+        {
+            if (point.PointerDevice.PointerDeviceType == PointerDeviceType.Touch || point.PointerDevice.PointerDeviceType == PointerDeviceType.Pen)
+            {
+                OldTouchPosition = point.Position;
+                return true;
+            }
+            return false;
+        }
+
+
+        #endregion
 
         #region Events
         //Handle keyinputs
@@ -1255,18 +1287,19 @@ namespace TextControlBox
         //Without coreWindow the selection outside of the window would not work
         private void CoreWindow_PointerReleased(CoreWindow sender, PointerEventArgs args)
         {
-            Debug.WriteLine("CoreWindow_PointerReleased");
 
             var point = Utils.GetPointFromCoreWindowRelativeTo(args, Canvas_Text);
             PointerReleasedAction(point);
         }
         private void Canvas_Selection_PointerReleased(object sender, PointerRoutedEventArgs e)
         {
-            Debug.WriteLine("Canvas_Selection_PointerReleased");
             PointerReleasedAction(e.GetCurrentPoint(sender as UIElement).Position);
         }
         private void CoreWindow_PointerMoved(CoreWindow sender, PointerEventArgs args)
         {
+            if (CheckTouchInput(args.CurrentPoint))
+                return;
+
             PointerMovedAction(Utils.GetPointFromCoreWindowRelativeTo(args, Canvas_Text));
         }
         private void Canvas_Selection_PointerMoved(object sender, PointerRoutedEventArgs e)
@@ -1275,6 +1308,9 @@ namespace TextControlBox
                 return;
 
             var point = e.GetCurrentPoint(Canvas_Selection);
+            
+            if (CheckTouchInput(point))
+                return;
 
             if (point.Properties.IsLeftButtonPressed)
             {
@@ -1288,9 +1324,13 @@ namespace TextControlBox
         {
             selectionrenderer.IsSelectingOverLinenumbers = false;
 
-            Point PointerPosition = e.GetCurrentPoint(sender as UIElement).Position;
-            bool LeftButtonPressed = e.GetCurrentPoint(sender as UIElement).Properties.IsLeftButtonPressed;
-            bool RightButtonPressed = e.GetCurrentPoint(sender as UIElement).Properties.IsRightButtonPressed;
+            var point = e.GetCurrentPoint(sender as UIElement);
+            if (CheckTouchInput_Click(point))
+                return;
+
+            Point PointerPosition = point.Position;
+            bool LeftButtonPressed = point.Properties.IsLeftButtonPressed;
+            bool RightButtonPressed = point.Properties.IsRightButtonPressed;
 
             if (LeftButtonPressed && !Utils.IsKeyPressed(VirtualKey.Shift))
                 PointerClickCount++;
@@ -1427,8 +1467,12 @@ namespace TextControlBox
         }
         private void Canvas_LineNumber_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
+            var point = e.GetCurrentPoint(sender as UIElement);
+            if (CheckTouchInput_Click(point))
+                return;
+
             //Select the line where the cursor is over
-            SelectLine(CursorRenderer.GetCursorLineFromPoint(e.GetCurrentPoint(sender as UIElement).Position, SingleLineHeight, NumberOfRenderedLines, NumberOfStartLine));
+            SelectLine(CursorRenderer.GetCursorLineFromPoint(point.Position, SingleLineHeight, NumberOfRenderedLines, NumberOfStartLine));
 
             selectionrenderer.IsSelecting = true;
             selectionrenderer.IsSelectingOverLinenumbers = true;
