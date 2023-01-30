@@ -48,7 +48,7 @@
                 {
                     return this.StartPosition.LineNumber < index && this.EndPosition.LineNumber > index;
                 }
-                else if(this.StartPosition.LineNumber == this.EndPosition.LineNumber)
+                else if (this.StartPosition.LineNumber == this.EndPosition.LineNumber)
                     return this.StartPosition.LineNumber != index;
                 else
                     return this.StartPosition.LineNumber > index && this.EndPosition.LineNumber < index;

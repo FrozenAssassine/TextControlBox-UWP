@@ -1,15 +1,7 @@
 ﻿using Collections.Pooled;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Schema;
 using TextControlBox.Helper;
-using TextControlBox.Text;
 
 namespace TextControlBox.Extensions
 {

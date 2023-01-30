@@ -1,15 +1,6 @@
 ﻿using Collections.Pooled;
-using System.Collections;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using TextControlBox.Extensions;
-using TextControlBox.Text;
-using Windows.UI.Xaml.Shapes;
 
 namespace TextControlBox.Helper
 {
@@ -75,14 +66,14 @@ namespace TextControlBox.Helper
         public static string[] GetLinesFromString(string content, string NewLineCharacter)
         {
             return content.Split(NewLineCharacter);
-        }       
+        }
         public static string[] CreateLines(string[] lines, int Start, string Beginning, string End)
         {
-            if(Start > 0)
+            if (Start > 0)
                 lines = lines.Skip(Start).ToArray();
 
             lines[0] = Beginning + lines[0];
-            if(lines.Length - 1 > 0)
+            if (lines.Length - 1 > 0)
                 lines[lines.Length - 1] = lines[lines.Length - 1] + End;
             return lines;
         }

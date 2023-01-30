@@ -1,11 +1,7 @@
 ﻿using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.UI;
 
@@ -30,7 +26,7 @@ namespace TextControlBox.Renderer
             string RenderedText,
             int[] PossibleLines,
             string SearchRegex,
-            float ScrollOffsetX, 
+            float ScrollOffsetX,
             float OffsetTop,
             Color SearchHighlightColor)
         {

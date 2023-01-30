@@ -1,5 +1,4 @@
 ﻿using Collections.Pooled;
-using System.Diagnostics;
 
 namespace TextControlBox.Text
 {
@@ -18,7 +17,7 @@ namespace TextControlBox.Text
                     undoredo.RecordUndoAction(() =>
                     {
                         Selection.MoveLinesDown(TotalLines, selection, cursorposition);
-                    
+
                     }, TotalLines, cursorposition.LineNumber, 2, 2, NewLineCharacter, cursorposition);
                     return result;
                 }

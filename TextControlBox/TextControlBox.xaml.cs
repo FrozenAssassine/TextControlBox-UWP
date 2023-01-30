@@ -6,13 +6,9 @@ using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Runtime;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using TextControlBox.Extensions;
 using TextControlBox.Helper;
 using TextControlBox.Languages;
@@ -21,11 +17,9 @@ using TextControlBox.Text;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Devices.Input;
 using Windows.Foundation;
-using Windows.Storage;
 using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Input;
-using Windows.UI.Popups;
 using Windows.UI.Text.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
@@ -113,7 +107,7 @@ namespace TextControlBox
         DispatcherTimer PointerClickTimer = new DispatcherTimer { Interval = new TimeSpan(0, 0, 0, 0, 200) };
 
         Point? OldTouchPosition = null;
-        
+
         //CursorPosition
         CursorPosition _CursorPosition = new CursorPosition(0, 0);
         CursorPosition OldCursorPosition = null;
@@ -185,7 +179,7 @@ namespace TextControlBox
                 _ZoomFactor = 400;
             if (_ZoomFactor < 4)
                 _ZoomFactor = 4;
-            
+
             if (_ZoomFactor != OldZoomFactor)
             {
                 NeedsUpdateTextLayout = true;
@@ -301,7 +295,7 @@ namespace TextControlBox
                 CheckRecalculateLongestLine(text);
                 undoRedo.RecordUndoAction(() =>
                 {
-                    CursorPosition = Selection.InsertText(TextSelection, CursorPosition, TotalLines,  text, NewLineCharacter);
+                    CursorPosition = Selection.InsertText(TextSelection, CursorPosition, TotalLines, text, NewLineCharacter);
                 }, TotalLines, CursorPosition.LineNumber, 1, SplittedTextLength, NewLineCharacter);
             }
             else if (text.Length == 0) //delete selection
@@ -360,7 +354,7 @@ namespace TextControlBox
                     undoRedo.RecordUndoAction(() =>
                     {
                         int curpos = TotalLines.GetLineLength(CursorPosition.LineNumber - 1);
-                        
+
                         //line still has text:
                         if (curLine.Length > 0)
                             TotalLines.String_AddToEnd(CursorPosition.LineNumber - 1, curLine);
@@ -398,9 +392,9 @@ namespace TextControlBox
                 //delete lines if cursor is at position 0 and the line is emty OR cursor is at the end of a line and the line has content
                 if (CharacterPos == curLine.Length)
                 {
-                    string LineToAdd = CursorPosition.LineNumber + 1< TotalLines.Count ? TotalLines.GetLineText(CursorPosition.LineNumber +1) : null;
+                    string LineToAdd = CursorPosition.LineNumber + 1 < TotalLines.Count ? TotalLines.GetLineText(CursorPosition.LineNumber + 1) : null;
                     if (LineToAdd != null)
-                    {                    
+                    {
                         if (CursorPosition.LineNumber == LongestLineIndex)
                             NeedsRecalculateLongestLineIndex = true;
 
@@ -475,7 +469,7 @@ namespace TextControlBox
                 undoRedo.RecordUndoAction(() =>
                 {
                     string[] SplittedLine = Utils.SplitAt(TotalLines.GetLineText(StartLinePos.LineNumber), StartLinePos.CharacterPosition);
-                    
+
                     TotalLines.SetLineText(StartLinePos.LineNumber, SplittedLine[1]);
                     TotalLines.InsertOrAdd(StartLinePos.LineNumber, SplittedLine[0]);
 
@@ -488,7 +482,7 @@ namespace TextControlBox
                 if (TextSelection.StartPosition.LineNumber == TextSelection.EndPosition.LineNumber)
                 {
                     //line is selected completely: remove = 1
-                    if(Selection.GetMax(TextSelection.StartPosition, TextSelection.EndPosition).CharacterPosition == TotalLines.GetLineLength(CursorPosition.LineNumber) &&
+                    if (Selection.GetMax(TextSelection.StartPosition, TextSelection.EndPosition).CharacterPosition == TotalLines.GetLineLength(CursorPosition.LineNumber) &&
                         Selection.GetMin(TextSelection.StartPosition, TextSelection.EndPosition).CharacterPosition == 0)
                     {
                         remove = 1;
@@ -621,7 +615,7 @@ namespace TextControlBox
                 VerticalScrollbar.Value = (CursorPosition.LineNumber - NumberOfRenderedLines + 1) * SingleLineHeight / DefaultVerticalScrollSensitivity;
             else if (NumberOfStartLine > CursorPosition.LineNumber)
                 VerticalScrollbar.Value = (CursorPosition.LineNumber - 1) * SingleLineHeight / DefaultVerticalScrollSensitivity;
-                
+
             if (Update)
                 UpdateAll();
         }
@@ -697,7 +691,7 @@ namespace TextControlBox
                 UpdateAll();
             }
         }
-        
+
         private bool OutOfRenderedArea(int line)
         {
             //Check whether the current line is outside the bounds of the visible area
@@ -716,7 +710,7 @@ namespace TextControlBox
                     {
                         text = await dataPackageView.GetTextAsync();
                     }
-                    catch(Exception ex) //When longer holding Ctrl + V the clipboard may throw an exception:
+                    catch (Exception ex) //When longer holding Ctrl + V the clipboard may throw an exception:
                     {
                         Debug.WriteLine("Clipboard exception: " + ex.Message);
                         return;
@@ -812,7 +806,7 @@ namespace TextControlBox
                 TotalLines.AddRange(lines);
 
                 this.LineEnding = LineEnding;
-                
+
                 NeedsRecalculateLongestLineIndex = true;
                 UpdateAll();
             }
@@ -1104,13 +1098,13 @@ namespace TextControlBox
             {
                 if (e.Key == VirtualKey.Down || e.Key == VirtualKey.Up)
                 {
-                    var selection = 
+                    var selection =
                         MoveLine.Move(
-                            TotalLines, 
-                            TextSelection, 
-                            CursorPosition, 
-                            undoRedo, 
-                            NewLineCharacter, 
+                            TotalLines,
+                            TextSelection,
+                            CursorPosition,
+                            undoRedo,
+                            NewLineCharacter,
                             e.Key == VirtualKey.Down ? MoveDirection.Down : MoveDirection.Up
                             );
 
@@ -1120,7 +1114,7 @@ namespace TextControlBox
                     {
                         selectionrenderer.SetSelection(selection);
                     }
-                        UpdateAll();
+                    UpdateAll();
                     return;
                 }
             }
@@ -1242,7 +1236,7 @@ namespace TextControlBox
 
                             if (selectionrenderer.SelectionStartPosition == null)
                                 selectionrenderer.SelectionStartPosition = new CursorPosition(CursorPosition);
-                            
+
                             Cursor.MoveToLineEnd(CursorPosition, CurrentLine);
                             selectionrenderer.SelectionEndPosition = CursorPosition;
                             UpdateSelection();
@@ -1250,7 +1244,7 @@ namespace TextControlBox
                         }
                         else
                         {
-                             Cursor.MoveToLineEnd(CursorPosition, CurrentLine);
+                            Cursor.MoveToLineEnd(CursorPosition, CurrentLine);
                             UpdateCursor();
                             UpdateText();
                         }
@@ -1308,7 +1302,7 @@ namespace TextControlBox
                 return;
 
             var point = e.GetCurrentPoint(Canvas_Selection);
-            
+
             if (CheckTouchInput(point))
                 return;
 
@@ -1716,7 +1710,7 @@ namespace TextControlBox
         }
         private void EditContext_FocusRemoved(CoreTextEditContext sender, object args)
         {
-            RemoveFocus();           
+            RemoveFocus();
         }
         private void UserControl_Tapped(object sender, TappedRoutedEventArgs e)
         {
@@ -1762,7 +1756,7 @@ namespace TextControlBox
         {
             if (selectionrenderer.IsSelecting || IsReadonly || !e.DataView.Contains(StandardDataFormats.Text))
                 return;
-         
+
             var deferral = e.GetDeferral();
 
             e.AcceptedOperation = DataPackageOperation.Copy;
@@ -1961,7 +1955,7 @@ namespace TextControlBox
             NeedsRecalculateLongestLineIndex = true;
 
             if (sel != null)
-            {               
+            {
                 //only set cursorposition
                 if (sel.StartPosition != null && sel.EndPosition == null)
                 {
@@ -2117,7 +2111,7 @@ namespace TextControlBox
             if (index >= TotalLines.Count || index < 0)
                 return false;
 
-            if(index == LongestLineIndex)
+            if (index == LongestLineIndex)
                 NeedsRecalculateLongestLineIndex = true;
 
             undoRedo.RecordUndoAction(() =>
@@ -2188,7 +2182,7 @@ namespace TextControlBox
                 CursorPosition.LineNumber += 1;
             }, TotalLines, index, 1, 2, NewLineCharacter);
 
-            if(OutOfRenderedArea(index))
+            if (OutOfRenderedArea(index))
                 ScrollBottomIntoView();
 
             UpdateText();
@@ -2281,7 +2275,6 @@ namespace TextControlBox
         public SearchResult BeginSearch(string word, bool wholeWord, bool matchCase)
         {
             var res = searchHelper.BeginSearch(TotalLines, word, wholeWord, matchCase);
-            FindNext();
             UpdateText();
             return res;
         }
@@ -2690,7 +2683,7 @@ namespace TextControlBox
         /// <returns>When found the Codelanguage. Otherwise null</returns>
         public static CodeLanguage GetCodeLanguageFromId(string Identifier)
         {
-            if(CodeLanguages.TryGetValue(Identifier, out CodeLanguage codelanguage))
+            if (CodeLanguages.TryGetValue(Identifier, out CodeLanguage codelanguage))
                 return codelanguage;
             return null;
         }

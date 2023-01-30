@@ -2,14 +2,8 @@
 using Microsoft.Graphics.Canvas;
 using Microsoft.Graphics.Canvas.Text;
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Diagnostics;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Xml;
 using TextControlBox.Extensions;
 using TextControlBox.Text;
 using Windows.Foundation;
@@ -139,7 +133,7 @@ namespace TextControlBox.Helper
                 case ElementTheme.Dark: return ApplicationTheme.Dark;
                 case ElementTheme.Default:
                     var DefaultTheme = new Windows.UI.ViewManagement.UISettings();
-                    return DefaultTheme.GetColorValue(Windows.UI.ViewManagement.UIColorType.Background).ToString() == "#FF000000" 
+                    return DefaultTheme.GetColorValue(Windows.UI.ViewManagement.UIColorType.Background).ToString() == "#FF000000"
                         ? ApplicationTheme.Dark : ApplicationTheme.Light;
 
                 default: return ApplicationTheme.Light;

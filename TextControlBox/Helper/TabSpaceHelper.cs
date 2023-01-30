@@ -1,11 +1,6 @@
 ﻿using Collections.Pooled;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TextControlBox.Text;
 
 namespace TextControlBox.Helper
 {
@@ -14,9 +9,9 @@ namespace TextControlBox.Helper
         private int _NumberOfSpaces = 4;
         private string OldSpaces = "    ";
 
-        public int NumberOfSpaces 
+        public int NumberOfSpaces
         {
-            get => _NumberOfSpaces; 
+            get => _NumberOfSpaces;
             set
             {
                 if (value != _NumberOfSpaces)
@@ -45,7 +40,7 @@ namespace TextControlBox.Helper
             }
             else
                 ReplaceSpacesToTabs(TotalLines);
-        }         
+        }
         public string UpdateTabs(string input)
         {
             if (UseSpacesInsteadTabs)

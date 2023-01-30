@@ -43,9 +43,9 @@ namespace TextControlBox_TestApp
         }
         private IEnumerable<string> GenerateContent()
         {
-            foreach (var language in TextControlBox.TextControlBox.CodeLanguages)
+            for (int i = 1000; i > 0; i--)
             {
-                yield return language.Value.Name;
+                yield return "Line: " + i;
             }
         }
 

@@ -2,9 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.IO.Compression;
-using System.Text;
 using TextControlBox.Extensions;
 using TextControlBox.Helper;
 
@@ -43,7 +40,7 @@ namespace TextControlBox.Text
         {
             var lineBefore = TotalLines.GetLineText(startline);
             action.Invoke();
-            var lineAfter =TotalLines.GetLineText(startline);
+            var lineAfter = TotalLines.GetLineText(startline);
             AddUndoItem(null, startline, lineBefore, lineAfter, 1, 1);
         }
 
@@ -73,7 +70,7 @@ namespace TextControlBox.Text
             }
 
             int NumberOfRemovedLines = orderedSel.EndPosition.LineNumber - orderedSel.StartPosition.LineNumber + 1;
-            
+
             if (NumberOfAddedLines == 0 && !Selection.WholeLinesAreSelected(selection, TotalLines) ||
                 orderedSel.StartPosition.LineNumber == orderedSel.EndPosition.LineNumber && orderedSel.Length == TotalLines.GetLineLength(orderedSel.StartPosition.LineNumber))
                 NumberOfAddedLines += 1;

@@ -1,16 +1,9 @@
 ﻿using Microsoft.Graphics.Canvas.Text;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
-using System.IO;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using TextControlBox.Extensions;
-using TextControlBox.Helper;
-using Windows.Storage;
-using Windows.UI;
 using Windows.UI.Text;
 using Windows.UI.Xaml;
 

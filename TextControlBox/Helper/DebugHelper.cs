@@ -1,6 +1,5 @@
 ﻿using Collections.Pooled;
 using System.Diagnostics;
-using TextControlBox.Text;
 
 namespace TextControlBox.Helper
 {

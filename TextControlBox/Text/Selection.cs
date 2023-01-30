@@ -1,14 +1,10 @@
 using Collections.Pooled;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using TextControlBox.Extensions;
 using TextControlBox.Helper;
-using Windows.UI.Notifications;
-using Windows.UI.Xaml.Shapes;
 
 namespace TextControlBox.Text
 {
@@ -116,7 +112,7 @@ namespace TextControlBox.Text
             int CurPos = CursorPosition.CharacterPosition;
             if (CurPos > curLine.Length)
                 CurPos = curLine.Length;
-            
+
             //GEt the text in front of the cursor
             string TextInFrontOfCursor = curLine.Substring(0, CurPos < 0 ? 0 : CurPos);
             //Get the text behind the cursor
@@ -127,7 +123,7 @@ namespace TextControlBox.Text
 
             return new CursorPosition(CursorPosition.CharacterPosition + lines.Length > 0 ? lines[lines.Length - 1].Length : 0, CursorPosition.LineNumber + lines.Length - 1);
         }
-        
+
         public static CursorPosition Replace(TextSelection Selection, PooledList<string> TotalLines, string Text, string NewLineCharacter)
         {
             //Just delete the text if the string is emty
@@ -474,11 +470,11 @@ namespace TextControlBox.Text
                 }
             }
         }
-    
+
         public static bool MoveLinesUp(PooledList<string> TotalLines, TextSelection selection, CursorPosition cursorposition)
         {
             //Move single line
-            if(selection == null)
+            if (selection == null)
             {
                 if (cursorposition.LineNumber > 0)
                 {

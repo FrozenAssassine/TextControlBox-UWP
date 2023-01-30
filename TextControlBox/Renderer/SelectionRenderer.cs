@@ -94,14 +94,14 @@ namespace TextControlBox.Renderer
                     {
                         if (i >= NumberOfRenderedLines) //Out of range of the List (do nothing)
                             break;
-                        
+
                         SelEndIndex += RenderedLines.ElementAt(i).Length + 1;
                     }
                     SelEndIndex += CharacterPosEnd;
                 }
 
                 SelectionStart = Math.Min(SelStartIndex, SelEndIndex);
-                
+
                 if (SelectionStart < 0)
                     SelectionStart = 0;
                 if (SelectionLength < 0)

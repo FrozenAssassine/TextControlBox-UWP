@@ -1,7 +1,5 @@
 ﻿using Collections.Pooled;
-using System.Diagnostics;
 using TextControlBox.Extensions;
-using TextControlBox.Helper;
 
 namespace TextControlBox.Text
 {
@@ -42,7 +40,7 @@ namespace TextControlBox.Text
                             TextSelection.StartPosition.CharacterPosition -= TabCharacter.Length;
                         else if (i == SelectedLinesCount && currentLine.Contains(TabCharacter, System.StringComparison.Ordinal))
                         {
-                            TextSelection.EndPosition.CharacterPosition -= TabCharacter.Length ;
+                            TextSelection.EndPosition.CharacterPosition -= TabCharacter.Length;
                         }
 
                         TotalLines.SetLineText(lineIndex, currentLine.RemoveFirstOccurence(TabCharacter));
@@ -61,7 +59,7 @@ namespace TextControlBox.Text
 
                 UndoRedo.RecordUndoAction(() =>
                 {
-                   TotalLines.SetLineText(CursorPosition.LineNumber, line.AddText(TabCharacter, CursorPosition.CharacterPosition));
+                    TotalLines.SetLineText(CursorPosition.LineNumber, line.AddText(TabCharacter, CursorPosition.CharacterPosition));
                 }, TotalLines, CursorPosition.LineNumber, 1, 1, NewLineCharacter);
 
                 CursorPosition.AddToCharacterPos(TabCharacter.Length);
