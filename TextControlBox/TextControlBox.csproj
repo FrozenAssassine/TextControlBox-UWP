@@ -132,6 +132,7 @@
     <Compile Include="Helper\FlyoutHelper.cs" />
     <Compile Include="Helper\SearchHelper.cs" />
     <Compile Include="Helper\TabSpaceHelper.cs" />
+    <Compile Include="Languages\Languages.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Helper\DebugHelper.cs" />
     <Compile Include="Helper\ListHelper.cs" />
@@ -177,35 +178,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Languages\CSharp.json" />
-    <Content Include="Languages\Html.json" />
-    <Content Include="Languages\Json.json" />
-    <Content Include="Languages\QSharp.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Languages\GCode.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Languages\Batch.json" />
-    <Content Include="Languages\Cpp.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Languages\ConfigFile.json" />
-    <Content Include="Languages\PHP.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Languages\Hex.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Languages\Javascript.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Languages\Java.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Languages\Xml.json" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

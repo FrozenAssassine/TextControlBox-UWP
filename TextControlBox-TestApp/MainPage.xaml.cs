@@ -37,19 +37,16 @@ namespace TextControlBox_TestApp
         }
         private void Load()
         {
-            textbox.CodeLanguage = TextControlBox.TextControlBox.GetCodeLanguageFromId("CSharp");
+            textbox.CodeLanguage = TextControlBox.TextControlBox.GetCodeLanguageFromId("Json");
+            textbox.SyntaxHighlighting = true;
             textbox.LoadLines(GenerateContent());
         }
         private IEnumerable<string> GenerateContent()
         {
-            int Length = 0;
-            int Limit = 50;
-            for (int i = 1; i < Limit; i++)
+            foreach (var language in TextControlBox.TextControlBox.CodeLanguages)
             {
-                Length += ("Line LOL: " + i).Length;
-                yield return "Line LOL: " + i;
+                yield return language.Value.Name;
             }
-            Debug.WriteLine("Length: " + Length);
         }
 
         private async void CoreWindow_KeyDown(Windows.UI.Core.CoreWindow sender, Windows.UI.Core.KeyEventArgs args)
