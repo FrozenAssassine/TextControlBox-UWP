@@ -11,11 +11,13 @@
 <img src="https://img.shields.io/github/issues/FrozenAssassine/TextControlBox-UWP.svg?style=flat">
 <img src="https://img.shields.io/github/issues-closed/FrozenAssassine/TextControlBox-UWP.svg">
 <img src="https://img.shields.io/github/stars/FrozenAssassine/TextControlBox-UWP.svg">
-<img src="https://img.shields.io/github/forks/FrozenAssassine/TextControlBox-UWP.svg">
 <img src="https://img.shields.io/github/repo-size/FrozenAssassine/TextControlBox-UWP">
+
+[![NuGet version (TextControlBox)](https://img.shields.io/nuget/v/TextControlBox.JuliusKirsch)](https://www.nuget.org/packages/TextControlBox.JuliusKirsch)
+
 </div>
 
-<h3 align="center">A UWP based textbox with Syntaxhighlighting and support for very large amount of text which is still in development.</h3>
+<h3 align="center">A UWP based textbox with syntaxhighlighting and support for very large amount of text which is still in development.</h3>
 
 ## Reason why I built it
 UWP has a default Textbox and a RichTextBox. Both of them are very slow in rendering multiple thousand lines. The selection works also very slow. So I decided to create my own version of a Textbox.
