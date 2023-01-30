@@ -134,7 +134,10 @@ namespace TextControlBox.Helper
 					}
 				}
 
-				if (RegexIndexInLine > CurrentLineMatches.Count)
+				if (CurrentLineMatches == null)
+                    return new InternSearchResult(SearchResult.NotFound, null);
+
+                if (RegexIndexInLine > CurrentLineMatches.Count)
 					RegexIndexInLine = CurrentLineMatches.Count - 1;
 				if (RegexIndexInLine < 0)
 					RegexIndexInLine = 0;

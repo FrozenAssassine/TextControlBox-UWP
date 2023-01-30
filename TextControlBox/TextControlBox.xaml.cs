@@ -15,16 +15,17 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using TextControlBox.Extensions;
 using TextControlBox.Helper;
+using TextControlBox.Languages;
 using TextControlBox.Renderer;
 using TextControlBox.Text;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Devices.Input;
 using Windows.Foundation;
-using Windows.Networking.Vpn;
 using Windows.Storage;
 using Windows.System;
 using Windows.UI.Core;
 using Windows.UI.Input;
+using Windows.UI.Popups;
 using Windows.UI.Text.Core;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
@@ -32,8 +33,6 @@ using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Shapes;
-using static System.Net.Mime.MediaTypeNames;
 using Color = Windows.UI.Color;
 
 namespace TextControlBox
@@ -108,7 +107,7 @@ namespace TextControlBox
         string RenderedText = "";
         string LineNumberTextToRender = "";
         string OldRenderedText = null;
-
+        string OldLineNumberTextToRender = "";
         //Handle double and triple -clicks:
         int PointerClickCount = 0;
         DispatcherTimer PointerClickTimer = new DispatcherTimer { Interval = new TimeSpan(0, 0, 0, 0, 200) };
@@ -212,6 +211,10 @@ namespace TextControlBox
         private void UpdateSelection()
         {
             Canvas_Selection.Invalidate();
+        }
+        private void NeedsUpdateLineNumbers()
+        {
+            OldLineNumberTextToRender = "";
         }
         private void UpdateCurrentLineTextLayout()
         {
@@ -708,11 +711,21 @@ namespace TextControlBox
                 DataPackageView dataPackageView = Clipboard.GetContent();
                 if (dataPackageView.Contains(StandardDataFormats.Text))
                 {
-                    string Text = await dataPackageView.GetTextAsync();
-                    if (await Utils.IsOverTextLimit(Text.Length))
+                    string text = null;
+                    try
+                    {
+                        text = await dataPackageView.GetTextAsync();
+                    }
+                    catch(Exception ex) //When longer holding Ctrl + V the clipboard may throw an exception:
+                    {
+                        Debug.WriteLine("Clipboard exception: " + ex.Message);
+                        return;
+                    }
+
+                    if (await Utils.IsOverTextLimit(text.Length))
                         return;
 
-                    AddCharacter(stringManager.CleanUpString(Text));
+                    AddCharacter(stringManager.CleanUpString(text));
                 }
             }
             catch (OutOfMemoryException)
@@ -1558,7 +1571,12 @@ namespace TextControlBox
 
             args.DrawingSession.DrawTextLayout(DrawnTextLayout, (float)-HorizontalScroll, SingleLineHeight, TextColorBrush);
 
-            Canvas_LineNumber.Invalidate();
+            //Only update when old text != new text, to reduce updates when scrolling
+            if (!OldLineNumberTextToRender.Equals(LineNumberTextToRender, StringComparison.OrdinalIgnoreCase))
+            {
+                OldLineNumberTextToRender = LineNumberTextToRender;
+                Canvas_LineNumber.Invalidate();
+            }
         }
         private void Canvas_Selection_Draw(CanvasControl sender, CanvasDrawEventArgs args)
         {
@@ -2357,7 +2375,7 @@ namespace TextControlBox
         /// <summary>
         /// The space between the linenumbers and the start of the text
         /// </summary>
-        public float SpaceBetweenLineNumberAndText { get => _SpaceBetweenLineNumberAndText; set { _SpaceBetweenLineNumberAndText = value; UpdateAll(); } }
+        public float SpaceBetweenLineNumberAndText { get => _SpaceBetweenLineNumberAndText; set { _SpaceBetweenLineNumberAndText = value; NeedsUpdateLineNumbers(); UpdateAll(); } }
 
         /// <summary>
         /// Get or set the current position of the cursor
@@ -2445,6 +2463,7 @@ namespace TextControlBox
             {
                 _ShowLineNumbers = value;
                 NeedsUpdateTextLayout = true;
+                NeedsUpdateLineNumbers();
                 UpdateAll();
             }
         }
@@ -2644,43 +2663,36 @@ namespace TextControlBox
 
         #region Static functions
         //static functions
-        private static void GetLanguagesFromBuffer()
-        {
-            _CodeLanguages = new Dictionary<string, CodeLanguage>();
-
-            var files = Directory.GetFiles("TextControlBox/Languages");
-            for (int i = 0; i < files.Length; i++)
-            {
-                var result = SyntaxHighlightingRenderer.GetCodeLanguageFromJson(File.ReadAllText(files[i]));
-                if(result.Succeed)
-                    _CodeLanguages.Add(result.CodeLanguage.Name.ToLower(), result.CodeLanguage);
-            }
-        }
-        private static Dictionary<string, CodeLanguage> _CodeLanguages = null;
-
         /// <summary>
-        /// Get all the builtin codelanguages for syntaxhighlighting
+        /// Get all the builtin code languages for syntaxhighlighting
         /// </summary>
-        public static Dictionary<string, CodeLanguage> CodeLanguages
+        public static Dictionary<string, CodeLanguage> CodeLanguages => new Dictionary<string, CodeLanguage>(StringComparer.OrdinalIgnoreCase)
         {
-            get
-            {
-                if (_CodeLanguages == null)
-                    GetLanguagesFromBuffer();
-
-                return _CodeLanguages;
-            }
-        }
+            { "Batch", new Batch() },
+            { "ConfigFile", new ConfigFile() },
+            { "C++", new Cpp() },
+            { "C#", new CSharp() },
+            { "GCode", new GCode() },
+            { "HexFile", new HexFile() },
+            { "Html", new Html() },
+            { "Java", new Java() },
+            { "Javascript", new Javascript() },
+            { "Json", new Json() },
+            { "PHP", new PHP() },
+            { "QSharp", new QSharp() },
+            { "XML", new XML() },
+        };
 
         /// <summary>
         /// Get a CodeLanguage by the identifier from the list
         /// </summary>
         /// <param name="Identifier"></param>
-        /// <returns></returns>
+        /// <returns>When found the Codelanguage. Otherwise null</returns>
         public static CodeLanguage GetCodeLanguageFromId(string Identifier)
         {
-            CodeLanguages.TryGetValue(Identifier.ToLower(), out CodeLanguage codelanguage);
-            return codelanguage;
+            if(CodeLanguages.TryGetValue(Identifier, out CodeLanguage codelanguage))
+                return codelanguage;
+            return null;
         }
 
         /// <summary>
