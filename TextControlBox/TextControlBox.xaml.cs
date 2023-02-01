@@ -190,7 +190,7 @@ namespace TextControlBox
             NeedsTextFormatUpdate = true;
 
             ScrollLineIntoView(CursorPosition.LineNumber);
-
+            NeedsUpdateLineNumbers();
             UpdateAll();
         }
         private void UpdateCursor()
