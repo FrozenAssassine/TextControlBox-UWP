@@ -57,8 +57,8 @@ namespace TextControlBox.Languages
                 new SyntaxHighlights("(\\\".+?\\\"|\\'.+?\\')", "#ffff00", "#ff000f"),
                 new SyntaxHighlights("\"[^\\n]*?\"", "#00CA00", "#00FF00"),
                 new SyntaxHighlights("'[^\\n]*?'", "#00CA00", "#00FF00"),
-                new SyntaxHighlights("/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/", "#888888", "#ff0000"),
-                new SyntaxHighlights("//(.*?)\\r?\\n", "#888888", "#646464"),
+                new SyntaxHighlights("/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/", "#888888", "#646464"),
+                new SyntaxHighlights("\\/\\/.*", "#888888", "#646464"),
             };
         }
     }
@@ -81,8 +81,8 @@ namespace TextControlBox.Languages
                 new SyntaxHighlights("#endregion", "#ff0000", "#ff0000", true),
                 new SyntaxHighlights("\"[^\\n]*?\"", "#ff5500", "#00FF00"),
                 new SyntaxHighlights("'[^\\n]*?'", "#00CA00", "#00FF00"),
-                new SyntaxHighlights("/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/", "#888888", "#646464"),
-                new SyntaxHighlights("//(.*?)\\r?\\n", "#888888", "#646464"),
+                new SyntaxHighlights("\\/\\/.*", "#888888", "#646464"),
+                new SyntaxHighlights("\\/\\/[^\\n\\r]+?(?:\\*\\)|[\\n\\r])", "#888888", "#646464"),
             };
         }
     }
@@ -168,7 +168,7 @@ namespace TextControlBox.Languages
                 new SyntaxHighlights("\"[^\\n]*?\"", "#ff5500", "#00FF00"),
                 new SyntaxHighlights("'[^\\n]*?'", "#00CA00", "#00FF00"),
                 new SyntaxHighlights("/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/", "#888888", "#646464"),
-                new SyntaxHighlights("//(.*?)\\r?\\n", "#888888", "#646464"),
+                new SyntaxHighlights("\\/\\/.*", "#888888", "#646464"),
             };
         }
     }
@@ -192,7 +192,7 @@ namespace TextControlBox.Languages
                 new SyntaxHighlights("/[^\\n]*/i{0,1}", "#FFFF00", "#FFFF00"),
                 new SyntaxHighlights("[\"'][^\\n]*?[\"']", "#ff5500", "#00FF00"),
                 new SyntaxHighlights("/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/", "#888888", "#646464"),
-                new SyntaxHighlights("//(.*?)\\r?\\n", "#888888", "#646464"),
+                new SyntaxHighlights("\\/\\/.*", "#888888", "#646464"),
             };
         }
     }
@@ -211,7 +211,7 @@ namespace TextControlBox.Languages
                 new SyntaxHighlights("(,|{|}|\\[|\\])", "#969696", "#646464"),
                 new SyntaxHighlights("(\".+\")\\:", "#00CA00", "#dddd00"),
                 new SyntaxHighlights("/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/", "#888888", "#646464"),
-                new SyntaxHighlights("//(.*?)\\r?\\n", "#888888", "#646464"),
+                new SyntaxHighlights("\\/\\/.*", "#888888", "#646464"),
                 new SyntaxHighlights("'[^\\n]*?'", "#00CA00", "#00FF00"),
                 new SyntaxHighlights("\"[^\\n]*?\"", "#00CA00", "#00FF00"),
             };
@@ -238,7 +238,7 @@ namespace TextControlBox.Languages
                 new SyntaxHighlights("\\'[^\\n]*?\\'", "#ff5500", "#00FF00"),
                 new SyntaxHighlights("\"/[^\\n]*/i{0,1}\"", "#ff5500", "#00FF00"),
                 new SyntaxHighlights("/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/", "#888888", "#646464"),
-                new SyntaxHighlights("//(.*?)\\r?\\n", "#888888", "#646464"),
+                new SyntaxHighlights("\\/\\/.*", "#888888", "#646464"),
             };
         }
     }
@@ -253,7 +253,7 @@ namespace TextControlBox.Languages
             this.Highlights = new SyntaxHighlights[]
             {
                 new SyntaxHighlights("\\W", "#BB0000", "#BB0000"),
-                new SyntaxHighlights("//(.*?)\\r?\\n", "#888888", "#646464"),
+                new SyntaxHighlights("\\/\\/.*", "#888888", "#646464"),
                 new SyntaxHighlights("\\b(namespace|open|operation|using|let|H|M|Reset|return)\\b", "#0066bb", "#00ffff"),
                 new SyntaxHighlights("\\b(Qubit|Result)\\b", "#00bb66", "#00ff00"),
             };
