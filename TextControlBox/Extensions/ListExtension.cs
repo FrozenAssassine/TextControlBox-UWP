@@ -11,10 +11,13 @@ namespace TextControlBox.Extensions
 
         public static string GetLineText(this PooledList<string> list, int index)
         {
+            if (list.Count == 0)
+                return "";
+
             if (index == -1 && list.Count > 0)
                 return list[list.Count - 1];
 
-            index = index >= list.Count ? list.Count - 1 : index >= 0 ? index : 0;
+            index = index >= list.Count ? list.Count - 1 : index > 0 ? index : 0;
             return list[index];
         }
 
