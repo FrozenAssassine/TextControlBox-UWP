@@ -40,7 +40,7 @@ namespace TextControlBox.Extensions
         }
         public static string GetCurrentLineText(this PooledList<string> list)
         {
-            return list[CurrentLineIndex < list.Count ? CurrentLineIndex : list.Count - 1];
+            return list[CurrentLineIndex < list.Count ? CurrentLineIndex : list.Count - 1 < 0 ? 0 : list.Count - 1];
         }
         public static void SetCurrentLineText(this PooledList<string> list, string text)
         {

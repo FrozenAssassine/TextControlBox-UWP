@@ -1790,13 +1790,16 @@ namespace TextControlBox
         /// <param name="index">The index of the line to go to</param>
         public void GoToLine(int index)
         {
+            if (index >= TotalLines.Count || index < 0)
+                return;
+
             selectionrenderer.SelectionEndPosition = null;
             CursorPosition = selectionrenderer.SelectionStartPosition = new CursorPosition(0, index);
 
             ScrollLineIntoView(index);
             this.Focus(FocusState.Programmatic);
-            UpdateSelection();
-            UpdateCursor();
+
+            UpdateAll();
         }
 
         /// <summary>
