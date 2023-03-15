@@ -2675,6 +2675,7 @@ namespace TextControlBox
             { "Javascript", new Javascript() },
             { "Json", new Json() },
             { "PHP", new PHP() },
+            { "Python", new Python() },
             { "QSharp", new QSharp() },
             { "XML", new XML() },
         };
