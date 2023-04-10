@@ -1482,6 +1482,11 @@ namespace TextControlBox
             Utils.ChangeCursor(CoreCursorType.Arrow);
         }
         //Scrolling
+        private void VerticalScrollbar_Loaded(object sender, RoutedEventArgs e)
+        {
+            VerticalScrollbar.Maximum = ((TotalLines.Count + 1) * SingleLineHeight - Scroll.ActualHeight) / DefaultVerticalScrollSensitivity;
+            VerticalScrollbar.ViewportSize = this.ActualHeight;
+        }
         private void HorizontalScrollbar_Scroll(object sender, ScrollEventArgs e)
         {
             UpdateAll();
@@ -2707,13 +2712,6 @@ namespace TextControlBox
         }
 
         #endregion
-
-        private void VerticalScrollbar_Loaded(object sender, RoutedEventArgs e)
-        {
-            VerticalScrollbar.Maximum = ((TotalLines.Count + 1) * SingleLineHeight - Scroll.ActualHeight) / DefaultVerticalScrollSensitivity;
-            VerticalScrollbar.ViewportSize = this.ActualHeight;
-        }
-
     }
     public class TextControlBoxDesign
     {
