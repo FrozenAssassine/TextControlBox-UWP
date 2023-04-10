@@ -12,7 +12,9 @@ namespace TextControlBox.Renderer
             if (TextLayout != null)
                 TextLayout.Dispose();
 
-            return CreateTextLayout(ResourceCreator, TextFormat, Text, targetSize);
+            TextLayout = CreateTextLayout(ResourceCreator, TextFormat, Text, targetSize);
+            TextLayout.Options = CanvasDrawTextOptions.EnableColorFont;
+            return TextLayout;
         }
         public static CanvasTextFormat CreateCanvasTextFormat(float ZoomedFontSize, FontFamily FontFamily)
         {
