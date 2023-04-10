@@ -280,4 +280,24 @@ namespace TextControlBox.Languages
             };
         }
     }
+    internal class Python : CodeLanguage
+    {
+        public Python()
+        {
+            this.Name = "Python";
+            this.Author = "Julius Kirsch";
+            this.Filter = new string[1] { ".py" };
+            this.Description = "Syntax highlighting for Python language";
+            this.Highlights = new SyntaxHighlights[]
+            {
+                new SyntaxHighlights("\\b([+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?\\b", "#dd00dd", "#ff00ff"),
+                new SyntaxHighlights("\\b(and|as|assert|break|class|continue|def|del|elif|else|except|False|finally|for|from|global|if|import|in|is|lambda|None|nonlocal|not|or|pass|raise|return|True|try|while|with|yield)\\b", "#aa00cc", "#cc00ff"),
+                new SyntaxHighlights("(?<!(def\\s))(?<=^|\\s|.)[a-zA-Z_][\\w_]*(?=\\()", "#cc9900", "#ffbb00"),
+                new SyntaxHighlights("\"[^\\n]*?\"", "#ff5500", "#00FF00"),
+                new SyntaxHighlights("'[^\\n]*?'", "#00CA00", "#00FF00"),
+                new SyntaxHighlights("\\#.*", "#888888", "#646464"),
+                new SyntaxHighlights("\\\"\"\"(.|[\\r\\n])*\\\"\"\"", "#888888", "#646464"),
+            };
+        }
+    }
 }
