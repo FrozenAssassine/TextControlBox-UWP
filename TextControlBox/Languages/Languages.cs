@@ -141,9 +141,9 @@ namespace TextControlBox.Languages
             {
                 new SyntaxHighlights("\\b([+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?\\b", "#dd00dd", "#ff00ff"),
                 new SyntaxHighlights("[-A-Za-z_]+\\=", "#00CA00", "#Ff0000"),
-                new SyntaxHighlights("<+[a-zA-Z0-9:]+>", "#00AADD", "#0099ff"),
-                new SyntaxHighlights("[<]+[a-zA-Z0-9:]+\\s", "#969696", "#0099ff"),
-                new SyntaxHighlights("<+[/]+[a-zA-Z0-9:]+>", "#969696", "#0099ff"),
+                new SyntaxHighlights("<([^ >!\\/]+)[^>]*>", "#969696", "#0099ff"),
+                new SyntaxHighlights("<+[/]+[a-zA-Z0-9:?\\-_]+>", "#969696", "#0099ff"),
+                new SyntaxHighlights("<[a-zA-Z0-9:?\\-]+?.*\\/>", "#969696", "#0099ff"),
                 new SyntaxHighlights("\"[^\\n]*?\"", "#00CA00", "#00FF00"),
                 new SyntaxHighlights("'[^\\n]*?'", "#00CA00", "#00FF00"),
                 new SyntaxHighlights("[0-9]+(px|rem|em|vh|vw|px|pt|pc|in|mm|cm|deg|%)", "#ff00ff", "#dd00dd"),
@@ -271,7 +271,7 @@ namespace TextControlBox.Languages
             {
                 new SyntaxHighlights("\\b([+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?\\b", "#dd00dd", "#ff00ff"),
                 new SyntaxHighlights("<([^ >!\\/]+)[^>]*>", "#969696", "#0099ff"),
-                new SyntaxHighlights("<+[/]+[a-zA-Z0-9:?\\-]+>", "#969696", "#0099ff"),
+                new SyntaxHighlights("<+[/]+[a-zA-Z0-9:?\\-_]+>", "#969696", "#0099ff"),
                 new SyntaxHighlights("<[a-zA-Z0-9:?\\-]+?.*\\/>", "#969696", "#0099ff"),
                 new SyntaxHighlights("[-A-Za-z_]+\\=", "#00CA00", "#Ff0000"),
                 new SyntaxHighlights("\"[^\\n]*?\"", "#00CA00", "#00FF00"),
