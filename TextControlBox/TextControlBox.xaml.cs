@@ -96,6 +96,7 @@ namespace TextControlBox
 
         CanvasTextFormat TextFormat = null;
         CanvasTextLayout DrawnTextLayout = null;
+        CanvasTextLayout LineNumberTextLayout = null;
         CanvasTextFormat LineNumberTextFormat = null;
 
         string RenderedText = "";
@@ -1566,9 +1567,8 @@ namespace TextControlBox
             args.DrawingSession.DrawTextLayout(DrawnTextLayout, (float)-HorizontalScroll, SingleLineHeight, TextColorBrush);
 
             //Only update when old text != new text, to reduce updates when scrolling
-            if (!OldLineNumberTextToRender.Equals(LineNumberTextToRender, StringComparison.OrdinalIgnoreCase))
+            if (OldLineNumberTextToRender == null || LineNumberTextToRender == null || !OldLineNumberTextToRender.Equals(LineNumberTextToRender, StringComparison.OrdinalIgnoreCase))
             {
-                OldLineNumberTextToRender = LineNumberTextToRender;
                 Canvas_LineNumber.Invalidate();
             }
         }
@@ -1665,8 +1665,13 @@ namespace TextControlBox
             if (posX < 0)
                 posX = 0;
 
-            CanvasTextLayout LineNumberLayout = TextRenderer.CreateTextLayout(sender, LineNumberTextFormat, LineNumberTextToRender, posX, (float)sender.Size.Height);
-            args.DrawingSession.DrawTextLayout(LineNumberLayout, 10, SingleLineHeight, LineNumberColorBrush);
+            if (LineNumberTextLayout == null  || !LineNumberTextToRender.Equals(OldLineNumberTextToRender, StringComparison.OrdinalIgnoreCase))
+            {
+                OldLineNumberTextToRender = LineNumberTextToRender;
+                LineNumberTextLayout = TextRenderer.CreateTextLayout(sender, LineNumberTextFormat, LineNumberTextToRender, posX, (float)sender.Size.Height);
+            }
+            
+            args.DrawingSession.DrawTextLayout(LineNumberTextLayout, 10, SingleLineHeight, LineNumberColorBrush);
         }
         //Internal events:
         private void Internal_TextChanged()
