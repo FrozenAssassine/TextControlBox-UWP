@@ -53,6 +53,7 @@ I also would like to have a Winui3 variant, but the CoreTextServicesManager is n
 - Javascript
 - Json
 - PHP
+- Python
 - QSharp
 - Xml
 
@@ -167,7 +168,7 @@ I also would like to have a Winui3 variant, but the CoreTextServicesManager is n
 
 TextControlBox textbox = new TextControlBox();
 
-//Use a builtin language | Available: Batch, ConfigFile, C++, CSharp, GCode, Hex, Html, Javascript, Json Json, PHP, QSharp, Xml
+//Use a builtin language | Available: Batch, ConfigFile, C++, CSharp, GCode, Hex, Html, Javascript, Json Json, PHP, Python, QSharp, Xml
 //Language identifiers are case intensitive
 textbox.CodeLanguage = TextControlBox.GetCodeLanguageFromId("CSharp");
 
