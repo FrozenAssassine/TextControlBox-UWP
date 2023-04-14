@@ -1363,6 +1363,9 @@ namespace TextControlBox
                 //Shift + click = set selection
                 if (Utils.IsKeyPressed(VirtualKey.Shift) && LeftButtonPressed)
                 {
+                    if (selectionrenderer.SelectionStartPosition == null)
+                        selectionrenderer.SetSelectionStart(new CursorPosition(CursorPosition));
+
                     UpdateCursorVariable(PointerPosition);
 
                     selectionrenderer.SetSelectionEnd(new CursorPosition(CursorPosition));
