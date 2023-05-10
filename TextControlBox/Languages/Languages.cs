@@ -304,7 +304,7 @@ namespace TextControlBox.Languages
     {
         public CSV()
         {
-            this.Name = "Comma-separated values";
+            this.Name = "CSV";
             this.Author = "Finn Freitag";
             this.Filter = new string[1] { ".csv" };
             this.Description = "Syntax highlighting for CSV language";
@@ -320,15 +320,15 @@ namespace TextControlBox.Languages
         {
             this.Name = "LaTex";
             this.Author = "Finn Freitag";
-            this.Filter = new string[1] { ".latex", ".tex" };
+            this.Filter = new string[2] { ".latex", ".tex" };
             this.Description = "Syntax highlighting for LaTex language";
             this.Highlights = new SyntaxHighlights[]
             {
-                new SyntaxHighlights("\\\\[a-z]+", "#0000FF", "#0000FF"),
+                new SyntaxHighlights("\\\\[a-z]+", "#0033aa", "#0088ff"),
                 new SyntaxHighlights("%.*", "#888888", "#646464"),
                 new SyntaxHighlights("[\\[\\]]", "#FFFF00", "#FFFF00"),
                 new SyntaxHighlights("[\\{\\}]", "#FF0000", "#FF0000"),
-                new SyntaxHighlights("\\$", "#00FF00", "#00FF00")
+                new SyntaxHighlights("\\$", "#00bb00", "#00FF00")
             };
         }
     }

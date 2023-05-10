@@ -2696,6 +2696,10 @@ namespace TextControlBox
             { "Python", new Python() },
             { "QSharp", new QSharp() },
             { "XML", new XML() },
+            { "CSV", new CSV() },
+            { "Latex", new LaTex() },
+            { "TOML", new TOML() },
+            { "Markdown", new Markdown() },
         };
 
         /// <summary>
