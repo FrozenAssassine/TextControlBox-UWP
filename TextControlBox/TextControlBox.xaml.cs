@@ -1108,6 +1108,11 @@ namespace TextControlBox
                             e.Key == VirtualKey.Down ? MoveDirection.Down : MoveDirection.Up
                             );
 
+                    if (e.Key == VirtualKey.Down)
+                        ScrollOneLineDown();
+                    else if (e.Key == VirtualKey.Up)
+                        ScrollOneLineUp();
+
                     if (selection == null)
                         ForceClearSelection();
                     else
