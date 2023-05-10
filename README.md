@@ -46,15 +46,19 @@ I also would like to have a Winui3 variant, but the CoreTextServicesManager is n
 - Config file
 - C++
 - C#
+- CSV
 - GCode
 - Hex
 - Html
 - Java
 - Javascript
 - Json
+- Markdown
+- LaTex
 - PHP
 - Python
 - QSharp
+- Toml
 - Xml
 
 ## Usage:
@@ -168,7 +172,7 @@ I also would like to have a Winui3 variant, but the CoreTextServicesManager is n
 
 TextControlBox textbox = new TextControlBox();
 
-//Use a builtin language | Available: Batch, ConfigFile, C++, CSharp, GCode, Hex, Html, Javascript, Json Json, PHP, Python, QSharp, Xml
+//Use a builtin language -> see list a bit higher
 //Language identifiers are case intensitive
 textbox.CodeLanguage = TextControlBox.GetCodeLanguageFromId("CSharp");
 
