@@ -300,4 +300,78 @@ namespace TextControlBox.Languages
             };
         }
     }
+    internal class CSV : CodeLanguage
+    {
+        public CSV()
+        {
+            this.Name = "Comma-separated values";
+            this.Author = "Finn Freitag";
+            this.Filter = new string[1] { ".csv" };
+            this.Description = "Syntax highlighting for CSV language";
+            this.Highlights = new SyntaxHighlights[]
+            {
+                new SyntaxHighlights("[\\:\\,\\;]", "#1b9902", "#1b9902")
+            };
+        }
+    }
+    internal class LaTex : CodeLanguage
+    {
+        public LaTex()
+        {
+            this.Name = "LaTex";
+            this.Author = "Finn Freitag";
+            this.Filter = new string[1] { ".latex", ".tex" };
+            this.Description = "Syntax highlighting for LaTex language";
+            this.Highlights = new SyntaxHighlights[]
+            {
+                new SyntaxHighlights("\\\\[a-z]+", "#0000FF", "#0000FF"),
+                new SyntaxHighlights("%.*", "#888888", "#646464"),
+                new SyntaxHighlights("[\\[\\]]", "#FFFF00", "#FFFF00"),
+                new SyntaxHighlights("[\\{\\}]", "#FF0000", "#FF0000"),
+                new SyntaxHighlights("\\$", "#00FF00", "#00FF00")
+            };
+        }
+    }
+    internal class TOML : CodeLanguage
+    {
+        public TOML()
+        {
+            this.Name = "TOML";
+            this.Author = "Finn Freitag";
+            this.Filter = new string[1] { ".toml" };
+            this.Description = "Syntax highlighting for TOML language";
+            this.Highlights = new SyntaxHighlights[]
+            {
+                new SyntaxHighlights("\\[.*\\]", "#0000FF", "#0000FF"),
+                new SyntaxHighlights("\\[[\\t\\s]*(\\w+)[\\t\\s]*\\]", "#9900FF", "#9900FF"),
+                new SyntaxHighlights("(\\w+)[\\s\\t]*\\=", "#DDDD00", "#DDDD00"),
+                new SyntaxHighlights("\\=\\s+(.+)", "#EE0000", "#EE0000"),
+                new SyntaxHighlights("[\\[\\]]", "#FFFF00", "#FFFF00"),
+                new SyntaxHighlights("\\b(true|false)\\b", "#00bb66", "#00ff00"),
+                new SyntaxHighlights("[\"'][^\\n]*?[\"']", "#D69D84", "#D69D84"),
+                new SyntaxHighlights("#.*", "#888888", "#888888")
+            };
+        }
+    }
+    internal class Markdown : CodeLanguage
+    {
+        public Markdown()
+        {
+            this.Name = "Markdown";
+            this.Author = "Finn Freitag";
+            this.Filter = new string[1] { ".md" };
+            this.Description = "Syntax highlighting for Markdown language";
+            this.Highlights = new SyntaxHighlights[]
+            {
+                new SyntaxHighlights("[>~\"'`\\-\\+|\\^\\!_]", "#FF0000", "#FF0000"),
+                new SyntaxHighlights("#", "#0000FF", "#0000FF"),
+                new SyntaxHighlights("\\*.*\\*", "#000000", "#FFFFFF", false, true),
+                new SyntaxHighlights("_.*_", "#000000", "#FFFFFF", false, true),
+                new SyntaxHighlights("\\*\\*.*\\*\\*", "#000000", "#FFFFFF", true),
+                new SyntaxHighlights("__.*__", "#000000", "#FFFFFF", true),
+                new SyntaxHighlights("\\d+\\.", "#00FF00", "#00FF00"),
+                new SyntaxHighlights("[\\[\\]\\(\\)]", "#FFFF00", "#FFFF00")
+            };
+        }
+    }
 }
