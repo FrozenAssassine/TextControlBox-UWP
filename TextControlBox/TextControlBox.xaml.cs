@@ -1287,7 +1287,6 @@ namespace TextControlBox
         //Without coreWindow the selection outside of the window would not work
         private void CoreWindow_PointerReleased(CoreWindow sender, PointerEventArgs args)
         {
-
             var point = Utils.GetPointFromCoreWindowRelativeTo(args, Canvas_Text);
             PointerReleasedAction(point);
         }
