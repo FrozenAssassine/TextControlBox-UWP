@@ -1677,12 +1677,8 @@ namespace TextControlBox
             if (posX < 0)
                 posX = 0;
 
-            if (LineNumberTextLayout == null  || !LineNumberTextToRender.Equals(OldLineNumberTextToRender, StringComparison.OrdinalIgnoreCase))
-            {
-                OldLineNumberTextToRender = LineNumberTextToRender;
-                LineNumberTextLayout = TextRenderer.CreateTextLayout(sender, LineNumberTextFormat, LineNumberTextToRender, posX, (float)sender.Size.Height);
-            }
-            
+            OldLineNumberTextToRender = LineNumberTextToRender;
+            LineNumberTextLayout = TextRenderer.CreateTextLayout(sender, LineNumberTextFormat, LineNumberTextToRender, posX, (float)sender.Size.Height);
             args.DrawingSession.DrawTextLayout(LineNumberTextLayout, 10, SingleLineHeight, LineNumberColorBrush);
         }
         //Internal events:

@@ -38,8 +38,9 @@ namespace TextControlBox_TestApp
         private void Load()
         {
             textbox.CodeLanguage = TextControlBox.TextControlBox.GetCodeLanguageFromId("Json");
-            textbox.SyntaxHighlighting = true;
-            textbox.LoadLines(GenerateContent());
+            textbox.SyntaxHighlighting = false;
+            textbox.SetText("Hello\nHello");
+            //textbox.LoadLines(GenerateContent());
         }
         private IEnumerable<string> GenerateContent()
         {
