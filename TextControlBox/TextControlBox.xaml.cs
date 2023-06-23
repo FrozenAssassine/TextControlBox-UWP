@@ -2219,7 +2219,7 @@ namespace TextControlBox
         /// <param name="replaceWord">The word to replace with</param>
         /// <param name="matchCase">Search with case sensitivity</param>
         /// <param name="wholeWord">Search for whole words</param>
-        /// <returns></returns>
+        /// <returns>Found when everything was replaced and not found when nothing was replaced</returns>
         public SearchResult ReplaceAll(string word, string replaceWord, bool matchCase, bool wholeWord)
         {
             if (word.Length == 0 || replaceWord.Length == 0)
@@ -2227,18 +2227,20 @@ namespace TextControlBox
 
             SearchParameter searchParameter = new SearchParameter(word, wholeWord, matchCase);
 
+            bool isFound = false;
             undoRedo.RecordUndoAction(() =>
             {
                 for (int i = 0; i < TotalLines.Count; i++)
                 {
                     if (TotalLines[i].Contains(searchParameter))
                     {
+                        isFound = true;
                         SetLineText(i, Regex.Replace(TotalLines[i], searchParameter.SearchExpression, replaceWord));
                     }
                 }
             }, TotalLines, 0, TotalLines.Count, TotalLines.Count, NewLineCharacter);
             UpdateText();
-            return SearchResult.ReachedEnd;
+            return isFound ? SearchResult.Found : SearchResult.NotFound;
         }
 
         /// <summary>
