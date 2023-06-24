@@ -199,9 +199,9 @@ namespace TextControlBox.Helper
             this.MatchCase = matchCase;
 
             if (wholeWord)
-                SearchExpression += @"\b" + (matchCase ? "" : "(?i)") + Word + @"\b";
+                SearchExpression += @"\b" + (matchCase ? "" : "(?i)") + Regex.Escape(Word) + @"\b";
             else
-                SearchExpression += (matchCase ? "" : "(?i)") + Word;
+                SearchExpression += (matchCase ? "" : "(?i)") + Regex.Escape(Word);
         }
         public bool WholeWord { get; set; }
         public bool MatchCase { get; set; }
