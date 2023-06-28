@@ -131,6 +131,7 @@ namespace TextControlBox.Renderer
         public string[] Filter { get; set; }
         public string Author { get; set; }
         public SyntaxHighlights[] Highlights;
+        public AutoPairingPair[] AutoPairingPair { get;set;}
     }
     //Used to create a CodeLanguage class from the JsonCodeLanguage class returned by the json load function:
     internal class JsonCodeLanguage
@@ -140,5 +141,21 @@ namespace TextControlBox.Renderer
         public string Filter { get; set; }
         public string Author { get; set; }
         public SyntaxHighlights[] Highlights;
+    }
+    public class AutoPairingPair
+    {
+        public AutoPairingPair(string value)
+        {
+            this.Value = this.Pair = value;
+        }
+        public AutoPairingPair(string value, string pair)
+        {
+            this.Value = value;
+            this.Pair = pair;
+        }
+
+        public bool Matches(string input) => input.Contains(this.Value);
+        public string Value { get; set; }
+        public string Pair { get; set; }
     }
 }

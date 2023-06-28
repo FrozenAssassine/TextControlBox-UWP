@@ -147,6 +147,7 @@
     <Compile Include="TextControlBox.xaml.cs">
       <DependentUpon>TextControlBox.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Text\AutoPairing.cs" />
     <Compile Include="Text\Cursor.cs" />
     <Compile Include="Text\CursorPosition.cs" />
     <Compile Include="Text\EventClasses.cs" />

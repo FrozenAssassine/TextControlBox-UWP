@@ -272,8 +272,12 @@ namespace TextControlBox
 
             int SplittedTextLength = text.Contains(NewLineCharacter) ? Utils.CountLines(text, NewLineCharacter) : 1;
 
+
             if (TextSelection == null && SplittedTextLength == 1)
             {
+                var res = AutoPairing.AutoPair(this, text);
+                text = res.text;
+
                 undoRedo.RecordUndoAction(() =>
                 {
                     var CharacterPos = GetCurPosInLine();
@@ -282,7 +286,7 @@ namespace TextControlBox
                         CurrentLine = CurrentLine.AddToEnd(text);
                     else
                         CurrentLine = CurrentLine.AddText(text, CharacterPos);
-                    CursorPosition.CharacterPosition = text.Length + CharacterPos;
+                    CursorPosition.CharacterPosition = res.length + CharacterPos;
 
                 }, TotalLines, CursorPosition.LineNumber, 1, 1, NewLineCharacter);
 
@@ -299,12 +303,17 @@ namespace TextControlBox
                     CursorPosition = Selection.InsertText(TextSelection, CursorPosition, TotalLines, text, NewLineCharacter);
                 }, TotalLines, CursorPosition.LineNumber, 1, SplittedTextLength, NewLineCharacter);
             }
+
             else if (text.Length == 0) //delete selection
             {
                 DeleteSelection();
             }
             else if (TextSelection != null)
             {
+                text = AutoPairing.AutoPairSelection(this, text);
+                if (text == null)
+                    return;
+
                 CheckRecalculateLongestLine(text);
                 undoRedo.RecordUndoAction(() =>
                 {
@@ -2626,6 +2635,14 @@ namespace TextControlBox
         /// This will drastically improve ram usage when saving
         /// </summary>
         public IEnumerable<string> Lines { get => TotalLines; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether auto-pairing is enabled.
+        /// </summary>
+        /// <remarks>
+        /// Auto-pairing automatically pairs opening and closing symbols, such as brackets or quotation marks.
+        /// </remarks>
+        public bool DoAutoPairing { get; set; } = true;
 
         #endregion
 
