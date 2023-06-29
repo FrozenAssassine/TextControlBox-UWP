@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using TextControlBox;
 using TextControlBox.Helper;
 using TextControlBox.Text;
 using Windows.Storage;
+using Windows.Storage.AccessCache;
 using Windows.Storage.Pickers;
 using Windows.UI;
 using Windows.UI.Xaml;
@@ -37,10 +39,8 @@ namespace TextControlBox_TestApp
         }
         private void Load()
         {
-            textbox.CodeLanguage = TextControlBox.TextControlBox.GetCodeLanguageFromId("Json");
-            textbox.SyntaxHighlighting = false;
-            textbox.SetText("Hello\nHello");
-            //textbox.LoadLines(GenerateContent());
+            textbox.CodeLanguage = TextControlBox.TextControlBox.GetCodeLanguageFromId("C#");
+            textbox.SyntaxHighlighting = true;
         }
         private IEnumerable<string> GenerateContent()
         {
@@ -70,7 +70,12 @@ namespace TextControlBox_TestApp
             }
             if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.L)
             {
-                textbox.ShowLineNumbers = !textbox.ShowLineNumbers;
+                var text = await FileIO.ReadTextAsync(await ApplicationData.Current.LocalFolder.GetFileAsync("css.json"));
+                Debug.WriteLine(text);
+                var res = TextControlBox.TextControlBox.GetCodeLanguageFromJson(text);
+                Debug.WriteLine("RESULT: " + res.Succeed);
+                textbox.CodeLanguage = res.CodeLanguage;
+                //textbox.ShowLineNumbers = !textbox.ShowLineNumbers;
                 //TextControlBox.DuplicateLine(TextControlBox.CurrentLineIndex);
             }
             if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.O)

@@ -18,6 +18,11 @@ namespace TextControlBox.Renderer
         }
         public static CanvasTextFormat CreateCanvasTextFormat(float ZoomedFontSize, FontFamily FontFamily)
         {
+            return CreateCanvasTextFormat(ZoomedFontSize, ZoomedFontSize + 2, FontFamily);
+        }
+
+        public static CanvasTextFormat CreateCanvasTextFormat(float ZoomedFontSize, float LineSpacing, FontFamily FontFamily)
+        {
             CanvasTextFormat textFormat;
             textFormat = new CanvasTextFormat()
             {
@@ -25,7 +30,7 @@ namespace TextControlBox.Renderer
                 HorizontalAlignment = CanvasHorizontalAlignment.Left,
                 VerticalAlignment = CanvasVerticalAlignment.Top,
                 WordWrapping = CanvasWordWrapping.NoWrap,
-                LineSpacing = ZoomedFontSize + 2,
+                LineSpacing = LineSpacing,
             };
             textFormat.IncrementalTabStop = ZoomedFontSize * 3; //default 137px
             textFormat.FontFamily = FontFamily.Source;

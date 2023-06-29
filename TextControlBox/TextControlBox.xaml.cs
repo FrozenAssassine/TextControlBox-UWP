@@ -33,6 +33,8 @@ namespace TextControlBox
 {
     public partial class TextControlBox : UserControl
     {
+        private CanvasControl Canvas_Minimap = null;
+        private MinimapRenderer MinimapRenderer = new MinimapRenderer();
         private CursorSize _CursorSize = null;
         private FontFamily _FontFamily = new FontFamily("Consolas");
         private bool UseDefaultDesign = true;
@@ -1505,6 +1507,7 @@ namespace TextControlBox
             {
                 UpdateAll();
             }
+            MinimapScrollbar.Value = e.NewValue * 5;
         }
         //Canvas event
         private void Canvas_Text_Draw(CanvasControl sender, CanvasDrawEventArgs args)
@@ -1522,7 +1525,7 @@ namespace TextControlBox
             //Measure textposition and apply the value to the scrollbar
             VerticalScrollbar.Maximum = ((TotalLines.Count + 1) * SingleLineHeight - Scroll.ActualHeight) / DefaultVerticalScrollSensitivity;
             VerticalScrollbar.ViewportSize = sender.ActualHeight;
-
+            
             //Calculate number of lines that needs to be rendered
             NumberOfRenderedLines = (int)(sender.ActualHeight / SingleLineHeight);
             NumberOfStartLine = (int)((VerticalScrollbar.Value * DefaultVerticalScrollSensitivity) / SingleLineHeight);
@@ -1547,7 +1550,6 @@ namespace TextControlBox
             if (NeedsRecalculateLongestLineIndex)
             {
                 NeedsRecalculateLongestLineIndex = false;
-                Debug.WriteLine("recalculate...");
                 LongestLineIndex = Utils.GetLongestLineIndex(TotalLines);
             }
 
@@ -1570,7 +1572,9 @@ namespace TextControlBox
 
                 DrawnTextLayout = TextRenderer.CreateTextResource(sender, DrawnTextLayout, TextFormat, RenderedText, new Size { Height = sender.Size.Height, Width = this.ActualWidth }, ZoomedFontSize);
                 SyntaxHighlightingRenderer.UpdateSyntaxHighlighting(DrawnTextLayout, _AppTheme, _CodeLanguage, SyntaxHighlighting, RenderedText);
+
             }
+            Canvas_Minimap.Invalidate();
 
             //render the search highlights
             if (SearchIsOpen)
@@ -1680,6 +1684,20 @@ namespace TextControlBox
             OldLineNumberTextToRender = LineNumberTextToRender;
             LineNumberTextLayout = TextRenderer.CreateTextLayout(sender, LineNumberTextFormat, LineNumberTextToRender, posX, (float)sender.Size.Height);
             args.DrawingSession.DrawTextLayout(LineNumberTextLayout, 10, SingleLineHeight, LineNumberColorBrush);
+        }
+        private void Canvas_Minimap_Draw(CanvasControl sender, CanvasDrawEventArgs args)
+        {
+            var renderLines = MinimapRenderer.CalculateNumberOfLinesOnScreen(sender);
+            Debug.WriteLine(":" + (renderLines / NumberOfRenderedLines));
+            //MinimapScrollbar.Maximum =  ((TotalLines.Count + 1 - renderLines) * SingleLineHeight - Scroll.ActualHeight) / DefaultVerticalScrollSensitivity;
+            MinimapScrollbar.Maximum = NumberOfRenderedLines * (renderLines / NumberOfRenderedLines) * SingleLineHeight;
+            MinimapScrollbar.ViewportSize = VerticalScrollbar.ViewportSize = sender.ActualHeight;
+
+            int startline = (int)((MinimapScrollbar.Value * DefaultVerticalScrollSensitivity) / SingleLineHeight);
+
+            var res = MinimapRenderer.CreateTextLayout(this, TotalLines, startline, NumberOfRenderedLines, sender, args);
+            SyntaxHighlightingRenderer.UpdateSyntaxHighlighting(res.textLayout, _AppTheme, _CodeLanguage, SyntaxHighlighting, res.text);
+            args.DrawingSession.DrawTextLayout(res.textLayout, 0, SingleLineHeight, TextColorBrush);
         }
         //Internal events:
         private void Internal_TextChanged()
@@ -2720,6 +2738,21 @@ namespace TextControlBox
         }
 
         #endregion
+
+        private void Minimap_Loaded(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void Canvas_Minimap_Loaded(object sender, RoutedEventArgs e)
+        {
+            Canvas_Minimap = sender as CanvasControl;
+        }
+
+
+        private void MinimapScrollbar_Scroll(object sender, ScrollEventArgs e)
+        {
+        }
     }
     public class TextControlBoxDesign
     {
