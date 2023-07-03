@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using TextControlBox.Extensions;
 using TextControlBox.Helper;
+using TextControlBox.Renderer;
 
 namespace TextControlBox.Text
 {
@@ -538,6 +539,39 @@ namespace TextControlBox.Text
             //    }
             //}
             return false;
+        }
+        public static void ClearSelectionIfNeeded(TextControlBox textbox, SelectionRenderer selectionrenderer)
+        {
+            //If the selection is visible, but is not getting set, clear the selection
+            if (selectionrenderer.HasSelection && !selectionrenderer.IsSelecting)
+            {
+                textbox.ClearSelection();
+            }
+        }
+
+
+        public static bool SelectionIsNull(SelectionRenderer selectionrenderer, TextSelection selection)
+        {
+            if (selection == null)
+                return true;
+            return selectionrenderer.SelectionStartPosition == null || selectionrenderer.SelectionEndPosition == null;
+        }
+        public static void SelectSingleWord(CanvasHelper canvashelper, SelectionRenderer selectionrenderer, CursorPosition CursorPosition, string currentLine)
+        {
+            int Characterpos = CursorPosition.CharacterPosition;
+            //Update variables
+            selectionrenderer.SelectionStartPosition =
+                new CursorPosition(Characterpos - Cursor.CalculateStepsToMoveLeft2(currentLine, Characterpos), CursorPosition.LineNumber);
+
+            selectionrenderer.SelectionEndPosition =
+                new CursorPosition(Characterpos + Cursor.CalculateStepsToMoveRight2(currentLine, Characterpos), CursorPosition.LineNumber);
+
+            CursorPosition.CharacterPosition = selectionrenderer.SelectionEndPosition.CharacterPosition;
+            selectionrenderer.HasSelection = true;
+
+            //Render it
+            canvashelper.UpdateSelection();
+            canvashelper.UpdateCursor();
         }
     }
 }
