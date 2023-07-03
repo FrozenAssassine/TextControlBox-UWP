@@ -139,6 +139,7 @@
     <Compile Include="Helper\Utils.cs" />
     <Compile Include="Renderer\CursorRenderer.cs" />
     <Compile Include="Renderer\LineHighlighter.cs" />
+    <Compile Include="Renderer\MinimapRenderer.cs" />
     <Compile Include="Renderer\SearchHighlightsRenderer.cs" />
     <Compile Include="Renderer\SelectionRenderer.cs" />
     <Compile Include="Renderer\SyntaxHighlightingRenderer.cs" />
