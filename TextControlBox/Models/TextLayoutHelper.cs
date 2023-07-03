@@ -12,7 +12,7 @@ namespace TextControlBox.Models
 {
     internal class TextLayoutHelper
     {
-        public static CanvasTextLayout CreateTextResource(ICanvasResourceCreatorWithDpi ResourceCreator, CanvasTextLayout TextLayout, CanvasTextFormat TextFormat, string Text, Size targetSize, float ZoomedFontSize)
+         public static CanvasTextLayout CreateTextResource(ICanvasResourceCreatorWithDpi ResourceCreator, CanvasTextLayout TextLayout, CanvasTextFormat TextFormat, string Text, Size targetSize, float ZoomedFontSize)
         {
             if (TextLayout != null)
                 TextLayout.Dispose();
@@ -23,6 +23,11 @@ namespace TextControlBox.Models
         }
         public static CanvasTextFormat CreateCanvasTextFormat(float ZoomedFontSize, FontFamily FontFamily)
         {
+            return CreateCanvasTextFormat(ZoomedFontSize, ZoomedFontSize + 2, FontFamily);
+        }
+
+        public static CanvasTextFormat CreateCanvasTextFormat(float ZoomedFontSize, float LineSpacing, FontFamily FontFamily)
+        {
             CanvasTextFormat textFormat;
             textFormat = new CanvasTextFormat()
             {
@@ -30,7 +35,7 @@ namespace TextControlBox.Models
                 HorizontalAlignment = CanvasHorizontalAlignment.Left,
                 VerticalAlignment = CanvasVerticalAlignment.Top,
                 WordWrapping = CanvasWordWrapping.NoWrap,
-                LineSpacing = ZoomedFontSize + 2,
+                LineSpacing = LineSpacing,
             };
             textFormat.IncrementalTabStop = ZoomedFontSize * 3; //default 137px
             textFormat.FontFamily = FontFamily.Source;
@@ -63,6 +68,5 @@ namespace TextControlBox.Models
             textFormat.TrimmingSign = CanvasTrimmingSign.None;
             return textFormat;
         }
-
     }
 }
