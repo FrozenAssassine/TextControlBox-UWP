@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using TextControlBox.Extensions;
 using TextControlBox.Helper;
 using TextControlBox.Languages;
+using TextControlBox.Models;
 using TextControlBox.Renderer;
 using TextControlBox.Text;
 using Windows.ApplicationModel.DataTransfer;
@@ -214,7 +215,7 @@ namespace TextControlBox
         private void UpdateCurrentLineTextLayout()
         {
             if (CursorPosition.LineNumber < TotalLines.Count)
-                CurrentLineTextLayout = TextRenderer.CreateTextLayout(Canvas_Text, TextFormat, TotalLines.GetLineText(CursorPosition.LineNumber) + "|", Canvas_Text.Size);
+                CurrentLineTextLayout = TextLayoutHelper.CreateTextLayout(Canvas_Text, TextFormat, TotalLines.GetLineText(CursorPosition.LineNumber) + "|", Canvas_Text.Size);
             else
                 CurrentLineTextLayout = null;
         }
@@ -1513,8 +1514,8 @@ namespace TextControlBox
             if (NeedsTextFormatUpdate || TextFormat == null || LineNumberTextFormat == null)
             {
                 if (_ShowLineNumbers)
-                    LineNumberTextFormat = TextRenderer.CreateLinenumberTextFormat(ZoomedFontSize, FontFamily);
-                TextFormat = TextRenderer.CreateCanvasTextFormat(ZoomedFontSize, FontFamily);
+                    LineNumberTextFormat = TextLayoutHelper.CreateLinenumberTextFormat(ZoomedFontSize, FontFamily);
+                TextFormat = TextLayoutHelper.CreateCanvasTextFormat(ZoomedFontSize, FontFamily);
             }
 
             CreateColorResources(args.DrawingSession);
@@ -1547,7 +1548,6 @@ namespace TextControlBox
             if (NeedsRecalculateLongestLineIndex)
             {
                 NeedsRecalculateLongestLineIndex = false;
-                Debug.WriteLine("recalculate...");
                 LongestLineIndex = Utils.GetLongestLineIndex(TotalLines);
             }
 
@@ -1568,7 +1568,7 @@ namespace TextControlBox
                 NeedsUpdateTextLayout = false;
                 OldRenderedText = RenderedText;
 
-                DrawnTextLayout = TextRenderer.CreateTextResource(sender, DrawnTextLayout, TextFormat, RenderedText, new Size { Height = sender.Size.Height, Width = this.ActualWidth }, ZoomedFontSize);
+                DrawnTextLayout = TextLayoutHelper.CreateTextResource(sender, DrawnTextLayout, TextFormat, RenderedText, new Size { Height = sender.Size.Height, Width = this.ActualWidth }, ZoomedFontSize);
                 SyntaxHighlightingRenderer.UpdateSyntaxHighlighting(DrawnTextLayout, _AppTheme, _CodeLanguage, SyntaxHighlighting, RenderedText);
             }
 
@@ -1678,7 +1678,7 @@ namespace TextControlBox
                 posX = 0;
 
             OldLineNumberTextToRender = LineNumberTextToRender;
-            LineNumberTextLayout = TextRenderer.CreateTextLayout(sender, LineNumberTextFormat, LineNumberTextToRender, posX, (float)sender.Size.Height);
+            LineNumberTextLayout = TextLayoutHelper.CreateTextLayout(sender, LineNumberTextFormat, LineNumberTextToRender, posX, (float)sender.Size.Height);
             args.DrawingSession.DrawTextLayout(LineNumberTextLayout, 10, SingleLineHeight, LineNumberColorBrush);
         }
         //Internal events:
@@ -1692,7 +1692,7 @@ namespace TextControlBox
         }
         private void Internal_CursorChanged()
         {
-            Text.SelectionChangedEventHandler args = new Text.SelectionChangedEventHandler
+            SelectionChangedEventHandler args = new SelectionChangedEventHandler
             {
                 CharacterPositionInLine = GetCurPosInLine() + 1,
                 LineNumber = CursorPosition.LineNumber,
@@ -2644,7 +2644,7 @@ namespace TextControlBox
         /// </summary>
         /// <param name="sender">The textbox in which the selection was changed</param>
         /// <param name="args">The new position of the cursor</param>
-        public delegate void SelectionChangedEvent(TextControlBox sender, Text.SelectionChangedEventHandler args);
+        public delegate void SelectionChangedEvent(TextControlBox sender, SelectionChangedEventHandler args);
         public event SelectionChangedEvent SelectionChanged;
 
         /// <summary>
@@ -2720,115 +2720,5 @@ namespace TextControlBox
         }
 
         #endregion
-    }
-    public class TextControlBoxDesign
-    {
-        public TextControlBoxDesign(TextControlBoxDesign Design)
-        {
-            this.Background = Design.Background;
-            this.TextColor = Design.TextColor;
-            this.SelectionColor = Design.SelectionColor;
-            this.CursorColor = Design.CursorColor;
-            this.LineHighlighterColor = Design.LineHighlighterColor;
-            this.LineNumberColor = Design.LineNumberColor;
-            this.LineNumberBackground = Design.LineNumberBackground;
-        }
-
-        /// <summary>
-        /// Create a new instance of the TextControlBoxDesign class
-        /// </summary>
-        /// <param name="Background">The background color of the textbox</param>
-        /// <param name="TextColor">The color of the text</param>
-        /// <param name="SelectionColor">The color of the selection</param>
-        /// <param name="CursorColor">The color of the cursor</param>
-        /// <param name="LineHighlighterColor">The color of the linehighlighter</param>
-        /// <param name="LineNumberColor">The color of the linenumber</param>
-        /// <param name="LineNumberBackground">The background color of the linenumbers</param>
-        public TextControlBoxDesign(Brush Background, Color TextColor, Color SelectionColor, Color CursorColor, Color LineHighlighterColor, Color LineNumberColor, Color LineNumberBackground, Color SearchHighlightColor)
-        {
-            this.Background = Background;
-            this.TextColor = TextColor;
-            this.SelectionColor = SelectionColor;
-            this.CursorColor = CursorColor;
-            this.LineHighlighterColor = LineHighlighterColor;
-            this.LineNumberColor = LineNumberColor;
-            this.LineNumberBackground = LineNumberBackground;
-            this.SearchHighlightColor = SearchHighlightColor;
-        }
-
-        public Brush Background { get; set; }
-        public Color TextColor { get; set; }
-        public Color SelectionColor { get; set; }
-        public Color CursorColor { get; set; }
-        public Color LineHighlighterColor { get; set; }
-        public Color LineNumberColor { get; set; }
-        public Color LineNumberBackground { get; set; }
-        public Color SearchHighlightColor { get; set; }
-    }
-    public class ScrollBarPosition
-    {
-        public ScrollBarPosition(ScrollBarPosition ScrollBarPosition)
-        {
-            this.ValueX = ScrollBarPosition.ValueX;
-            this.ValueY = ScrollBarPosition.ValueY;
-        }
-
-        /// <summary>
-        /// Creates a new instance of the ScrollBarPosition class
-        /// </summary>
-        /// <param name="ValueX">The horizontal amount scrolled</param>
-        /// <param name="ValueY">The vertical amount scrolled</param>
-        public ScrollBarPosition(double ValueX = 0, double ValueY = 0)
-        {
-            this.ValueX = ValueX;
-            this.ValueY = ValueY;
-        }
-
-        /// <summary>
-        /// The amount scrolled horizontally
-        /// </summary>
-        public double ValueX { get; set; }
-
-        /// <summary>
-        /// The amount scrolled vertically
-        /// </summary>
-        public double ValueY { get; set; }
-    }
-    public class CursorSize
-    {
-        /// <summary>
-        /// Creates a new instance of the CursorSize class
-        /// </summary>
-        /// <param name="Width">The width of the cursor</param>
-        /// <param name="Height">The height of the cursor</param>
-        /// <param name="OffsetX">The x-offset from the actual cursor position</param>
-        /// <param name="OffsetY">The y-offset from the actual cursor position</param>
-        public CursorSize(float Width = 0, float Height = 0, float OffsetX = 0, float OffsetY = 0)
-        {
-            this.Width = Width;
-            this.Height = Height;
-            this.OffsetX = OffsetX;
-            this.OffsetY = OffsetY;
-        }
-
-        /// <summary>
-        /// The width of the cursor
-        /// </summary>
-        public float Width { get; private set; }
-
-        /// <summary>
-        /// The height of the cursor
-        /// </summary>
-        public float Height { get; private set; }
-
-        /// <summary>
-        /// The left/right offset from the actual cursor position
-        /// </summary>
-        public float OffsetX { get; private set; }
-
-        /// <summary>
-        /// The top/bottom offset from the actual cursor position
-        /// </summary>
-        public float OffsetY { get; private set; }
     }
 }
