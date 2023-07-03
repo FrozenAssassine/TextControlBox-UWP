@@ -30,6 +30,10 @@ namespace TextControlBox.Languages
             this.Author = "Finn Freitag";
             this.Filter = new string[1] { ".ini" };
             this.Description = "Syntax highlighting for configuration files";
+            this.AutoPairingPair = new AutoPairingPair[]
+            {
+                new AutoPairingPair("[", "]")
+            };
             this.Highlights = new SyntaxHighlights[]
             {
                 new SyntaxHighlights("[\\[\\]]", "#0000FF", "#0000FF"),
@@ -48,6 +52,14 @@ namespace TextControlBox.Languages
             this.Author = "Julius Kirsch";
             this.Filter = new string[6] { ".cpp", ".cxx", ".cc", ".hpp", ".h", ".c" };
             this.Description = "Syntax highlighting for C++ language";
+            this.AutoPairingPair = new AutoPairingPair[5]
+            {
+                new AutoPairingPair("{", "}"),
+                new AutoPairingPair("[", "]"),
+                new AutoPairingPair("(", ")"),
+                new AutoPairingPair("\""),
+                new AutoPairingPair("\'")
+            };
             this.Highlights = new SyntaxHighlights[]
             {
                 new SyntaxHighlights("\\b([+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?\\b", "#dd00dd", "#00ff00"),
@@ -69,7 +81,15 @@ namespace TextControlBox.Languages
             this.Name = "C#";
             this.Author = "Julius Kirsch";
             this.Filter = new string[1] { ".cs" };
-            this.Description = "Syntax highlighting for C# language";
+            this.Description = "Syntax highlighting for C# language"; 
+            this.AutoPairingPair = new AutoPairingPair[5]
+            {
+                new AutoPairingPair("{", "}"),
+                new AutoPairingPair("[", "]"),
+                new AutoPairingPair("(", ")"),
+                new AutoPairingPair("\""),
+                new AutoPairingPair("\'")
+            };
             this.Highlights = new SyntaxHighlights[]
             {
                 new SyntaxHighlights("\\b([+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?\\b", "#ff00ff", "#ff00ff"),
@@ -137,6 +157,7 @@ namespace TextControlBox.Languages
             this.Author = "Julius Kirsch";
             this.Filter = new string[2] { ".html", ".htm" };
             this.Description = "Syntax highlighting for Html language";
+
             this.Highlights = new SyntaxHighlights[]
             {
                 new SyntaxHighlights("\\b([+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?\\b", "#dd00dd", "#ff00ff"),
@@ -159,6 +180,14 @@ namespace TextControlBox.Languages
             this.Author = "Julius Kirsch";
             this.Filter = new string[2] { ".java", ".class" };
             this.Description = "Syntax highlighting for Java language";
+            this.AutoPairingPair = new AutoPairingPair[5]
+            {
+                new AutoPairingPair("{", "}"),
+                new AutoPairingPair("[", "]"),
+                new AutoPairingPair("(", ")"),
+                new AutoPairingPair("\""),
+                new AutoPairingPair("\'")
+            };
             this.Highlights = new SyntaxHighlights[]
             {
                 new SyntaxHighlights("\\b([+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?\\b", "#ff00ff", "#ff00ff"),
@@ -180,6 +209,16 @@ namespace TextControlBox.Languages
             this.Author = "Finn Freitag";
             this.Filter = new string[1] { ".js" };
             this.Description = "Syntax highlighting for Javascript language";
+            this.AutoPairingPair = new AutoPairingPair[6]
+            {
+                new AutoPairingPair("{", "}"),
+                new AutoPairingPair("[", "]"),
+                new AutoPairingPair("(", ")"),
+                new AutoPairingPair("`", "`"),
+                new AutoPairingPair("\""),
+                new AutoPairingPair("\'")
+            };
+
             this.Highlights = new SyntaxHighlights[]
             {
                 new SyntaxHighlights("\\W", "#990033", "#CC0066"),
@@ -204,6 +243,14 @@ namespace TextControlBox.Languages
             this.Author = "Julius Kirsch";
             this.Filter = new string[1] { ".json" };
             this.Description = "Syntax highlighting for Json language";
+            this.AutoPairingPair = new AutoPairingPair[4]
+            {
+                new AutoPairingPair("{", "}"),
+                new AutoPairingPair("[", "]"),
+                new AutoPairingPair("\""),
+                new AutoPairingPair("\'")
+            };
+
             this.Highlights = new SyntaxHighlights[]
             {
                 new SyntaxHighlights("\\b([+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?\\b", "#dd00dd", "#ff00ff"),
@@ -225,6 +272,12 @@ namespace TextControlBox.Languages
             this.Author = "Finn Freitag";
             this.Filter = new string[1] { ".php" };
             this.Description = "Syntax highlighting for PHP language";
+            this.AutoPairingPair = new AutoPairingPair[2]
+            {
+                new AutoPairingPair("\""),
+                new AutoPairingPair("\'")
+            };
+
             this.Highlights = new SyntaxHighlights[]
             {
                 new SyntaxHighlights("\\<\\?php", "#FF0000", "#FF0000"),
@@ -250,6 +303,15 @@ namespace TextControlBox.Languages
             this.Author = "Finn Freitag";
             this.Filter = new string[1] { ".qs" };
             this.Description = "Syntax highlighting for QSharp language";
+            this.AutoPairingPair = new AutoPairingPair[5]
+            {
+                new AutoPairingPair("{", "}"),
+                new AutoPairingPair("[", "]"),
+                new AutoPairingPair("(", ")"),
+                new AutoPairingPair("\""),
+                new AutoPairingPair("\'")
+            };
+
             this.Highlights = new SyntaxHighlights[]
             {
                 new SyntaxHighlights("\\W", "#BB0000", "#BB0000"),
@@ -288,6 +350,16 @@ namespace TextControlBox.Languages
             this.Author = "Julius Kirsch";
             this.Filter = new string[1] { ".py" };
             this.Description = "Syntax highlighting for Python language";
+            this.AutoPairingPair = new AutoPairingPair[6]
+            {
+                new AutoPairingPair("{", "}"),
+                new AutoPairingPair("[", "]"),
+                new AutoPairingPair("(", ")"),
+                new AutoPairingPair("`", "`"),
+                new AutoPairingPair("\""),
+                new AutoPairingPair("\'")
+            };
+
             this.Highlights = new SyntaxHighlights[]
             {
                 new SyntaxHighlights("\\b([+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[eE]([+-]?\\d+))?\\b", "#dd00dd", "#ff00ff"),
@@ -340,6 +412,11 @@ namespace TextControlBox.Languages
             this.Author = "Finn Freitag";
             this.Filter = new string[1] { ".toml" };
             this.Description = "Syntax highlighting for TOML language";
+            this.AutoPairingPair = new AutoPairingPair[]
+            {
+                new AutoPairingPair("[", "]"),
+                new AutoPairingPair("\""),
+            };
             this.Highlights = new SyntaxHighlights[]
             {
                 new SyntaxHighlights("\\[.*\\]", "#0000FF", "#0000FF"),

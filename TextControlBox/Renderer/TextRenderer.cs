@@ -7,5 +7,5 @@ namespace TextControlBox.Renderer
 {
     internal class TextRenderer
     {
-            }
+    }
 }

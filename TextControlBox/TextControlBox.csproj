@@ -145,6 +145,7 @@
     <Compile Include="Helper\Utils.cs" />
     <Compile Include="Renderer\CursorRenderer.cs" />
     <Compile Include="Renderer\LineHighlighter.cs" />
+    <Compile Include="Renderer\MinimapRenderer.cs" />
     <Compile Include="Renderer\SearchHighlightsRenderer.cs" />
     <Compile Include="Renderer\SelectionRenderer.cs" />
     <Compile Include="Renderer\SyntaxHighlightingRenderer.cs" />
@@ -153,6 +154,7 @@
     <Compile Include="TextControlBox.xaml.cs">
       <DependentUpon>TextControlBox.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Text\AutoPairing.cs" />
     <Compile Include="Text\Cursor.cs" />
     <Compile Include="Text\CursorPosition.cs" />
     <Compile Include="Text\LineEndings.cs" />

@@ -34,6 +34,8 @@ namespace TextControlBox
 {
     public partial class TextControlBox : UserControl
     {
+        private CanvasControl Canvas_Minimap = null;
+        private MinimapRenderer MinimapRenderer = new MinimapRenderer();
         private CursorSize _CursorSize = null;
         private FontFamily _FontFamily = new FontFamily("Consolas");
         private bool UseDefaultDesign = true;
@@ -273,8 +275,12 @@ namespace TextControlBox
 
             int SplittedTextLength = text.Contains(NewLineCharacter) ? Utils.CountLines(text, NewLineCharacter) : 1;
 
+
             if (TextSelection == null && SplittedTextLength == 1)
             {
+                var res = AutoPairing.AutoPair(this, text);
+                text = res.text;
+
                 undoRedo.RecordUndoAction(() =>
                 {
                     var CharacterPos = GetCurPosInLine();
@@ -283,7 +289,7 @@ namespace TextControlBox
                         CurrentLine = CurrentLine.AddToEnd(text);
                     else
                         CurrentLine = CurrentLine.AddText(text, CharacterPos);
-                    CursorPosition.CharacterPosition = text.Length + CharacterPos;
+                    CursorPosition.CharacterPosition = res.length + CharacterPos;
 
                 }, TotalLines, CursorPosition.LineNumber, 1, 1, NewLineCharacter);
 
@@ -300,12 +306,17 @@ namespace TextControlBox
                     CursorPosition = Selection.InsertText(TextSelection, CursorPosition, TotalLines, text, NewLineCharacter);
                 }, TotalLines, CursorPosition.LineNumber, 1, SplittedTextLength, NewLineCharacter);
             }
+
             else if (text.Length == 0) //delete selection
             {
                 DeleteSelection();
             }
             else if (TextSelection != null)
             {
+                text = AutoPairing.AutoPairSelection(this, text);
+                if (text == null)
+                    return;
+
                 CheckRecalculateLongestLine(text);
                 undoRedo.RecordUndoAction(() =>
                 {
@@ -1506,6 +1517,7 @@ namespace TextControlBox
             {
                 UpdateAll();
             }
+            MinimapScrollbar.Value = e.NewValue * 5;
         }
         //Canvas event
         private void Canvas_Text_Draw(CanvasControl sender, CanvasDrawEventArgs args)
@@ -1523,7 +1535,7 @@ namespace TextControlBox
             //Measure textposition and apply the value to the scrollbar
             VerticalScrollbar.Maximum = ((TotalLines.Count + 1) * SingleLineHeight - Scroll.ActualHeight) / DefaultVerticalScrollSensitivity;
             VerticalScrollbar.ViewportSize = sender.ActualHeight;
-
+            
             //Calculate number of lines that needs to be rendered
             NumberOfRenderedLines = (int)(sender.ActualHeight / SingleLineHeight);
             NumberOfStartLine = (int)((VerticalScrollbar.Value * DefaultVerticalScrollSensitivity) / SingleLineHeight);
@@ -1570,7 +1582,9 @@ namespace TextControlBox
 
                 DrawnTextLayout = TextLayoutHelper.CreateTextResource(sender, DrawnTextLayout, TextFormat, RenderedText, new Size { Height = sender.Size.Height, Width = this.ActualWidth }, ZoomedFontSize);
                 SyntaxHighlightingRenderer.UpdateSyntaxHighlighting(DrawnTextLayout, _AppTheme, _CodeLanguage, SyntaxHighlighting, RenderedText);
+
             }
+            Canvas_Minimap.Invalidate();
 
             //render the search highlights
             if (SearchIsOpen)
@@ -1680,6 +1694,20 @@ namespace TextControlBox
             OldLineNumberTextToRender = LineNumberTextToRender;
             LineNumberTextLayout = TextLayoutHelper.CreateTextLayout(sender, LineNumberTextFormat, LineNumberTextToRender, posX, (float)sender.Size.Height);
             args.DrawingSession.DrawTextLayout(LineNumberTextLayout, 10, SingleLineHeight, LineNumberColorBrush);
+        }
+        private void Canvas_Minimap_Draw(CanvasControl sender, CanvasDrawEventArgs args)
+        {
+            var renderLines = MinimapRenderer.CalculateNumberOfLinesOnScreen(sender);
+            Debug.WriteLine(":" + (renderLines / NumberOfRenderedLines));
+            //MinimapScrollbar.Maximum =  ((TotalLines.Count + 1 - renderLines) * SingleLineHeight - Scroll.ActualHeight) / DefaultVerticalScrollSensitivity;
+            MinimapScrollbar.Maximum = NumberOfRenderedLines * (renderLines / NumberOfRenderedLines) * SingleLineHeight;
+            MinimapScrollbar.ViewportSize = VerticalScrollbar.ViewportSize = sender.ActualHeight;
+
+            int startline = (int)((MinimapScrollbar.Value * DefaultVerticalScrollSensitivity) / SingleLineHeight);
+
+            var res = MinimapRenderer.CreateTextLayout(this, TotalLines, startline, NumberOfRenderedLines, sender, args);
+            SyntaxHighlightingRenderer.UpdateSyntaxHighlighting(res.textLayout, _AppTheme, _CodeLanguage, SyntaxHighlighting, res.text);
+            args.DrawingSession.DrawTextLayout(res.textLayout, 0, SingleLineHeight, TextColorBrush);
         }
         //Internal events:
         private void Internal_TextChanged()
@@ -2219,7 +2247,7 @@ namespace TextControlBox
         /// <param name="replaceWord">The word to replace with</param>
         /// <param name="matchCase">Search with case sensitivity</param>
         /// <param name="wholeWord">Search for whole words</param>
-        /// <returns></returns>
+        /// <returns>Found when everything was replaced and not found when nothing was replaced</returns>
         public SearchResult ReplaceAll(string word, string replaceWord, bool matchCase, bool wholeWord)
         {
             if (word.Length == 0 || replaceWord.Length == 0)
@@ -2227,18 +2255,20 @@ namespace TextControlBox
 
             SearchParameter searchParameter = new SearchParameter(word, wholeWord, matchCase);
 
+            bool isFound = false;
             undoRedo.RecordUndoAction(() =>
             {
                 for (int i = 0; i < TotalLines.Count; i++)
                 {
                     if (TotalLines[i].Contains(searchParameter))
                     {
+                        isFound = true;
                         SetLineText(i, Regex.Replace(TotalLines[i], searchParameter.SearchExpression, replaceWord));
                     }
                 }
             }, TotalLines, 0, TotalLines.Count, TotalLines.Count, NewLineCharacter);
             UpdateText();
-            return SearchResult.ReachedEnd;
+            return isFound ? SearchResult.Found : SearchResult.NotFound;
         }
 
         /// <summary>
@@ -2627,6 +2657,14 @@ namespace TextControlBox
         /// </summary>
         public IEnumerable<string> Lines { get => TotalLines; }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether auto-pairing is enabled.
+        /// </summary>
+        /// <remarks>
+        /// Auto-pairing automatically pairs opening and closing symbols, such as brackets or quotation marks.
+        /// </remarks>
+        public bool DoAutoPairing { get; set; } = true;
+
         #endregion
 
         #region Public events
@@ -2720,5 +2758,20 @@ namespace TextControlBox
         }
 
         #endregion
+
+        private void Minimap_Loaded(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void Canvas_Minimap_Loaded(object sender, RoutedEventArgs e)
+        {
+            Canvas_Minimap = sender as CanvasControl;
+        }
+
+
+        private void MinimapScrollbar_Scroll(object sender, ScrollEventArgs e)
+        {
+        }
     }
 }
