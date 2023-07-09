@@ -37,9 +37,10 @@ namespace TextControlBox_TestApp
                 SelectionColor = Color.FromArgb(100, 144, 0, 255)
             };*/
         }
-        private void Load()
+        private async void Load()
         {
             textbox.CodeLanguage = TextControlBox.TextControlBox.GetCodeLanguageFromId("C#");
+            //textbox.CodeLanguage = TextControlBox.TextControlBox.GetCodeLanguageFromJson(await FileIO.ReadTextAsync(await ApplicationData.Current.LocalFolder.GetFileAsync("css.json"))).CodeLanguage;
             textbox.SyntaxHighlighting = true;
         }
         private IEnumerable<string> GenerateContent()
