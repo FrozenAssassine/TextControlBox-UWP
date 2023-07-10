@@ -222,7 +222,7 @@ namespace TextControlBox
         private void UpdateCursorVariable(Point point)
         {
             //Apply an offset to the cursorposition
-            point = point.Subtract(-10, +5);
+            point = point.Subtract(-(SingleLineHeight / 4), SingleLineHeight / 4);
 
             CursorPosition.LineNumber = CursorRenderer.GetCursorLineFromPoint(point, SingleLineHeight, NumberOfRenderedLines, NumberOfStartLine);
 
