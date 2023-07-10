@@ -389,7 +389,7 @@ namespace TextControlBox
             UpdateCursor();
             Internal_TextChanged();
         }
-        private void DeleteText(bool ControlIsPressed = false)
+        private void DeleteText(bool ControlIsPressed = false, bool ShiftIsPressed = false)
         {
             UpdateCurrentLine();
             string curLine = CurrentLine;
@@ -397,7 +397,12 @@ namespace TextControlBox
             if (IsReadonly)
                 return;
 
-            if (TextSelection == null)
+            if (ShiftIsPressed)
+            {
+                if(TextSelection == null)
+                    DeleteLine(CursorPosition.LineNumber);    
+            }
+            else if (TextSelection == null)
             {
                 int CharacterPos = GetCurPosInLine();
                 //delete lines if cursor is at position 0 and the line is emty OR cursor is at the end of a line and the line has content
@@ -1144,7 +1149,7 @@ namespace TextControlBox
                     RemoveText(ctrl);
                     break;
                 case VirtualKey.Delete:
-                    DeleteText(ctrl);
+                    DeleteText(ctrl, shift);
                     break;
                 case VirtualKey.Left:
                     {
@@ -2144,6 +2149,11 @@ namespace TextControlBox
             {
                 TotalLines.RemoveAt(index);
             }, TotalLines, index, 2, 1, NewLineCharacter);
+            
+            if (TotalLines.Count == 0)
+            {
+                TotalLines.AddLine();
+            }
 
             UpdateText();
             return true;
@@ -2698,7 +2708,6 @@ namespace TextControlBox
         public static Dictionary<string, CodeLanguage> CodeLanguages => new Dictionary<string, CodeLanguage>(StringComparer.OrdinalIgnoreCase)
         {
             { "Batch", new Batch() },
-            { "ConfigFile", new ConfigFile() },
             { "C++", new Cpp() },
             { "C#", new CSharp() },
             { "GCode", new GCode() },
@@ -2711,10 +2720,6 @@ namespace TextControlBox
             { "Python", new Python() },
             { "QSharp", new QSharp() },
             { "XML", new XML() },
-            { "CSV", new CSV() },
-            { "Latex", new LaTex() },
-            { "TOML", new TOML() },
-            { "Markdown", new Markdown() },
         };
 
         /// <summary>
