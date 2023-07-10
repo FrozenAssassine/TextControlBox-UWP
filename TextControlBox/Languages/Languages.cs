@@ -451,4 +451,36 @@ namespace TextControlBox.Languages
             };
         }
     }
+    internal class CSS : CodeLanguage
+    {
+        public CSS()
+        {
+            this.Name = "CSS";
+            this.Author = "Julius Kirsch";
+            this.Filter = new string[2] { ".css", ".scss" };
+            this.Description = "Syntax highlighting for CSS language";
+            this.AutoPairingPair = new AutoPairingPair[5]
+            {
+                new AutoPairingPair("{", "}"),
+                new AutoPairingPair("[", "]"),
+                new AutoPairingPair("(", ")"),
+                new AutoPairingPair("\""),
+                new AutoPairingPair("\'")
+            };
+            this.Highlights = new SyntaxHighlights[]
+            {
+                new SyntaxHighlights("[a-zA-Z-]+.*;", "#ff5500", "#00ffff"),//properties
+                new SyntaxHighlights("\\b([a-zA-Z_-][a-zA-Z0-9_-]*)(?=\\()", "#bb00bb", "#00ff99"),//functions
+                new SyntaxHighlights(":[a-z].*(?={)", "#0033ff", "#fffd00"),//pseudo classes/elements
+                new SyntaxHighlights("(.|#|^).*\\s*{", "#227700", "#44ff00"),//classname
+                new SyntaxHighlights("(?<=\\d)(?:px|%|em|rem|in|cm|mm|pt|pc|ex|ch|vw|vh|vmin|vmax|ms|s)", "#cc0000", "#ff0000"),//units
+                new SyntaxHighlights("\\b-?\\d+(?:\\.\\d+)?", "#0000ff", "#cc00ff"),//numbers
+                new SyntaxHighlights("@([^ ]+)", "#8800ff", "#ff0000"),//first word after the @
+                new SyntaxHighlights("#[0-9A-Fa-f]{1,8}\\b", "#00bb55", "#cc00ff"),//hexadecimal
+                new SyntaxHighlights("(\".+?\"|\'.+?\')", "#00aaff", "#ff8800"),//strings
+                new SyntaxHighlights("(;|:|{|}|,)", "#777777", "#bbbbbb"),//special characters
+                new SyntaxHighlights("\\/\\*(.|\\n)*?\\*\\/", "#555555", "#888888"),//comments
+            };
+        }
+    }
 }
