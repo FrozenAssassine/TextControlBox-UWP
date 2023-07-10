@@ -50,7 +50,6 @@ namespace TextControlBox.Helper
 
         private void ReplaceSpacesToSpaces(PooledList<string> TotalLines)
         {
-            Debug.WriteLine("START:" + OldSpaces + ":" + Spaces + ":");
             for (int i = 0; i < TotalLines.Count; i++)
             {
                 TotalLines[i] = Replace(TotalLines[i], OldSpaces, Spaces);

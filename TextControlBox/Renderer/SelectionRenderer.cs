@@ -112,7 +112,6 @@ namespace TextControlBox.Renderer
                 else
                     SelectionLength = SelStartIndex - SelEndIndex;
 
-                Debug.WriteLine("SELSTART: " + SelectionStart);
                 CanvasTextLayoutRegion[] descriptions = TextLayout.GetCharacterRegions(SelectionStart, SelectionLength);
                 for (int i = 0; i < descriptions.Length; i++)
                 {

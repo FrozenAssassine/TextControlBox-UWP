@@ -56,8 +56,6 @@ namespace TextControlBox.Text
             action.Invoke();
             var linesAfter = TotalLines.GetLines_Large(startline, redoCount).GetString(NewLineCharacter);
 
-            Debug.WriteLine("Undo Action");
-
             AddUndoItem(cursorposition == null ? null : new TextSelection(new CursorPosition(cursorposition), null), startline, linesBefore, linesAfter, undocount, redoCount);
         }
         public void RecordUndoAction(Action action, PooledList<string> TotalLines, TextSelection selection, int NumberOfAddedLines, string NewLineCharacter)
@@ -93,6 +91,7 @@ namespace TextControlBox.Text
         /// Excecutes the undo and applys the changes to the text
         /// </summary>
         /// <param name="TotalLines">A list containing all the lines of the textbox</param>
+        /// <param name="stringManager">An instance of the StringManager class from the TextControlBox.xaml.cs</param>
         /// <param name="NewLineCharacter">The current line-ending character either CR, LF or CRLF</param>
         /// <returns>A class containing the start and end-position of the selection</returns>
         public TextSelection Undo(PooledList<string> TotalLines, StringManager stringManager, string NewLineCharacter)
@@ -123,8 +122,6 @@ namespace TextControlBox.Text
                 TotalLines.Safe_RemoveRange(item.StartLine, item.RedoCount);
                 if (item.UndoCount > 0)
                     TotalLines.InsertOrAddRange(ListHelper.GetLinesFromString(stringManager.CleanUpString(item.UndoText), NewLineCharacter), item.StartLine);
-
-                //Selection.ReplaceLines(TotalLines, item.StartLine, item.RedoCount, StringManager.CleanUpString(Decompress(item.UndoText)).Split(NewLineCharacter));
             }
 
             return item.Selection;
@@ -134,9 +131,10 @@ namespace TextControlBox.Text
         /// Excecutes the redo and apply the changes to the text
         /// </summary>
         /// <param name="TotalLines">A list containing all the lines of the textbox</param>
+        /// <param name="stringmanager">An instance of the StringManager from the TextControlBox.xaml.cs</param>
         /// <param name="NewLineCharacter">The current line-ending character either CR, LF or CRLF</param>
         /// <returns>A class containing the start and end-position of the selection</returns>
-        public TextSelection Redo(PooledList<string> TotalLines, StringManager StringManager, string NewLineCharacter)
+        public TextSelection Redo(PooledList<string> TotalLines, StringManager stringmanager, string NewLineCharacter)
         {
             if (RedoStack.Count < 1)
                 return null;
@@ -148,18 +146,15 @@ namespace TextControlBox.Text
             //Faster for singleline
             if (item.UndoCount == 1 && item.RedoCount == 1)
             {
-                TotalLines.SetLineText(item.StartLine, StringManager.CleanUpString(item.RedoText));
+                TotalLines.SetLineText(item.StartLine, stringmanager.CleanUpString(item.RedoText));
             }
             else
             {
                 TotalLines.Safe_RemoveRange(item.StartLine, item.UndoCount);
                 if (item.RedoCount > 0)
-                    TotalLines.InsertOrAddRange(ListHelper.GetLinesFromString(StringManager.CleanUpString(item.RedoText), NewLineCharacter), item.StartLine);
-
-                //Selection.ReplaceLines(TotalLines, item.StartLine, item.UndoCount, StringManager.CleanUpString(Decompress(item.RedoText)).Split(NewLineCharacter));
+                    TotalLines.InsertOrAddRange(ListHelper.GetLinesFromString(stringmanager.CleanUpString(item.RedoText), NewLineCharacter), item.StartLine);
             }
             return null;
-            //return item.Selection;
         }
 
         /// <summary>

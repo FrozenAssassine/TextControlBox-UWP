@@ -139,6 +139,7 @@
     <Compile Include="Models\SelectionChangedEventHandler.cs" />
     <Compile Include="Models\TextControlBoxDesign.cs" />
     <Compile Include="Models\TextLayoutHelper.cs" />
+    <Compile Include="Models\TextSelectionPosition.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Helper\DebugHelper.cs" />
     <Compile Include="Helper\ListHelper.cs" />

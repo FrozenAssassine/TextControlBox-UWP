@@ -168,7 +168,6 @@ namespace TextControlBox.Text
             }
             else if (WholeTextSelected(Selection, TotalLines))
             {
-                Debug.WriteLine("Replace whole text");
                 if (lines.Length < TotalLines.Count)
                 {
                     ListHelper.Clear(TotalLines);

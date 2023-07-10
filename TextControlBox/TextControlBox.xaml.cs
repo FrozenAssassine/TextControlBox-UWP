@@ -133,6 +133,7 @@ namespace TextControlBox
         private readonly TabSpaceHelper tabSpaceHelper = new TabSpaceHelper();
         private readonly StringManager stringManager;
         private readonly SearchHelper searchHelper = new SearchHelper();
+        private readonly CanvasHelper canvasHelper;
 
         /// <summary>
         /// Creates a new instance of the TextControlBox
@@ -148,6 +149,7 @@ namespace TextControlBox
             flyoutHelper = new FlyoutHelper(this);
             inputPane = InputPane.GetForCurrentView();
             stringManager = new StringManager(tabSpaceHelper);
+            canvasHelper = new CanvasHelper(Canvas_Selection, Canvas_LineNumber, Canvas_Text, Canvas_Cursor);
 
             //Events:
             this.KeyDown += TextControlBox_KeyDown;
@@ -163,12 +165,6 @@ namespace TextControlBox
         }
 
         #region Update functions
-        private void UpdateAll()
-        {
-            UpdateText();
-            UpdateSelection();
-            UpdateCursor();
-        }
         private void UpdateZoom()
         {
             ZoomedFontSize = _FontSize * (float)_ZoomFactor / 100;
@@ -193,21 +189,9 @@ namespace TextControlBox
 
             ScrollLineIntoView(CursorPosition.LineNumber);
             NeedsUpdateLineNumbers();
-            UpdateAll();
+            canvasHelper.UpdateAll();
         }
-        private void UpdateCursor()
-        {
-            Canvas_Cursor.Invalidate();
-        }
-        private void UpdateText()
-        {
-            Utils.ChangeCursor(CoreCursorType.IBeam);
-            Canvas_Text.Invalidate();
-        }
-        private void UpdateSelection()
-        {
-            Canvas_Selection.Invalidate();
-        }
+
         private void NeedsUpdateLineNumbers()
         {
             OldLineNumberTextToRender = "";
@@ -260,8 +244,8 @@ namespace TextControlBox
                 ClearSelection();
 
             }, TotalLines, TextSelection, 0, NewLineCharacter);
-            UpdateSelection();
-            UpdateCursor();
+            canvasHelper.UpdateSelection();
+            canvasHelper.UpdateCursor();
         }
         private void AddCharacter(string text, bool IgnoreSelection = false)
         {
@@ -321,13 +305,13 @@ namespace TextControlBox
                     CursorPosition = Selection.Replace(TextSelection, TotalLines, text, NewLineCharacter);
 
                     ClearSelection();
-                    UpdateSelection();
+                    canvasHelper.UpdateSelection();
                 }, TotalLines, TextSelection, SplittedTextLength, NewLineCharacter);
             }
 
             ScrollLineToCenter(CursorPosition.LineNumber);
-            UpdateText();
-            UpdateCursor();
+            canvasHelper.UpdateText();
+            canvasHelper.UpdateCursor();
             Internal_TextChanged();
         }
         private void RemoveText(bool ControlIsPressed = false)
@@ -385,8 +369,8 @@ namespace TextControlBox
             }
 
             UpdateScrollToShowCursor();
-            UpdateText();
-            UpdateCursor();
+            canvasHelper.UpdateText();
+            canvasHelper.UpdateCursor();
             Internal_TextChanged();
         }
         private void DeleteText(bool ControlIsPressed = false, bool ShiftIsPressed = false)
@@ -446,8 +430,8 @@ namespace TextControlBox
             }
 
             UpdateScrollToShowCursor();
-            UpdateText();
-            UpdateCursor();
+            canvasHelper.UpdateText();
+            canvasHelper.UpdateCursor();
             Internal_TextChanged();
         }
         private void AddNewLine()
@@ -473,7 +457,7 @@ namespace TextControlBox
                     CursorPosition = new CursorPosition(0, 1);
                 }, TotalLines, 0, TotalLines.Count, 2, NewLineCharacter);
                 ForceClearSelection();
-                UpdateAll();
+                canvasHelper.UpdateAll();
                 Internal_TextChanged();
                 return;
             }
@@ -520,7 +504,7 @@ namespace TextControlBox
             else
                 UpdateScrollToShowCursor();
 
-            UpdateAll();
+            canvasHelper.UpdateAll();
             Internal_TextChanged();
         }
         #endregion
@@ -534,51 +518,21 @@ namespace TextControlBox
                 TotalLines.AddLine();
             }
         }
-        private void ClearSelectionIfNeeded()
-        {
-            //If the selection is visible, but is not getting set, clear the selection
-            if (selectionrenderer.HasSelection && !selectionrenderer.IsSelecting)
-            {
-                ForceClearSelection();
-            }
-        }
         private void ForceClearSelection()
         {
             selectionrenderer.ClearSelection();
             TextSelection = null;
-            UpdateSelection();
+            canvasHelper.UpdateSelection();
         }
         private void StartSelectionIfNeeded()
         {
-            if (SelectionIsNull())
+            if (Selection.SelectionIsNull(selectionrenderer, TextSelection))
             {
                 selectionrenderer.SelectionStartPosition = selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
                 TextSelection = new TextSelection(selectionrenderer.SelectionStartPosition, selectionrenderer.SelectionEndPosition);
             }
         }
-        private bool SelectionIsNull()
-        {
-            if (TextSelection == null)
-                return true;
-            return selectionrenderer.SelectionStartPosition == null || selectionrenderer.SelectionEndPosition == null;
-        }
-        private void SelectSingleWord(CursorPosition CursorPosition)
-        {
-            int Characterpos = CursorPosition.CharacterPosition;
-            //Update variables
-            selectionrenderer.SelectionStartPosition =
-                new CursorPosition(Characterpos - Cursor.CalculateStepsToMoveLeft2(CurrentLine, Characterpos), CursorPosition.LineNumber);
 
-            selectionrenderer.SelectionEndPosition =
-                new CursorPosition(Characterpos + Cursor.CalculateStepsToMoveRight2(CurrentLine, Characterpos), CursorPosition.LineNumber);
-
-            CursorPosition.CharacterPosition = selectionrenderer.SelectionEndPosition.CharacterPosition;
-            selectionrenderer.HasSelection = true;
-
-            //Render it
-            UpdateSelection();
-            UpdateCursor();
-        }
         private void DoDragDropSelection()
         {
             if (TextSelection == null || IsReadonly)
@@ -604,7 +558,7 @@ namespace TextControlBox
 
             Utils.ChangeCursor(CoreCursorType.IBeam);
             DragDropSelection = false;
-            UpdateAll();
+            canvasHelper.UpdateAll();
         }
         private void EndDragDropSelection(bool ClearSelectedText = true)
         {
@@ -614,7 +568,7 @@ namespace TextControlBox
 
             Utils.ChangeCursor(CoreCursorType.IBeam);
             selectionrenderer.IsSelecting = false;
-            UpdateCursor();
+            canvasHelper.UpdateCursor();
         }
         private bool DragDropOverSelection(Point CurPos)
         {
@@ -633,7 +587,7 @@ namespace TextControlBox
                 VerticalScrollbar.Value = (CursorPosition.LineNumber - 1) * SingleLineHeight / DefaultVerticalScrollSensitivity;
 
             if (Update)
-                UpdateAll();
+                canvasHelper.UpdateAll();
         }
         private int GetCurPosInLine()
         {
@@ -661,13 +615,13 @@ namespace TextControlBox
             inputPane.TryShow();
             Utils.ChangeCursor(CoreCursorType.IBeam);
 
-            UpdateCursor();
+            canvasHelper.UpdateCursor();
         }
         private void RemoveFocus()
         {
             if (HasFocus)
                 LostFocus?.Invoke(this);
-            UpdateCursor();
+            canvasHelper.UpdateCursor();
 
             HasFocus = false;
             EditContext.NotifyFocusLeave();
@@ -704,7 +658,7 @@ namespace TextControlBox
             //only update when a line was scrolled
             if ((int)(VerticalScrollbar.Value / SingleLineHeight) != NumberOfStartLine)
             {
-                UpdateAll();
+                canvasHelper.UpdateAll();
             }
         }
 
@@ -824,7 +778,7 @@ namespace TextControlBox
                 this.LineEnding = LineEnding;
 
                 NeedsRecalculateLongestLineIndex = true;
-                UpdateAll();
+                canvasHelper.UpdateAll();
             }
             catch (OutOfMemoryException)
             {
@@ -857,7 +811,7 @@ namespace TextControlBox
                 else
                     Selection.ReplaceLines(TotalLines, 0, TotalLines.Count, stringManager.CleanUpString(text).Split(NewLineCharacter));
 
-                UpdateAll();
+                canvasHelper.UpdateAll();
             }
             catch (OutOfMemoryException)
             {
@@ -888,7 +842,7 @@ namespace TextControlBox
                     }
                 }, TotalLines, 0, TotalLines.Count, Utils.CountLines(text, NewLineCharacter), NewLineCharacter);
 
-                UpdateAll();
+                canvasHelper.UpdateAll();
             }
             catch (OutOfMemoryException)
             {
@@ -953,12 +907,12 @@ namespace TextControlBox
                 if (CurPosX > CanvasWidth - 100)
                 {
                     ScrollIntoViewHorizontal();
-                    UpdateAll();
+                    canvasHelper.UpdateAll();
                 }
                 else if (CurPosX < 100)
                 {
                     ScrollIntoViewHorizontal();
-                    UpdateAll();
+                    canvasHelper.UpdateAll();
                 }
             }
 
@@ -967,7 +921,7 @@ namespace TextControlBox
             {
                 DragDropOverSelection(point);
                 UpdateCursorVariable(point);
-                UpdateCursor();
+                canvasHelper.UpdateCursor();
             }
             if (selectionrenderer.IsSelecting && !DragDropSelection)
             {
@@ -989,9 +943,9 @@ namespace TextControlBox
                     UpdateCursorVariable(point);
 
                 //Update:
-                UpdateCursor();
+                canvasHelper.UpdateCursor();
                 selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
-                UpdateSelection();
+                canvasHelper.UpdateSelection();
             }
         }
         private bool CheckTouchInput(PointerPoint point)
@@ -1007,7 +961,7 @@ namespace TextControlBox
                 double scrollY = OldTouchPosition.Value.Y - point.Position.Y;
                 VerticalScrollbar.Value += scrollY > 2 ? 2 : scrollY < -2 ? -2 : scrollY;
                 HorizontalScrollbar.Value += scrollX > 2 ? 2 : scrollX < -2 ? -2 : scrollX;
-                UpdateAll();
+                canvasHelper.UpdateAll();
                 return true;
             }
             return false;
@@ -1062,7 +1016,7 @@ namespace TextControlBox
                         CursorPosition = Selection.EndPosition;
                     }
                 }
-                UpdateAll();
+                canvasHelper.UpdateAll();
 
                 //mark as handled to not change focus
                 e.Handled = true;
@@ -1102,7 +1056,7 @@ namespace TextControlBox
                         SelectAll();
                         break;
                     case VirtualKey.W:
-                        SelectSingleWord(CursorPosition);
+                        Selection.SelectSingleWord(canvasHelper, selectionrenderer, CursorPosition, CurrentLine);
                         break;
                 }
 
@@ -1135,7 +1089,7 @@ namespace TextControlBox
                     {
                         selectionrenderer.SetSelection(selection);
                     }
-                    UpdateAll();
+                    canvasHelper.UpdateAll();
                     return;
                 }
             }
@@ -1167,13 +1121,13 @@ namespace TextControlBox
                             else
                                 Cursor.MoveLeft(CursorPosition, TotalLines, CurrentLine);
 
-                            ClearSelectionIfNeeded();
+                            Selection.ClearSelectionIfNeeded(this, selectionrenderer);
                         }
 
                         UpdateScrollToShowCursor();
-                        UpdateText();
-                        UpdateCursor();
-                        UpdateSelection();
+                        canvasHelper.UpdateText();
+                        canvasHelper.UpdateCursor();
+                        canvasHelper.UpdateSelection();
                         break;
                     }
                 case VirtualKey.Right:
@@ -1192,11 +1146,11 @@ namespace TextControlBox
                             else
                                 Cursor.MoveRight(CursorPosition, TotalLines, TotalLines.GetCurrentLineText());
 
-                            ClearSelectionIfNeeded();
+                            Selection.ClearSelectionIfNeeded(this, selectionrenderer);
                         }
 
                         UpdateScrollToShowCursor(false);
-                        UpdateAll();
+                        canvasHelper.UpdateAll();
                         break;
                     }
                 case VirtualKey.Down:
@@ -1210,12 +1164,12 @@ namespace TextControlBox
                         }
                         else
                         {
-                            ClearSelectionIfNeeded();
+                            Selection.ClearSelectionIfNeeded(this, selectionrenderer);
                             CursorPosition = Cursor.MoveDown(CursorPosition, TotalLines.Count);
                         }
 
                         UpdateScrollToShowCursor(false);
-                        UpdateAll();
+                        canvasHelper.UpdateAll();
                         break;
                     }
                 case VirtualKey.Up:
@@ -1229,12 +1183,12 @@ namespace TextControlBox
                         }
                         else
                         {
-                            ClearSelectionIfNeeded();
+                            Selection.ClearSelectionIfNeeded(this, selectionrenderer);
                             CursorPosition = Cursor.MoveUp(CursorPosition);
                         }
 
                         UpdateScrollToShowCursor(false);
-                        UpdateAll();
+                        canvasHelper.UpdateAll();
                         break;
                     }
                 case VirtualKey.Escape:
@@ -1260,14 +1214,14 @@ namespace TextControlBox
 
                             Cursor.MoveToLineEnd(CursorPosition, CurrentLine);
                             selectionrenderer.SelectionEndPosition = CursorPosition;
-                            UpdateSelection();
-                            UpdateCursor();
+                            canvasHelper.UpdateSelection();
+                            canvasHelper.UpdateCursor();
                         }
                         else
                         {
                             Cursor.MoveToLineEnd(CursorPosition, CurrentLine);
-                            UpdateCursor();
-                            UpdateText();
+                            canvasHelper.UpdateCursor();
+                            canvasHelper.UpdateText();
                         }
                         break;
                     }
@@ -1282,14 +1236,14 @@ namespace TextControlBox
                             Cursor.MoveToLineStart(CursorPosition);
                             selectionrenderer.SelectionEndPosition = CursorPosition;
 
-                            UpdateSelection();
-                            UpdateCursor();
+                            canvasHelper.UpdateSelection();
+                            canvasHelper.UpdateCursor();
                         }
                         else
                         {
                             Cursor.MoveToLineStart(CursorPosition);
-                            UpdateCursor();
-                            UpdateText();
+                            canvasHelper.UpdateCursor();
+                            canvasHelper.UpdateText();
                         }
                         break;
                     }
@@ -1358,7 +1312,7 @@ namespace TextControlBox
             else if (PointerClickCount == 2)
             {
                 UpdateCursorVariable(PointerPosition);
-                SelectSingleWord(CursorPosition);
+                Selection.SelectSingleWord(canvasHelper, selectionrenderer, CursorPosition, CurrentLine);
             }
             else
             {
@@ -1389,8 +1343,8 @@ namespace TextControlBox
                     UpdateCursorVariable(PointerPosition);
 
                     selectionrenderer.SetSelectionEnd(new CursorPosition(CursorPosition));
-                    UpdateSelection();
-                    UpdateCursor();
+                    canvasHelper.UpdateSelection();
+                    canvasHelper.UpdateCursor();
                     return;
                 }
 
@@ -1427,7 +1381,7 @@ namespace TextControlBox
                         selectionrenderer.IsSelecting = true;
                     }
                 }
-                UpdateCursor();
+                canvasHelper.UpdateCursor();
             }
 
             PointerClickTimer.Start();
@@ -1474,13 +1428,13 @@ namespace TextControlBox
             if (selectionrenderer.IsSelecting)
             {
                 UpdateCursorVariable(e.GetCurrentPoint(Canvas_Selection).Position);
-                UpdateCursor();
+                canvasHelper.UpdateCursor();
 
                 selectionrenderer.SelectionEndPosition = new CursorPosition(CursorPosition.CharacterPosition, CursorPosition.LineNumber);
                 NeedsUpdate = true;
             }
             if (NeedsUpdate)
-                UpdateAll();
+                canvasHelper.UpdateAll();
         }
         private void Canvas_LineNumber_PointerPressed(object sender, PointerRoutedEventArgs e)
         {
@@ -1511,14 +1465,14 @@ namespace TextControlBox
         }
         private void HorizontalScrollbar_Scroll(object sender, ScrollEventArgs e)
         {
-            UpdateAll();
+            canvasHelper.UpdateAll();
         }
         private void VerticalScrollbar_Scroll(object sender, ScrollEventArgs e)
         {
             //only update when a line was scrolled
             if ((int)(VerticalScrollbar.Value / SingleLineHeight * DefaultVerticalScrollSensitivity) != NumberOfStartLine)
             {
-                UpdateAll();
+                canvasHelper.UpdateAll();
             }
         }
         //Canvas event
@@ -1659,7 +1613,7 @@ namespace TextControlBox
                 CursorColorBrush);
 
 
-            if (_ShowLineHighlighter && SelectionIsNull())
+            if (_ShowLineHighlighter && Selection.SelectionIsNull(selectionrenderer, TextSelection))
             {
                 LineHighlighter.Render((float)sender.ActualWidth, CurrentLineTextLayout, (float)-HorizontalScroll, RenderPosY, ZoomedFontSize, args, LineHighlighterBrush);
             }
@@ -1793,7 +1747,7 @@ namespace TextControlBox
             deferral.Complete();
 
             UpdateCursorVariable(e.GetPosition(Canvas_Text));
-            UpdateCursor();
+            canvasHelper.UpdateCursor();
         }
         #endregion
 
@@ -1808,8 +1762,8 @@ namespace TextControlBox
             selectionrenderer.SetSelection(new CursorPosition(0, index), new CursorPosition(TotalLines.GetLineLength(index), index));
             CursorPosition = selectionrenderer.SelectionEndPosition;
 
-            UpdateSelection();
-            UpdateCursor();
+            canvasHelper.UpdateSelection();
+            canvasHelper.UpdateCursor();
         }
 
         /// <summary>
@@ -1827,7 +1781,7 @@ namespace TextControlBox
             ScrollLineIntoView(index);
             this.Focus(FocusState.Programmatic);
 
-            UpdateAll();
+            canvasHelper.UpdateAll();
         }
 
         /// <summary>
@@ -1856,6 +1810,7 @@ namespace TextControlBox
         /// This will drastically improve loading time and ram usage
         /// </summary>
         /// <param name="lines">A string array containing the lines</param>
+        /// <param name="lineEnding">The Lineending in which the text should be loaded</param>
         public void LoadLines(IEnumerable<string> lines, LineEnding lineEnding = LineEnding.CRLF)
         {
             Safe_LoadLines(lines, lineEnding);
@@ -1909,8 +1864,8 @@ namespace TextControlBox
                     CursorPosition = result.EndPosition;
             }
 
-            UpdateSelection();
-            UpdateCursor();
+            canvasHelper.UpdateSelection();
+            canvasHelper.UpdateCursor();
         }
 
         /// <summary>
@@ -1923,8 +1878,8 @@ namespace TextControlBox
                 return;
             selectionrenderer.SetSelection(new CursorPosition(0, 0), new CursorPosition(TotalLines.GetLineLength(-1), TotalLines.Count - 1));
             CursorPosition = selectionrenderer.SelectionEndPosition;
-            UpdateSelection();
-            UpdateCursor();
+            canvasHelper.UpdateSelection();
+            canvasHelper.UpdateCursor();
         }
 
         /// <summary>
@@ -1957,7 +1912,7 @@ namespace TextControlBox
                 if (sel.StartPosition != null && sel.EndPosition == null)
                 {
                     CursorPosition = sel.StartPosition;
-                    UpdateAll();
+                    canvasHelper.UpdateAll();
                     return;
                 }
 
@@ -1966,7 +1921,7 @@ namespace TextControlBox
             }
             else
                 ForceClearSelection();
-            UpdateAll();
+            canvasHelper.UpdateAll();
         }
 
         /// <summary>
@@ -1991,7 +1946,7 @@ namespace TextControlBox
                 if (sel.StartPosition != null && sel.EndPosition == null)
                 {
                     CursorPosition = sel.StartPosition;
-                    UpdateAll();
+                    canvasHelper.UpdateAll();
                     return;
                 }
 
@@ -2000,7 +1955,7 @@ namespace TextControlBox
             }
             else
                 ForceClearSelection();
-            UpdateAll();
+            canvasHelper.UpdateAll();
         }
 
         /// <summary>
@@ -2019,7 +1974,7 @@ namespace TextControlBox
         public void ScrollOneLineUp()
         {
             VerticalScrollbar.Value -= SingleLineHeight / DefaultVerticalScrollSensitivity;
-            UpdateAll();
+            canvasHelper.UpdateAll();
         }
 
         /// <summary>
@@ -2028,7 +1983,7 @@ namespace TextControlBox
         public void ScrollOneLineDown()
         {
             VerticalScrollbar.Value += SingleLineHeight / DefaultVerticalScrollSensitivity;
-            UpdateAll();
+            canvasHelper.UpdateAll();
         }
 
         /// <summary>
@@ -2038,7 +1993,7 @@ namespace TextControlBox
         public void ScrollLineIntoView(int index)
         {
             VerticalScrollbar.Value = (index - NumberOfRenderedLines / 2) * SingleLineHeight / DefaultVerticalScrollSensitivity;
-            UpdateAll();
+            canvasHelper.UpdateAll();
         }
 
         /// <summary>
@@ -2047,7 +2002,7 @@ namespace TextControlBox
         public void ScrollTopIntoView()
         {
             VerticalScrollbar.Value = (CursorPosition.LineNumber - 1) * SingleLineHeight / DefaultVerticalScrollSensitivity;
-            UpdateAll();
+            canvasHelper.UpdateAll();
         }
 
         /// <summary>
@@ -2056,7 +2011,7 @@ namespace TextControlBox
         public void ScrollBottomIntoView()
         {
             VerticalScrollbar.Value = (CursorPosition.LineNumber - NumberOfRenderedLines + 1) * SingleLineHeight / DefaultVerticalScrollSensitivity;
-            UpdateAll();
+            canvasHelper.UpdateAll();
         }
 
         /// <summary>
@@ -2069,7 +2024,7 @@ namespace TextControlBox
                 CursorPosition.LineNumber = 0;
 
             VerticalScrollbar.Value -= NumberOfRenderedLines * SingleLineHeight / DefaultVerticalScrollSensitivity;
-            UpdateAll();
+            canvasHelper.UpdateAll();
         }
 
         /// <summary>
@@ -2081,7 +2036,7 @@ namespace TextControlBox
             if (CursorPosition.LineNumber > TotalLines.Count - 1)
                 CursorPosition.LineNumber = TotalLines.Count - 1;
             VerticalScrollbar.Value += NumberOfRenderedLines * SingleLineHeight / DefaultVerticalScrollSensitivity;
-            UpdateAll();
+            canvasHelper.UpdateAll();
         }
 
         /// <summary>
@@ -2128,7 +2083,7 @@ namespace TextControlBox
             {
                 TotalLines.SetLineText(index, stringManager.CleanUpString(text));
             }, TotalLines, index, 1, 1, NewLineCharacter);
-            UpdateText();
+            canvasHelper.UpdateText();
             return true;
         }
 
@@ -2155,7 +2110,7 @@ namespace TextControlBox
                 TotalLines.AddLine();
             }
 
-            UpdateText();
+            canvasHelper.UpdateText();
             return true;
         }
 
@@ -2179,7 +2134,7 @@ namespace TextControlBox
 
             }, TotalLines, index, 1, 2, NewLineCharacter);
 
-            UpdateText();
+            canvasHelper.UpdateText();
             return true;
         }
 
@@ -2200,7 +2155,7 @@ namespace TextControlBox
         /// <param name="text2">The text for the right side</param>
         public void SurroundSelectionWith(string text1, string text2)
         {
-            if (!SelectionIsNull())
+            if (!Selection.SelectionIsNull(selectionrenderer, TextSelection))
             {
                 AddCharacter(stringManager.CleanUpString(text1) + SelectedText + stringManager.CleanUpString(text2));
             }
@@ -2221,8 +2176,8 @@ namespace TextControlBox
             if (OutOfRenderedArea(index))
                 ScrollBottomIntoView();
 
-            UpdateText();
-            UpdateCursor();
+            canvasHelper.UpdateText();
+            canvasHelper.UpdateCursor();
         }
         /// <summary>
         /// Duplicates the line at the current cursor position
@@ -2259,7 +2214,7 @@ namespace TextControlBox
                     }
                 }
             }, TotalLines, 0, TotalLines.Count, TotalLines.Count, NewLineCharacter);
-            UpdateText();
+            canvasHelper.UpdateText();
             return isFound ? SearchResult.Found : SearchResult.NotFound;
         }
 
@@ -2277,8 +2232,8 @@ namespace TextControlBox
             {
                 selectionrenderer.SetSelection(res.selection);
                 ScrollLineIntoView(CursorPosition.LineNumber);
-                UpdateText();
-                UpdateSelection();
+                canvasHelper.UpdateText();
+                canvasHelper.UpdateSelection();
             }
             return res.result;
         }
@@ -2297,8 +2252,8 @@ namespace TextControlBox
             {
                 selectionrenderer.SetSelection(res.selection);
                 ScrollLineIntoView(CursorPosition.LineNumber);
-                UpdateText();
-                UpdateSelection();
+                canvasHelper.UpdateText();
+                canvasHelper.UpdateSelection();
             }
             return res.result;
         }
@@ -2313,7 +2268,7 @@ namespace TextControlBox
         public SearchResult BeginSearch(string word, bool wholeWord, bool matchCase)
         {
             var res = searchHelper.BeginSearch(TotalLines, word, wholeWord, matchCase);
-            UpdateText();
+            canvasHelper.UpdateText();
             return res;
         }
 
@@ -2323,7 +2278,7 @@ namespace TextControlBox
         public void EndSearch()
         {
             searchHelper.EndSearch();
-            UpdateText();
+            canvasHelper.UpdateText();
         }
 
         /// <summary>
@@ -2383,7 +2338,7 @@ namespace TextControlBox
             {
                 _CodeLanguage = value;
                 NeedsUpdateTextLayout = true; //set to true to force update the textlayout
-                UpdateText();
+                canvasHelper.UpdateText();
             }
         }
 
@@ -2406,7 +2361,7 @@ namespace TextControlBox
         /// <summary>
         /// The space between the linenumbers and the start of the text
         /// </summary>
-        public float SpaceBetweenLineNumberAndText { get => _SpaceBetweenLineNumberAndText; set { _SpaceBetweenLineNumberAndText = value; NeedsUpdateLineNumbers(); UpdateAll(); } }
+        public float SpaceBetweenLineNumberAndText { get => _SpaceBetweenLineNumberAndText; set { _SpaceBetweenLineNumberAndText = value; NeedsUpdateLineNumbers(); canvasHelper.UpdateAll(); } }
 
         /// <summary>
         /// Get or set the current position of the cursor
@@ -2414,13 +2369,13 @@ namespace TextControlBox
         public CursorPosition CursorPosition
         {
             get => _CursorPosition;
-            set { _CursorPosition = new CursorPosition(value.CharacterPosition, value.LineNumber); UpdateCursor(); }
+            set { _CursorPosition = new CursorPosition(value.CharacterPosition, value.LineNumber); canvasHelper.UpdateCursor(); }
         }
 
         /// <summary>
         /// The fontfamily of the textbox
         /// </summary>
-        public new FontFamily FontFamily { get => _FontFamily; set { _FontFamily = value; NeedsTextFormatUpdate = true; UpdateAll(); } }
+        public new FontFamily FontFamily { get => _FontFamily; set { _FontFamily = value; NeedsTextFormatUpdate = true; canvasHelper.UpdateAll(); } }
 
         /// <summary>
         /// The fontsize of the textbox
@@ -2455,7 +2410,7 @@ namespace TextControlBox
                 this.Background = _Design.Background;
                 ColorResourcesCreated = false;
                 NeedsUpdateTextLayout = true;
-                UpdateAll();
+                canvasHelper.UpdateAll();
             }
         }
 
@@ -2480,7 +2435,7 @@ namespace TextControlBox
 
                 this.Background = _Design.Background;
                 ColorResourcesCreated = false;
-                UpdateAll();
+                canvasHelper.UpdateAll();
             }
         }
 
@@ -2495,7 +2450,7 @@ namespace TextControlBox
                 _ShowLineNumbers = value;
                 NeedsUpdateTextLayout = true;
                 NeedsUpdateLineNumbers();
-                UpdateAll();
+                canvasHelper.UpdateAll();
             }
         }
 
@@ -2505,7 +2460,7 @@ namespace TextControlBox
         public bool ShowLineHighlighter
         {
             get => _ShowLineHighlighter;
-            set { _ShowLineHighlighter = value; UpdateCursor(); }
+            set { _ShowLineHighlighter = value; canvasHelper.UpdateCursor(); }
         }
 
         /// <summary>
@@ -2521,7 +2476,7 @@ namespace TextControlBox
         /// <summary>
         /// Change the size and offset of the cursor. Use null for the default
         /// </summary>
-        public CursorSize CursorSize { get => _CursorSize; set { _CursorSize = value; UpdateCursor(); } }
+        public CursorSize CursorSize { get => _CursorSize; set { _CursorSize = value; canvasHelper.UpdateCursor(); } }
 
         /// <summary>
         /// Change the contextflyout of the textbox
@@ -2615,12 +2570,12 @@ namespace TextControlBox
         /// <summary>
         /// Get the vertical scrollposition
         /// </summary>
-        public double VerticalScroll { get => VerticalScrollbar.Value; set { VerticalScrollbar.Value = value < 0 ? 0 : value; UpdateAll(); } }
+        public double VerticalScroll { get => VerticalScrollbar.Value; set { VerticalScrollbar.Value = value < 0 ? 0 : value; canvasHelper.UpdateAll(); } }
 
         /// <summary>
         /// Get the horizontal scrollposition
         /// </summary>
-        public double HorizontalScroll { get => HorizontalScrollbar.Value; set { HorizontalScrollbar.Value = value < 0 ? 0 : value; UpdateAll(); } }
+        public double HorizontalScroll { get => HorizontalScrollbar.Value; set { HorizontalScrollbar.Value = value < 0 ? 0 : value; canvasHelper.UpdateAll(); } }
 
         /// <summary>
         /// The radius of the borders around the control
@@ -2630,12 +2585,12 @@ namespace TextControlBox
         /// <summary>
         /// Indicates whether to use spaces or tabs
         /// </summary>
-        public bool UseSpacesInsteadTabs { get => tabSpaceHelper.UseSpacesInsteadTabs; set { tabSpaceHelper.UseSpacesInsteadTabs = value; tabSpaceHelper.UpdateTabs(TotalLines); UpdateAll(); } }
+        public bool UseSpacesInsteadTabs { get => tabSpaceHelper.UseSpacesInsteadTabs; set { tabSpaceHelper.UseSpacesInsteadTabs = value; tabSpaceHelper.UpdateTabs(TotalLines); canvasHelper.UpdateAll(); } }
 
         /// <summary>
         /// The number of spaces to use instead of one tab
         /// </summary>
-        public int NumberOfSpacesForTab { get => tabSpaceHelper.NumberOfSpaces; set { tabSpaceHelper.NumberOfSpaces = value; tabSpaceHelper.UpdateNumberOfSpaces(TotalLines); UpdateAll(); } }
+        public int NumberOfSpacesForTab { get => tabSpaceHelper.NumberOfSpaces; set { tabSpaceHelper.NumberOfSpaces = value; tabSpaceHelper.UpdateNumberOfSpaces(TotalLines); canvasHelper.UpdateAll(); } }
 
         /// <summary>
         /// Get whether the search is currently active
@@ -2665,7 +2620,6 @@ namespace TextControlBox
         /// Invokes when the text has changed
         /// </summary>
         /// <param name="sender">The textbox in which the text was changed</param>
-        /// <param name="text">The text of the textbox</param>
         public delegate void TextChangedEvent(TextControlBox sender);
         public event TextChangedEvent TextChanged;
 

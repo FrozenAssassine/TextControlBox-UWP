@@ -40,8 +40,8 @@ namespace TextControlBox_TestApp
         private async void Load()
         {
             textbox.CodeLanguage = TextControlBox.TextControlBox.GetCodeLanguageFromId("C#");
-            //textbox.CodeLanguage = TextControlBox.TextControlBox.GetCodeLanguageFromJson(await FileIO.ReadTextAsync(await ApplicationData.Current.LocalFolder.GetFileAsync("css.json"))).CodeLanguage;
             textbox.SyntaxHighlighting = true;
+            textbox.LoadLines(GenerateContent());
         }
         private IEnumerable<string> GenerateContent()
         {
@@ -66,18 +66,10 @@ namespace TextControlBox_TestApp
             {
                 textbox.RequestedTheme = textbox.RequestedTheme == ElementTheme.Dark ? 
                     ElementTheme.Light : textbox.RequestedTheme == ElementTheme.Default ? ElementTheme.Light : ElementTheme.Dark;
-                
-                //TextControlBox.DuplicateLine(TextControlBox.CurrentLineIndex);
             }
             if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.L)
             {
-                var text = await FileIO.ReadTextAsync(await ApplicationData.Current.LocalFolder.GetFileAsync("css.json"));
-                Debug.WriteLine(text);
-                var res = TextControlBox.TextControlBox.GetCodeLanguageFromJson(text);
-                Debug.WriteLine("RESULT: " + res.Succeed);
-                textbox.CodeLanguage = res.CodeLanguage;
-                //textbox.ShowLineNumbers = !textbox.ShowLineNumbers;
-                //TextControlBox.DuplicateLine(TextControlBox.CurrentLineIndex);
+                textbox.ShowLineNumbers = !textbox.ShowLineNumbers;
             }
             if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.O)
             {
@@ -105,21 +97,6 @@ namespace TextControlBox_TestApp
                     await FileIO.WriteLinesAsync(file, textbox.Lines);
                 }
             }
-        }
-
-        private void searchInput_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            textbox.BeginSearch(searchInput.Text, false, false);
-        }
-
-        private void SearchUp_Click(object sender, RoutedEventArgs e)
-        {
-            textbox.FindPrevious();
-        }
-
-        private void SearchDown_Click(object sender, RoutedEventArgs e)
-        {
-            textbox.FindNext();
         }
     }
 }

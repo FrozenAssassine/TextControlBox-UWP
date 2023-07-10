@@ -14,7 +14,13 @@
             this.CharacterPosition = CurrentCursorPosition.CharacterPosition;
             this.LineNumber = CurrentCursorPosition.LineNumber;
         }
+        /// <summary>
+        /// The characterposition of the cursor in the current line
+        /// </summary>
         public int CharacterPosition { get; internal set; } = 0;
+        /// <summary>
+        /// The linenumber in which the cursor currently is
+        /// </summary>
         public int LineNumber { get; internal set; } = 0;
         internal CursorPosition Change(int CharacterPosition, int LineNumber)
         {

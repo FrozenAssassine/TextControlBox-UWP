@@ -56,15 +56,4 @@
             return false;
         }
     }
-
-    public class TextSelectionPosition
-    {
-        public TextSelectionPosition(int Index = 0, int Length = 0)
-        {
-            this.Index = Index;
-            this.Length = Length;
-        }
-        public int Index { get; set; }
-        public int Length { get; set; }
-    }
 }
