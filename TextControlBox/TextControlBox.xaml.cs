@@ -134,6 +134,7 @@ namespace TextControlBox
         private readonly StringManager stringManager;
         private readonly SearchHelper searchHelper = new SearchHelper();
         private readonly CanvasHelper canvasHelper;
+        private readonly AutoIndentation autoindentation = new AutoIndentation();
 
         /// <summary>
         /// Creates a new instance of the TextControlBox
@@ -503,6 +504,8 @@ namespace TextControlBox
                 ScrollOneLineDown();
             else
                 UpdateScrollToShowCursor();
+
+            IndentLine(CursorPosition.LineNumber);
 
             canvasHelper.UpdateAll();
             Internal_TextChanged();
@@ -1753,6 +1756,24 @@ namespace TextControlBox
 
         #region Public functions and properties
 
+        public void UpdateIndentation()
+        {
+            autoindentation.IndentAll(TotalLines);
+            canvasHelper.UpdateAll();
+        }
+
+        public void IndentLine(int line)
+        {
+            if (!AutoIndentation)
+                return;
+
+            if (autoindentation.IndentCurrent(TotalLines, line))
+            {
+                Cursor.MoveToLineEnd(CursorPosition, CurrentLine);
+                canvasHelper.UpdateAll();
+            }
+        }
+
         /// <summary>
         /// Selects a line specified by the index
         /// </summary>
@@ -2611,6 +2632,8 @@ namespace TextControlBox
         /// Auto-pairing automatically pairs opening and closing symbols, such as brackets or quotation marks.
         /// </remarks>
         public bool DoAutoPairing { get; set; } = true;
+
+        public bool AutoIndentation { get; set; } = true;
 
         #endregion
 
