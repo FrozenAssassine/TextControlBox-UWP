@@ -1,28 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TextControlBox
+﻿namespace TextControlBox
 {
+    /// <summary>
+    /// Represents the class that will be returned by the SelectionChanged event of the TextControlBox.
+    /// </summary>
     public class SelectionChangedEventHandler
     {
         /// <summary>
-        /// The cursorposition in the current line
+        /// Represents the position of the cursor within the current line.
         /// </summary>
-        public int CharacterPositionInLine;
+        public int CharacterPositionInLine { get; set; }
+
         /// <summary>
-        /// The linenumber where the cursor is currently in
+        /// Represents the line number where the cursor is currently located.
         /// </summary>
-        public int LineNumber;
+        public int LineNumber { get; set; }
+
         /// <summary>
-        /// The start index of the selection
+        /// Represents the starting index of the selection.
         /// </summary>
-        public int SelectionStartIndex;
+        public int SelectionStartIndex { get; set; }
+
         /// <summary>
-        /// The lenght of the selection
+        /// Represents the length of the selection.
         /// </summary>
-        public int SelectionLength;
+        public int SelectionLength { get; set; }
     }
 }

@@ -24,11 +24,11 @@ namespace TextControlBox.Helper
             return i >= MatchingSearchLines.Length ? MatchingSearchLines.Length - 1 : i < 0 ? 0 : i;
         }
 
-        public InternSearchResult FindNext(PooledList<string> TotalLines, CursorPosition CursorPosition)
+        public InternSearchResult FindNext(PooledList<string> totalLines, CursorPosition cursorPosition)
         {
             if (IsSearchOpen && MatchingSearchLines != null && MatchingSearchLines.Length > 0)
             {
-                CurrentSearchLine = CursorPosition.LineNumber;
+                CurrentSearchLine = cursorPosition.LineNumber;
                 int indexInList = Array.IndexOf(MatchingSearchLines, CurrentSearchLine);
                 //When in a line without a match search for the next line with a match
                 if (indexInList == -1)
@@ -62,34 +62,31 @@ namespace TextControlBox.Helper
                     if (CurrentSearchLine < MatchingSearchLines[MatchingSearchLines.Length - 1])
                     {
                         CurrentSearchArrayIndex++;
-                        CurrentSearchLine = CursorPosition.LineNumber = MatchingSearchLines[CurrentSearchArrayIndex];
-                        CurrentLineMatches = Regex.Matches(TotalLines[CurrentSearchLine], SearchParameter.SearchExpression);
+                        CurrentSearchLine = cursorPosition.LineNumber = MatchingSearchLines[CurrentSearchArrayIndex];
+                        CurrentLineMatches = Regex.Matches(totalLines[CurrentSearchLine], SearchParameter.SearchExpression);
                     }
                     else
                         return new InternSearchResult(SearchResult.ReachedEnd, null);
                 }
 
-                if (RegexIndexInLine > CurrentLineMatches.Count)
-                    RegexIndexInLine = CurrentLineMatches.Count - 1;
-                if (RegexIndexInLine < 0)
-                    RegexIndexInLine = 0;
+                RegexIndexInLine = Math.Clamp(RegexIndexInLine, 0, CurrentLineMatches.Count - 1);
 
                 RegexIndexInLine++;
                 if (RegexIndexInLine > CurrentLineMatches.Count || RegexIndexInLine < 0)
                     return new InternSearchResult(SearchResult.NotFound, null);
 
                 return new InternSearchResult(SearchResult.Found, new TextSelection(
-                    new CursorPosition(CurrentLineMatches[RegexIndexInLine - 1].Index, CursorPosition.LineNumber),
-                    new CursorPosition(CurrentLineMatches[RegexIndexInLine - 1].Index + CurrentLineMatches[RegexIndexInLine - 1].Length, CursorPosition.LineNumber)));
+                    new CursorPosition(CurrentLineMatches[RegexIndexInLine - 1].Index, cursorPosition.LineNumber),
+                    new CursorPosition(CurrentLineMatches[RegexIndexInLine - 1].Index + CurrentLineMatches[RegexIndexInLine - 1].Length, cursorPosition.LineNumber)));
             }
             return new InternSearchResult(SearchResult.NotFound, null);
         }
-        public InternSearchResult FindPrevious(PooledList<string> Lines, CursorPosition CursorPosition)
+        public InternSearchResult FindPrevious(PooledList<string> totalLines, CursorPosition cursorPosition)
         {
             if (IsSearchOpen && MatchingSearchLines != null)
             {
                 //Find the next linnenumber with a match if the line is not in the array of matching lines
-                CurrentSearchLine = CursorPosition.LineNumber;
+                CurrentSearchLine = cursorPosition.LineNumber;
                 int indexInList = Array.IndexOf(MatchingSearchLines, CurrentSearchLine);
                 if (indexInList == -1)
                 {
@@ -126,8 +123,8 @@ namespace TextControlBox.Helper
                     }
                     if (CurrentSearchLine < MatchingSearchLines[MatchingSearchLines.Length - 1])
                     {
-                        CurrentSearchLine = CursorPosition.LineNumber = MatchingSearchLines[CheckIndexValue(CurrentSearchArrayIndex - 1)];
-                        CurrentLineMatches = Regex.Matches(Lines[CurrentSearchLine], SearchParameter.SearchExpression);
+                        CurrentSearchLine = cursorPosition.LineNumber = MatchingSearchLines[CheckIndexValue(CurrentSearchArrayIndex - 1)];
+                        CurrentLineMatches = Regex.Matches(totalLines[CurrentSearchLine], SearchParameter.SearchExpression);
                         RegexIndexInLine = CurrentLineMatches.Count - 1;
                         CurrentSearchArrayIndex--;
                     }
@@ -136,33 +133,30 @@ namespace TextControlBox.Helper
                 if (CurrentLineMatches == null)
                     return new InternSearchResult(SearchResult.NotFound, null);
 
-                if (RegexIndexInLine > CurrentLineMatches.Count)
-                    RegexIndexInLine = CurrentLineMatches.Count - 1;
-                if (RegexIndexInLine < 0)
-                    RegexIndexInLine = 0;
+                RegexIndexInLine = Math.Clamp(RegexIndexInLine, 0, CurrentLineMatches.Count - 1);
 
                 //RegexIndexInLine--;
                 if (RegexIndexInLine >= CurrentLineMatches.Count || RegexIndexInLine < 0)
                     return new InternSearchResult(SearchResult.NotFound, null);
 
                 return new InternSearchResult(SearchResult.Found, new TextSelection(
-                    new CursorPosition(CurrentLineMatches[RegexIndexInLine].Index, CursorPosition.LineNumber),
-                    new CursorPosition(CurrentLineMatches[RegexIndexInLine].Index + CurrentLineMatches[RegexIndexInLine--].Length, CursorPosition.LineNumber)));
+                    new CursorPosition(CurrentLineMatches[RegexIndexInLine].Index, cursorPosition.LineNumber),
+                    new CursorPosition(CurrentLineMatches[RegexIndexInLine].Index + CurrentLineMatches[RegexIndexInLine--].Length, cursorPosition.LineNumber)));
             }
             return new InternSearchResult(SearchResult.NotFound, null);
         }
 
-        public void UpdateSearchLines(PooledList<string> TotalLines)
+        public void UpdateSearchLines(PooledList<string> totalLines)
         {
-            MatchingSearchLines = FindIndexes(TotalLines);
+            MatchingSearchLines = FindIndexes(totalLines);
         }
 
-        public SearchResult BeginSearch(PooledList<string> TotalLines, string Word, bool MatchCase, bool WholeWord)
+        public SearchResult BeginSearch(PooledList<string> totalLines, string word, bool matchCase, bool wholeWord)
         {
-            SearchParameter = new SearchParameter(Word, WholeWord, MatchCase);
-            UpdateSearchLines(TotalLines);
+            SearchParameter = new SearchParameter(word, wholeWord, matchCase);
+            UpdateSearchLines(totalLines);
 
-            if (Word == "" || Word == null)
+            if (word == "" || word == null)
                 return SearchResult.InvalidInput;
 
             //A result was found
@@ -179,12 +173,12 @@ namespace TextControlBox.Helper
             MatchingSearchLines = null;
         }
 
-        private int[] FindIndexes(PooledList<string> Lines)
+        private int[] FindIndexes(PooledList<string> totalLines)
         {
             List<int> results = new List<int>();
-            for (int i = 0; i < Lines.Count; i++)
+            for (int i = 0; i < totalLines.Count; i++)
             {
-                if (Lines[i].Contains(SearchParameter))
+                if (totalLines[i].Contains(SearchParameter))
                     results.Add(i);
             };
             return results.ToArray();
@@ -192,38 +186,33 @@ namespace TextControlBox.Helper
     }
     internal class SearchParameter
     {
-        public SearchParameter(string Word, bool wholeWord = false, bool matchCase = false)
+        public SearchParameter(string word, bool wholeWord = false, bool matchCase = false)
         {
-            this.Word = Word;
+            this.Word = word;
             this.WholeWord = wholeWord;
             this.MatchCase = matchCase;
 
             if (wholeWord)
-                SearchExpression += @"\b" + (matchCase ? "" : "(?i)") + Regex.Escape(Word) + @"\b";
+                SearchExpression += @"\b" + (matchCase ? "" : "(?i)") + Regex.Escape(word) + @"\b";
             else
-                SearchExpression += (matchCase ? "" : "(?i)") + Regex.Escape(Word);
+                SearchExpression += (matchCase ? "" : "(?i)") + Regex.Escape(word);
         }
+
         public bool WholeWord { get; set; }
         public bool MatchCase { get; set; }
         public string Word { get; set; }
         public string SearchExpression { get; set; } = "";
-    }
-    /// <summary>
-    /// A result returned from the search
-    /// </summary>
-    public enum SearchResult
-    {
-        Found, NotFound, InvalidInput, ReachedBegin, ReachedEnd, SearchNotOpened
     }
 
     internal struct InternSearchResult
     {
         public InternSearchResult(SearchResult result, TextSelection selection)
         {
-            this.result = result;
-            this.selection = selection;
+            this.Result = result;
+            this.Selection = selection;
         }
-        public TextSelection selection;
-        public SearchResult result;
+
+        public TextSelection Selection;
+        public SearchResult Result;
     }
 }

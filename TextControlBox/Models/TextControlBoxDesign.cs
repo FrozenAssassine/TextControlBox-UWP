@@ -1,59 +1,89 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Windows.UI;
+﻿using Windows.UI;
 using Windows.UI.Xaml.Media;
 
 namespace TextControlBox
 {
+    /// <summary>
+    /// Represents the design settings for the textbox.
+    /// </summary>
     public class TextControlBoxDesign
     {
         /// <summary>
         /// Create an instance of the TextControlBoxDesign from a given design
         /// </summary>
-        /// <param name="Design">The design to create a new instance from</param>
-        public TextControlBoxDesign(TextControlBoxDesign Design)
+        /// <param name="design">The design to create a new instance from</param>
+        public TextControlBoxDesign(TextControlBoxDesign design)
         {
-            this.Background = Design.Background;
-            this.TextColor = Design.TextColor;
-            this.SelectionColor = Design.SelectionColor;
-            this.CursorColor = Design.CursorColor;
-            this.LineHighlighterColor = Design.LineHighlighterColor;
-            this.LineNumberColor = Design.LineNumberColor;
-            this.LineNumberBackground = Design.LineNumberBackground;
+            this.Background = design.Background;
+            this.TextColor = design.TextColor;
+            this.SelectionColor = design.SelectionColor;
+            this.CursorColor = design.CursorColor;
+            this.LineHighlighterColor = design.LineHighlighterColor;
+            this.LineNumberColor = design.LineNumberColor;
+            this.LineNumberBackground = design.LineNumberBackground;
         }
 
         /// <summary>
         /// Create a new instance of the TextControlBoxDesign class
         /// </summary>
-        /// <param name="Background">The background color of the textbox</param>
-        /// <param name="TextColor">The color of the text</param>
-        /// <param name="SelectionColor">The color of the selection</param>
-        /// <param name="CursorColor">The color of the cursor</param>
-        /// <param name="LineHighlighterColor">The color of the linehighlighter</param>
-        /// <param name="LineNumberColor">The color of the linenumber</param>
-        /// <param name="LineNumberBackground">The background color of the linenumbers</param>
-        public TextControlBoxDesign(Brush Background, Color TextColor, Color SelectionColor, Color CursorColor, Color LineHighlighterColor, Color LineNumberColor, Color LineNumberBackground, Color SearchHighlightColor)
+        /// <param name="background">The background color of the textbox</param>
+        /// <param name="textColor">The color of the text</param>
+        /// <param name="selectionColor">The color of the selection</param>
+        /// <param name="cursorColor">The color of the cursor</param>
+        /// <param name="lineHighlighterColor">The color of the linehighlighter</param>
+        /// <param name="lineNumberColor">The color of the linenumber</param>
+        /// <param name="lineNumberBackground">The background color of the linenumbers</param>
+        /// <param name="searchHighlightColor">The color of the search highlights</param>
+        public TextControlBoxDesign(Brush background, Color textColor, Color selectionColor, Color cursorColor, Color lineHighlighterColor, Color lineNumberColor, Color lineNumberBackground, Color searchHighlightColor)
         {
-            this.Background = Background;
-            this.TextColor = TextColor;
-            this.SelectionColor = SelectionColor;
-            this.CursorColor = CursorColor;
-            this.LineHighlighterColor = LineHighlighterColor;
-            this.LineNumberColor = LineNumberColor;
-            this.LineNumberBackground = LineNumberBackground;
-            this.SearchHighlightColor = SearchHighlightColor;
+            this.Background = background;
+            this.TextColor = textColor;
+            this.SelectionColor = selectionColor;
+            this.CursorColor = cursorColor;
+            this.LineHighlighterColor = lineHighlighterColor;
+            this.LineNumberColor = lineNumberColor;
+            this.LineNumberBackground = lineNumberBackground;
+            this.SearchHighlightColor = searchHighlightColor;
         }
 
+        /// <summary>
+        /// Gets or sets the background color of the textbox.
+        /// </summary>
         public Brush Background { get; set; }
+
+        /// <summary>
+        /// Gets or sets the text color of the textbox.
+        /// </summary>
         public Color TextColor { get; set; }
+
+        /// <summary>
+        /// Gets or sets the color of the selected text in the textbox.
+        /// </summary>
         public Color SelectionColor { get; set; }
+
+        /// <summary>
+        /// Gets or sets the color of the cursor in the textbox.
+        /// </summary>
         public Color CursorColor { get; set; }
+
+        /// <summary>
+        /// Gets or sets the color of the line highlighter in the textbox.
+        /// </summary>
         public Color LineHighlighterColor { get; set; }
+
+        /// <summary>
+        /// Gets or sets the color of the line numbers in the textbox.
+        /// </summary>
         public Color LineNumberColor { get; set; }
+
+        /// <summary>
+        /// Gets or sets the background color of the line numbers in the textbox.
+        /// </summary>
         public Color LineNumberBackground { get; set; }
+
+        /// <summary>
+        /// Gets or sets the color used to highlight search results in the textbox.
+        /// </summary>
         public Color SearchHighlightColor { get; set; }
     }
 }

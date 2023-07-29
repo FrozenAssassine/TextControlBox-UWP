@@ -1,6 +1,5 @@
 ﻿using Collections.Pooled;
 using System;
-using System.Diagnostics;
 
 namespace TextControlBox.Helper
 {
@@ -27,19 +26,17 @@ namespace TextControlBox.Helper
         private string Spaces = "    ";
         private string Tab = "\t";
 
-        public void UpdateNumberOfSpaces(PooledList<string> TotalLines)
+        public void UpdateNumberOfSpaces(PooledList<string> totalLines)
         {
-            ReplaceSpacesToSpaces(TotalLines);
+            ReplaceSpacesToSpaces(totalLines);
         }
 
-        public void UpdateTabs(PooledList<string> TotalLines)
+        public void UpdateTabs(PooledList<string> totalLines)
         {
             if (UseSpacesInsteadTabs)
-            {
-                ReplaceTabsToSpaces(TotalLines);
-            }
+                ReplaceTabsToSpaces(totalLines);
             else
-                ReplaceSpacesToTabs(TotalLines);
+                ReplaceSpacesToTabs(totalLines);
         }
         public string UpdateTabs(string input)
         {
@@ -48,11 +45,11 @@ namespace TextControlBox.Helper
             return Replace(input, Spaces, Tab);
         }
 
-        private void ReplaceSpacesToSpaces(PooledList<string> TotalLines)
+        private void ReplaceSpacesToSpaces(PooledList<string> totalLines)
         {
-            for (int i = 0; i < TotalLines.Count; i++)
+            for (int i = 0; i < totalLines.Count; i++)
             {
-                TotalLines[i] = Replace(TotalLines[i], OldSpaces, Spaces);
+                totalLines[i] = Replace(totalLines[i], OldSpaces, Spaces);
             }
         }
         private void ReplaceSpacesToTabs(PooledList<string> TotalLines)
@@ -62,11 +59,11 @@ namespace TextControlBox.Helper
                 TotalLines[i] = Replace(TotalLines[i], Spaces, Tab);
             }
         }
-        private void ReplaceTabsToSpaces(PooledList<string> TotalLines)
+        private void ReplaceTabsToSpaces(PooledList<string> totalLines)
         {
-            for (int i = 0; i < TotalLines.Count; i++)
+            for (int i = 0; i < totalLines.Count; i++)
             {
-                TotalLines[i] = Replace(TotalLines[i], "\t", Spaces);
+                totalLines[i] = Replace(totalLines[i], "\t", Spaces);
             }
         }
         public string Replace(string input, string find, string replace)

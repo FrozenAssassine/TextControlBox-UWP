@@ -125,6 +125,9 @@
     <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Enums\LineEnding.cs" />
+    <Compile Include="Enums\LineMoveDirection.cs" />
+    <Compile Include="Enums\SearchResult.cs" />
     <Compile Include="Extensions\ColorExtension.cs" />
     <Compile Include="Extensions\IntExtension.cs" />
     <Compile Include="Extensions\ListExtension.cs" />
@@ -134,18 +137,24 @@
     <Compile Include="Helper\SearchHelper.cs" />
     <Compile Include="Helper\TabSpaceHelper.cs" />
     <Compile Include="Languages\Languages.cs" />
+    <Compile Include="Models\AutoPairingPair.cs" />
+    <Compile Include="Models\CodeFontStyle.cs" />
+    <Compile Include="Models\CodeLanguage.cs" />
     <Compile Include="Models\CursorSize.cs" />
+    <Compile Include="Models\JsonCodeLanguage.cs" />
+    <Compile Include="Models\JsonLoadResult.cs" />
     <Compile Include="Models\ScrollBarPosition.cs" />
     <Compile Include="Models\SelectionChangedEventHandler.cs" />
+    <Compile Include="Models\SyntaxHighlights.cs" />
     <Compile Include="Models\TextControlBoxDesign.cs" />
-    <Compile Include="Models\TextLayoutHelper.cs" />
+    <Compile Include="Helper\TextLayoutHelper.cs" />
     <Compile Include="Models\TextSelectionPosition.cs" />
+    <Compile Include="Models\UndoRedoItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Helper\DebugHelper.cs" />
     <Compile Include="Helper\ListHelper.cs" />
     <Compile Include="Helper\Utils.cs" />
     <Compile Include="Renderer\CursorRenderer.cs" />
-    <Compile Include="Renderer\LineHighlighter.cs" />
+    <Compile Include="Renderer\LineHighlighterRenderer.cs" />
     <Compile Include="Renderer\SearchHighlightsRenderer.cs" />
     <Compile Include="Renderer\SelectionRenderer.cs" />
     <Compile Include="Renderer\SyntaxHighlightingRenderer.cs" />
@@ -155,13 +164,13 @@
     </Compile>
     <Compile Include="Text\AutoPairing.cs" />
     <Compile Include="Text\Cursor.cs" />
-    <Compile Include="Text\CursorPosition.cs" />
+    <Compile Include="Models\CursorPosition.cs" />
     <Compile Include="Text\LineEndings.cs" />
     <Compile Include="Text\MoveLine.cs" />
     <Compile Include="Text\Selection.cs" />
     <Compile Include="Text\StringManager.cs" />
     <Compile Include="Text\TabKey.cs" />
-    <Compile Include="Text\TextSelection.cs" />
+    <Compile Include="Models\TextSelection.cs" />
     <Compile Include="Text\UndoRedo.cs" />
     <EmbeddedResource Include="Properties\TextControlBox.rd.xml" />
   </ItemGroup>

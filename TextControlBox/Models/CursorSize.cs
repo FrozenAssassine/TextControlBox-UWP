@@ -1,26 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TextControlBox
+﻿namespace TextControlBox
 {
+    /// <summary>
+    /// Represents the size of the cursor in the textbox.
+    /// </summary>
     public class CursorSize
     {
         /// <summary>
         /// Creates a new instance of the CursorSize class
         /// </summary>
-        /// <param name="Width">The width of the cursor</param>
-        /// <param name="Height">The height of the cursor</param>
-        /// <param name="OffsetX">The x-offset from the actual cursor position</param>
-        /// <param name="OffsetY">The y-offset from the actual cursor position</param>
-        public CursorSize(float Width = 0, float Height = 0, float OffsetX = 0, float OffsetY = 0)
+        /// <param name="width">The width of the cursor</param>
+        /// <param name="height">The height of the cursor</param>
+        /// <param name="offsetX">The x-offset from the actual cursor position</param>
+        /// <param name="offsetY">The y-offset from the actual cursor position</param>
+        public CursorSize(float width = 0, float height = 0, float offsetX = 0, float offsetY = 0)
         {
-            this.Width = Width;
-            this.Height = Height;
-            this.OffsetX = OffsetX;
-            this.OffsetY = OffsetY;
+            this.Width = width;
+            this.Height = height;
+            this.OffsetX = offsetX;
+            this.OffsetY = offsetY;
         }
 
         /// <summary>

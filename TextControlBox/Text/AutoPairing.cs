@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TextControlBox.Renderer;
+﻿using System.Linq;
 
 namespace TextControlBox.Text
 {
@@ -36,7 +30,7 @@ namespace TextControlBox.Text
             if (res.ElementAt(0) is AutoPairingPair pair)
             {
                 textbox.SurroundSelectionWith(inputtext, pair.Pair);
-                return null; 
+                return null;
             }
             return inputtext;
         }

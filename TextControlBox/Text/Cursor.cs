@@ -1,197 +1,170 @@
 ﻿using Collections.Pooled;
+using System;
 using TextControlBox.Extensions;
-using Windows.UI.Core;
-using Windows.UI.Xaml;
+using TextControlBox.Helper;
 
 namespace TextControlBox.Text
 {
     internal class Cursor
     {
-        private static bool ControlIsPressed { get => Window.Current.CoreWindow.GetKeyState(Windows.System.VirtualKey.Control).HasFlag(CoreVirtualKeyStates.Down); }
-
-        private static int CheckIndex(string str, int index)
+        private static int CheckIndex(string str, int index) => Math.Clamp(index, 0, str.Length - 1);
+        public static int CursorPositionToIndex(PooledList<string> totalLines, CursorPosition cursorPosition)
         {
-            if (index >= str.Length)
-                index = str.Length - 1;
-            if (index < 0)
-                return 0;
-            return index;
-        }
-        public static int CursorPositionToIndex(PooledList<string> TotalLines, CursorPosition CursorPosition)
-        {
-            int CursorIndex = CursorPosition.CharacterPosition;
-            int LineNumber = CursorPosition.LineNumber < TotalLines.Count ? CursorIndex : TotalLines.Count - 1;
-            for (int i = 0; i < LineNumber; i++)
+            int cursorIndex = cursorPosition.CharacterPosition;
+            int lineNumber = cursorPosition.LineNumber < totalLines.Count ? cursorIndex : totalLines.Count - 1;
+            for (int i = 0; i < lineNumber; i++)
             {
-                CursorIndex += TotalLines.GetLineLength(i) + 1;
+                cursorIndex += totalLines.GetLineLength(i) + 1;
             }
-            return CursorIndex;
+            return cursorIndex;
         }
-
-        public static bool Equals(CursorPosition CurPos1, CursorPosition CurPos2)
+        public static bool Equals(CursorPosition curPos1, CursorPosition curPos2)
         {
-            if (CurPos1 == null || CurPos2 == null)
+            if (curPos1 == null || curPos2 == null)
                 return false;
 
-            if (CurPos1.LineNumber == CurPos2.LineNumber)
-                return CurPos1.CharacterPosition == CurPos2.CharacterPosition;
+            if (curPos1.LineNumber == curPos2.LineNumber)
+                return curPos1.CharacterPosition == curPos2.CharacterPosition;
             return false;
         }
 
-        //Convert the coordinates from Relative to Absolute and the other way around
-        public static CursorPosition RelativeToAbsolute(CursorPosition curpos, int nmbOfUnrenderdLines)
-        {
-            return curpos.ChangeLineNumber(curpos.LineNumber - nmbOfUnrenderdLines);
-        }
-
         //Calculate the number of characters from the cursorposition to the next character or digit to the left and to the right
-        public static int CalculateStepsToMoveLeft2(string CurrentLine, int CursorCharPosition)
+        public static int CalculateStepsToMoveLeft2(string currentLine, int cursorCharPosition)
         {
-            if (CurrentLine.Length == 0)
+            if (currentLine.Length == 0)
                 return 0;
 
-            int Count = 0;
-            for (int i = CursorCharPosition - 1; i >= 0; i--)
+            int stepsToMove = 0;
+            for (int i = cursorCharPosition - 1; i >= 0; i--)
             {
-                char CurrentCharacter = CurrentLine[CheckIndex(CurrentLine, i)];
-                if (char.IsLetterOrDigit(CurrentCharacter) || CurrentCharacter == '_')
-                    Count++;
-                else if (i == CursorCharPosition - 1 && char.IsWhiteSpace(CurrentCharacter))
+                char currentCharacter = currentLine[CheckIndex(currentLine, i)];
+                if (char.IsLetterOrDigit(currentCharacter) || currentCharacter == '_')
+                    stepsToMove++;
+                else if (i == cursorCharPosition - 1 && char.IsWhiteSpace(currentCharacter))
                     return 0;
                 else
                     break;
             }
-            return Count;
+            return stepsToMove;
         }
-        public static int CalculateStepsToMoveRight2(string CurrentLine, int CursorCharPosition)
+        public static int CalculateStepsToMoveRight2(string currentLine, int cursorCharPosition)
         {
-            if (CurrentLine.Length == 0)
+            if (currentLine.Length == 0)
                 return 0;
 
-            int Count = 0;
-            for (int i = CursorCharPosition; i < CurrentLine.Length; i++)
+            int stepsToMove = 0;
+            for (int i = cursorCharPosition; i < currentLine.Length; i++)
             {
-                char CurrentCharacter = CurrentLine[CheckIndex(CurrentLine, i)];
-                if (char.IsLetterOrDigit(CurrentCharacter) || CurrentCharacter == '_')
-                    Count++;
-                else if (i == CursorCharPosition && char.IsWhiteSpace(CurrentCharacter))
+                char currentCharacter = currentLine[CheckIndex(currentLine, i)];
+                if (char.IsLetterOrDigit(currentCharacter) || currentCharacter == '_')
+                    stepsToMove++;
+                else if (i == cursorCharPosition && char.IsWhiteSpace(currentCharacter))
                     return 0;
                 else
                     break;
             }
-            return Count;
+            return stepsToMove;
         }
 
         //Calculates how many characters the cursor needs to move if control is pressed
         //Returns 1 when control is not pressed
-        public static int CalculateStepsToMoveLeft(string CurrentLine, int CursorCharPosition)
+        public static int CalculateStepsToMoveLeft(string currentLine, int cursorCharPosition)
         {
-            if (!ControlIsPressed)
+            if (!Utils.IsKeyPressed(Windows.System.VirtualKey.Control))
                 return 1;
-            int Count = 0;
-            for (int i = CursorCharPosition - 1; i >= 0; i--)
+
+            int stepsToMove = 0;
+            for (int i = cursorCharPosition - 1; i >= 0; i--)
             {
-                char CurrentCharacter = CurrentLine[CheckIndex(CurrentLine, i)];
+                char CurrentCharacter = currentLine[CheckIndex(currentLine, i)];
                 if (char.IsLetterOrDigit(CurrentCharacter) || CurrentCharacter == '_')
-                    Count++;
-                else if (i == CursorCharPosition - 1 && char.IsWhiteSpace(CurrentCharacter))
-                    Count++;
+                    stepsToMove++;
+                else if (i == cursorCharPosition - 1 && char.IsWhiteSpace(CurrentCharacter))
+                    stepsToMove++;
                 else
                     break;
             }
-            //If it ignores the ControlKey return the real value of Count otherwise
-            //return 1 if Count is 0
-            return Count == 0 ? 1 : Count;
+            //If it ignores the ControlKey return the real value of stepsToMove otherwise
+            //return 1 if stepsToMove is 0
+            return stepsToMove == 0 ? 1 : stepsToMove;
         }
-        public static int CalculateStepsToMoveRight(string CurrentLine, int CursorCharPosition)
+        public static int CalculateStepsToMoveRight(string currentLine, int cursorCharPosition)
         {
-            if (!ControlIsPressed)
+            if (!Utils.IsKeyPressed(Windows.System.VirtualKey.Control))
                 return 1;
-            int Count = 0;
-            for (int i = CursorCharPosition; i < CurrentLine.Length; i++)
+
+            int stepsToMove = 0;
+            for (int i = cursorCharPosition; i < currentLine.Length; i++)
             {
-                char CurrentCharacter = CurrentLine[CheckIndex(CurrentLine, i)];
+                char CurrentCharacter = currentLine[CheckIndex(currentLine, i)];
                 if (char.IsLetterOrDigit(CurrentCharacter) || CurrentCharacter == '_')
-                    Count++;
-                else if (i == CursorCharPosition && char.IsWhiteSpace(CurrentCharacter))
-                    Count++;
+                    stepsToMove++;
+                else if (i == cursorCharPosition && char.IsWhiteSpace(CurrentCharacter))
+                    stepsToMove++;
                 else
                     break;
             }
-            //If it ignores the ControlKey return the real value of Count otherwise
-            //return 1 if Count is 0
-            return Count == 0 ? 1 : Count;
+            //If it ignores the ControlKey return the real value of stepsToMove otherwise
+            //return 1 if stepsToMove is 0
+            return stepsToMove == 0 ? 1 : stepsToMove;
         }
 
         //Move cursor:
-        public static void MoveLeft(CursorPosition CurrentCursorPosition, PooledList<string> TotalLines, string CurrentLine)
+        public static void MoveLeft(CursorPosition currentCursorPosition, PooledList<string> totalLines, string currentLine)
         {
-            if (CurrentCursorPosition.LineNumber < 0)
+            if (currentCursorPosition.LineNumber < 0)
                 return;
-            else
-            {
-                int currentLineLength = TotalLines.GetLineLength(CurrentCursorPosition.LineNumber);
-                if (CurrentCursorPosition.CharacterPosition == 0 && CurrentCursorPosition.LineNumber > 0)
-                {
-                    CurrentCursorPosition.CharacterPosition = TotalLines.GetLineLength(CurrentCursorPosition.LineNumber - 1);
-                    CurrentCursorPosition.LineNumber -= 1;
-                }
-                else if (CurrentCursorPosition.CharacterPosition > currentLineLength)
-                {
-                    CurrentCursorPosition.CharacterPosition = currentLineLength - 1;
-                }
-                else if (CurrentCursorPosition.CharacterPosition > 0)
-                {
-                    CurrentCursorPosition.CharacterPosition -= CalculateStepsToMoveLeft(CurrentLine, CurrentCursorPosition.CharacterPosition);
-                }
-            }
-        }
-        public static void MoveRight(CursorPosition CurrentCursorPosition, PooledList<string> TotalLines, string CurrentLine)
-        {
-            int LineLength = TotalLines.GetLineLength(CurrentCursorPosition.LineNumber);
 
-            if (CurrentCursorPosition.LineNumber > TotalLines.Count - 1)
+            int currentLineLength = totalLines.GetLineLength(currentCursorPosition.LineNumber);
+            if (currentCursorPosition.CharacterPosition == 0 && currentCursorPosition.LineNumber > 0)
             {
+                currentCursorPosition.CharacterPosition = totalLines.GetLineLength(currentCursorPosition.LineNumber - 1);
+                currentCursorPosition.LineNumber -= 1;
+            }
+            else if (currentCursorPosition.CharacterPosition > currentLineLength)
+                currentCursorPosition.CharacterPosition = currentLineLength - 1;
+            else if (currentCursorPosition.CharacterPosition > 0)
+                currentCursorPosition.CharacterPosition -= CalculateStepsToMoveLeft(currentLine, currentCursorPosition.CharacterPosition);
+        }
+        public static void MoveRight(CursorPosition currentCursorPosition, PooledList<string> totalLines, string currentLine)
+        {
+            int lineLength = totalLines.GetLineLength(currentCursorPosition.LineNumber);
+
+            if (currentCursorPosition.LineNumber > totalLines.Count - 1)
                 return;
-            }
-            else
+
+            if (currentCursorPosition.CharacterPosition == lineLength && currentCursorPosition.LineNumber < totalLines.Count - 1)
             {
-                if (CurrentCursorPosition.CharacterPosition == LineLength && CurrentCursorPosition.LineNumber < TotalLines.Count - 1)
-                {
-                    CurrentCursorPosition.CharacterPosition = 0;
-                    CurrentCursorPosition.LineNumber += 1;
-                }
-                else if (CurrentCursorPosition.CharacterPosition < LineLength)
-                {
-                    CurrentCursorPosition.CharacterPosition += CalculateStepsToMoveRight(CurrentLine, CurrentCursorPosition.CharacterPosition);
-                }
+                currentCursorPosition.CharacterPosition = 0;
+                currentCursorPosition.LineNumber += 1;
             }
+            else if (currentCursorPosition.CharacterPosition < lineLength)
+                currentCursorPosition.CharacterPosition += CalculateStepsToMoveRight(currentLine, currentCursorPosition.CharacterPosition);
 
-            if (CurrentCursorPosition.CharacterPosition > LineLength)
-                CurrentCursorPosition.CharacterPosition = LineLength;
+            if (currentCursorPosition.CharacterPosition > lineLength)
+                currentCursorPosition.CharacterPosition = lineLength;
         }
-        public static CursorPosition MoveDown(CursorPosition CurrentCursorPosition, int TotalLinesLength)
+        public static CursorPosition MoveDown(CursorPosition currentCursorPosition, int totalLinesLength)
         {
-            CursorPosition ReturnValue = new CursorPosition(CurrentCursorPosition);
-            if (CurrentCursorPosition.LineNumber < TotalLinesLength - 1)
-                ReturnValue = CursorPosition.ChangeLineNumber(CurrentCursorPosition, CurrentCursorPosition.LineNumber + 1);
-            return ReturnValue;
+            CursorPosition returnValue = new CursorPosition(currentCursorPosition);
+            if (currentCursorPosition.LineNumber < totalLinesLength - 1)
+                returnValue = CursorPosition.ChangeLineNumber(currentCursorPosition, currentCursorPosition.LineNumber + 1);
+            return returnValue;
         }
-        public static CursorPosition MoveUp(CursorPosition CurrentCursorPosition)
+        public static CursorPosition MoveUp(CursorPosition currentCursorPosition)
         {
-            CursorPosition ReturnValue = new CursorPosition(CurrentCursorPosition);
-            if (CurrentCursorPosition.LineNumber > 0)
-                ReturnValue = CursorPosition.ChangeLineNumber(ReturnValue, CurrentCursorPosition.LineNumber - 1);
-            return ReturnValue;
+            CursorPosition returnValue = new CursorPosition(currentCursorPosition);
+            if (currentCursorPosition.LineNumber > 0)
+                returnValue = CursorPosition.ChangeLineNumber(returnValue, currentCursorPosition.LineNumber - 1);
+            return returnValue;
         }
-        public static void MoveToLineEnd(CursorPosition CursorPosition, string CurrentLine)
+        public static void MoveToLineEnd(CursorPosition cursorPosition, string currentLine)
         {
-            CursorPosition.CharacterPosition = CurrentLine.Length;
+            cursorPosition.CharacterPosition = currentLine.Length;
         }
-
-        public static void MoveToLineStart(CursorPosition CursorPosition)
+        public static void MoveToLineStart(CursorPosition cursorPosition)
         {
-            CursorPosition.CharacterPosition = 0;
+            cursorPosition.CharacterPosition = 0;
         }
     }
 }

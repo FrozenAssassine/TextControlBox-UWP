@@ -1,28 +1,30 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace TextControlBox
+﻿namespace TextControlBox
 {
+    /// <summary>
+    /// Represents the position of a scrollbar, containing the horizontal and vertical scroll positions.
+    /// </summary>
     public class ScrollBarPosition
     {
-        public ScrollBarPosition(ScrollBarPosition ScrollBarPosition)
+        /// <summary>
+        /// Initializes a new instance of the ScrollBarPosition class with the provided values.
+        /// </summary>
+        /// <param name="scrollBarPosition">The existing ScrollBarPosition object from which to copy the values.</param>
+
+        public ScrollBarPosition(ScrollBarPosition scrollBarPosition)
         {
-            this.ValueX = ScrollBarPosition.ValueX;
-            this.ValueY = ScrollBarPosition.ValueY;
+            this.ValueX = scrollBarPosition.ValueX;
+            this.ValueY = scrollBarPosition.ValueY;
         }
 
         /// <summary>
         /// Creates a new instance of the ScrollBarPosition class
         /// </summary>
-        /// <param name="ValueX">The horizontal amount scrolled</param>
-        /// <param name="ValueY">The vertical amount scrolled</param>
-        public ScrollBarPosition(double ValueX = 0, double ValueY = 0)
+        /// <param name="valueX">The horizontal amount scrolled</param>
+        /// <param name="valueY">The vertical amount scrolled</param>
+        public ScrollBarPosition(double valueX = 0, double valueY = 0)
         {
-            this.ValueX = ValueX;
-            this.ValueY = ValueY;
+            this.ValueX = valueX;
+            this.ValueY = valueY;
         }
 
         /// <summary>

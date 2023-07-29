@@ -2,40 +2,30 @@
 using Microsoft.Graphics.Canvas.UI.Xaml;
 using System;
 using System.Text.RegularExpressions;
-using Windows.Foundation;
+using TextControlBox.Helper;
 using Windows.UI;
 
 namespace TextControlBox.Renderer
 {
     internal class SearchHighlightsRenderer
     {
-        public static Rect CreateRect(Rect r, float MarginLeft = 0, float MarginTop = 0)
-        {
-            return new Rect(
-                new Point(
-                    Math.Floor(r.Left + MarginLeft),//X
-                    Math.Floor(r.Top + MarginTop)), //Y
-                new Point(
-                    Math.Ceiling(r.Right + MarginLeft), //Width
-                    Math.Ceiling(r.Bottom + MarginTop))); //Height
-        }
-
         public static void RenderHighlights(
-            CanvasDrawEventArgs Event,
-            CanvasTextLayout DrawnTextLayout,
-            string RenderedText,
-            int[] PossibleLines,
-            string SearchRegex,
-            float ScrollOffsetX,
-            float OffsetTop,
-            Color SearchHighlightColor)
+            CanvasDrawEventArgs args,
+            CanvasTextLayout drawnTextLayout,
+            string renderedText,
+            int[] possibleLines,
+            string searchRegex,
+            float scrollOffsetX,
+            float offsetTop,
+            Color searchHighlightColor)
         {
-            if (SearchRegex == null || PossibleLines == null || PossibleLines.Length == 0)
+            if (searchRegex == null || possibleLines == null || possibleLines.Length == 0)
                 return;
-            MatchCollection matches = null;
+
+            MatchCollection matches;
             try
             {
-                matches = Regex.Matches(RenderedText, SearchRegex);
+                matches = Regex.Matches(renderedText, searchRegex);
             }
             catch (ArgumentException)
             {
@@ -45,10 +35,10 @@ namespace TextControlBox.Renderer
             {
                 var match = matches[j];
 
-                var layoutRegion = DrawnTextLayout.GetCharacterRegions(match.Index, match.Length);
+                var layoutRegion = drawnTextLayout.GetCharacterRegions(match.Index, match.Length);
                 if (layoutRegion.Length > 0)
                 {
-                    Event.DrawingSession.FillRectangle(CreateRect(layoutRegion[0].LayoutBounds, ScrollOffsetX, OffsetTop), SearchHighlightColor);
+                    args.DrawingSession.FillRectangle(Utils.CreateRect(layoutRegion[0].LayoutBounds, scrollOffsetX, offsetTop), searchHighlightColor);
                 }
             }
             return;

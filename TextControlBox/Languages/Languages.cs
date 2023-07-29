@@ -1,6 +1,4 @@
-﻿using TextControlBox.Renderer;
-
-namespace TextControlBox.Languages
+﻿namespace TextControlBox.Languages
 {
     internal class Batch : CodeLanguage
     {
@@ -81,7 +79,7 @@ namespace TextControlBox.Languages
             this.Name = "C#";
             this.Author = "Julius Kirsch";
             this.Filter = new string[1] { ".cs" };
-            this.Description = "Syntax highlighting for C# language"; 
+            this.Description = "Syntax highlighting for C# language";
             this.AutoPairingPair = new AutoPairingPair[5]
             {
                 new AutoPairingPair("{", "}"),

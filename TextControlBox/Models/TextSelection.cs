@@ -35,23 +35,16 @@
         public CursorPosition StartPosition { get; set; }
         public CursorPosition EndPosition { get; set; }
 
-        public new string ToString()
-        {
-            return StartPosition.LineNumber + ":" + StartPosition.CharacterPosition + " | " + EndPosition.LineNumber + ":" + EndPosition.CharacterPosition;
-        }
-
-        public bool IsLineInSelection(int index)
+        public bool IsLineInSelection(int line)
         {
             if (this.StartPosition != null && this.EndPosition != null)
             {
                 if (this.StartPosition.LineNumber > this.EndPosition.LineNumber)
-                {
-                    return this.StartPosition.LineNumber < index && this.EndPosition.LineNumber > index;
-                }
+                    return this.StartPosition.LineNumber < line && this.EndPosition.LineNumber > line;
                 else if (this.StartPosition.LineNumber == this.EndPosition.LineNumber)
-                    return this.StartPosition.LineNumber != index;
+                    return this.StartPosition.LineNumber != line;
                 else
-                    return this.StartPosition.LineNumber > index && this.EndPosition.LineNumber < index;
+                    return this.StartPosition.LineNumber > line && this.EndPosition.LineNumber < line;
             }
             return false;
         }
