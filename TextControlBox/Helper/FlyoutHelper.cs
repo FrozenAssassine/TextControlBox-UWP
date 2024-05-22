@@ -23,19 +23,19 @@ namespace TextControlBox.Helper
             MenuFlyout.Items.Add(CreateItem(() => { sender.Redo(); }, "Redo", Symbol.Redo, "Ctrl + Y"));
         }
 
-        public MenuFlyoutItem CreateItem(Action action, string Text, Symbol Icon, string Key)
+        public MenuFlyoutItem CreateItem(Action action, string text, Symbol icon, string key)
         {
-            var Item = new MenuFlyoutItem
+            var item = new MenuFlyoutItem
             {
-                Text = Text,
-                KeyboardAcceleratorTextOverride = Key,
-                Icon = new SymbolIcon { Symbol = Icon }
+                Text = text,
+                KeyboardAcceleratorTextOverride = key,
+                Icon = new SymbolIcon { Symbol = icon }
             };
-            Item.Click += delegate
+            item.Click += delegate
             {
                 action();
             };
-            return Item;
+            return item;
         }
     }
 }

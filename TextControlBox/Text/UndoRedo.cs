@@ -1,9 +1,9 @@
 ﻿using Collections.Pooled;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using TextControlBox.Extensions;
 using TextControlBox.Helper;
+using TextControlBox.Models;
 
 namespace TextControlBox.Text
 {
@@ -36,66 +36,58 @@ namespace TextControlBox.Text
             });
         }
 
-        private void RecordSingleLine(Action action, PooledList<string> TotalLines, int startline)
+        private void RecordSingleLine(Action action, PooledList<string> totalLines, int startline)
         {
-            var lineBefore = TotalLines.GetLineText(startline);
+            var lineBefore = totalLines.GetLineText(startline);
             action.Invoke();
-            var lineAfter = TotalLines.GetLineText(startline);
+            var lineAfter = totalLines.GetLineText(startline);
             AddUndoItem(null, startline, lineBefore, lineAfter, 1, 1);
         }
 
-        public void RecordUndoAction(Action action, PooledList<string> TotalLines, int startline, int undocount, int redoCount, string NewLineCharacter, CursorPosition cursorposition = null)
+        public void RecordUndoAction(Action action, PooledList<string> totalLines, int startline, int undocount, int redoCount, string newLineCharacter, CursorPosition cursorposition = null)
         {
             if (undocount == redoCount && redoCount == 1)
             {
-                RecordSingleLine(action, TotalLines, startline);
+                RecordSingleLine(action, totalLines, startline);
                 return;
             }
 
-            var linesBefore = TotalLines.GetLines_Large(startline, undocount).GetString(NewLineCharacter);
+            var linesBefore = totalLines.GetLines(startline, undocount).GetString(newLineCharacter);
             action.Invoke();
-            var linesAfter = TotalLines.GetLines_Large(startline, redoCount).GetString(NewLineCharacter);
-
-            Debug.WriteLine("Undo Action");
+            var linesAfter = totalLines.GetLines(startline, redoCount).GetString(newLineCharacter);
 
             AddUndoItem(cursorposition == null ? null : new TextSelection(new CursorPosition(cursorposition), null), startline, linesBefore, linesAfter, undocount, redoCount);
         }
-        public void RecordUndoAction(Action action, PooledList<string> TotalLines, TextSelection selection, int NumberOfAddedLines, string NewLineCharacter)
+        public void RecordUndoAction(Action action, PooledList<string> totalLines, TextSelection selection, int numberOfAddedLines, string newLineCharacter)
         {
             var orderedSel = Selection.OrderTextSelection(selection);
             if (orderedSel.StartPosition.LineNumber == orderedSel.EndPosition.LineNumber && orderedSel.StartPosition.LineNumber == 1)
             {
-                RecordSingleLine(action, TotalLines, orderedSel.StartPosition.LineNumber);
+                RecordSingleLine(action, totalLines, orderedSel.StartPosition.LineNumber);
                 return;
             }
 
-            int NumberOfRemovedLines = orderedSel.EndPosition.LineNumber - orderedSel.StartPosition.LineNumber + 1;
+            int numberOfRemovedLines = orderedSel.EndPosition.LineNumber - orderedSel.StartPosition.LineNumber + 1;
 
-            if (NumberOfAddedLines == 0 && !Selection.WholeLinesAreSelected(selection, TotalLines) ||
-                orderedSel.StartPosition.LineNumber == orderedSel.EndPosition.LineNumber && orderedSel.Length == TotalLines.GetLineLength(orderedSel.StartPosition.LineNumber))
-                NumberOfAddedLines += 1;
+            if (numberOfAddedLines == 0 && !Selection.WholeLinesAreSelected(selection, totalLines) ||
+                orderedSel.StartPosition.LineNumber == orderedSel.EndPosition.LineNumber && orderedSel.Length == totalLines.GetLineLength(orderedSel.StartPosition.LineNumber))
+                numberOfAddedLines += 1;
 
-            var linesBefore = TotalLines.GetLines_Large(orderedSel.StartPosition.LineNumber, NumberOfRemovedLines).GetString(NewLineCharacter);
+            var linesBefore = totalLines.GetLines(orderedSel.StartPosition.LineNumber, numberOfRemovedLines).GetString(newLineCharacter);
             action.Invoke();
-            var linesAfter = TotalLines.GetLines_Large(orderedSel.StartPosition.LineNumber, NumberOfAddedLines).GetString(NewLineCharacter);
+            var linesAfter = totalLines.GetLines(orderedSel.StartPosition.LineNumber, numberOfAddedLines).GetString(newLineCharacter);
 
             AddUndoItem(
                 selection,
                 orderedSel.StartPosition.LineNumber,
                 linesBefore,
                 linesAfter,
-                NumberOfRemovedLines,
-                NumberOfAddedLines
+                numberOfRemovedLines,
+                numberOfAddedLines
                 );
         }
 
-        /// <summary>
-        /// Excecutes the undo and applys the changes to the text
-        /// </summary>
-        /// <param name="TotalLines">A list containing all the lines of the textbox</param>
-        /// <param name="NewLineCharacter">The current line-ending character either CR, LF or CRLF</param>
-        /// <returns>A class containing the start and end-position of the selection</returns>
-        public TextSelection Undo(PooledList<string> TotalLines, StringManager stringManager, string NewLineCharacter)
+        public TextSelection Undo(PooledList<string> totalLines, StringManager stringManager, string newLineCharacter)
         {
             if (UndoStack.Count < 1)
                 return null;
@@ -116,27 +108,19 @@ namespace TextControlBox.Text
             //Faster for singleline
             if (item.UndoCount == 1 && item.RedoCount == 1)
             {
-                TotalLines.SetLineText(item.StartLine, stringManager.CleanUpString(item.UndoText));
+                totalLines.SetLineText(item.StartLine, stringManager.CleanUpString(item.UndoText));
             }
             else
             {
-                TotalLines.Safe_RemoveRange(item.StartLine, item.RedoCount);
+                totalLines.Safe_RemoveRange(item.StartLine, item.RedoCount);
                 if (item.UndoCount > 0)
-                    TotalLines.InsertOrAddRange(ListHelper.GetLinesFromString(stringManager.CleanUpString(item.UndoText), NewLineCharacter), item.StartLine);
-
-                //Selection.ReplaceLines(TotalLines, item.StartLine, item.RedoCount, StringManager.CleanUpString(Decompress(item.UndoText)).Split(NewLineCharacter));
+                    totalLines.InsertOrAddRange(ListHelper.GetLinesFromString(stringManager.CleanUpString(item.UndoText), newLineCharacter), item.StartLine);
             }
 
             return item.Selection;
         }
 
-        /// <summary>
-        /// Excecutes the redo and apply the changes to the text
-        /// </summary>
-        /// <param name="TotalLines">A list containing all the lines of the textbox</param>
-        /// <param name="NewLineCharacter">The current line-ending character either CR, LF or CRLF</param>
-        /// <returns>A class containing the start and end-position of the selection</returns>
-        public TextSelection Redo(PooledList<string> TotalLines, StringManager StringManager, string NewLineCharacter)
+        public TextSelection Redo(PooledList<string> totalLines, StringManager stringmanager, string newLineCharacter)
         {
             if (RedoStack.Count < 1)
                 return null;
@@ -148,18 +132,15 @@ namespace TextControlBox.Text
             //Faster for singleline
             if (item.UndoCount == 1 && item.RedoCount == 1)
             {
-                TotalLines.SetLineText(item.StartLine, StringManager.CleanUpString(item.RedoText));
+                totalLines.SetLineText(item.StartLine, stringmanager.CleanUpString(item.RedoText));
             }
             else
             {
-                TotalLines.Safe_RemoveRange(item.StartLine, item.UndoCount);
+                totalLines.Safe_RemoveRange(item.StartLine, item.UndoCount);
                 if (item.RedoCount > 0)
-                    TotalLines.InsertOrAddRange(ListHelper.GetLinesFromString(StringManager.CleanUpString(item.RedoText), NewLineCharacter), item.StartLine);
-
-                //Selection.ReplaceLines(TotalLines, item.StartLine, item.UndoCount, StringManager.CleanUpString(Decompress(item.RedoText)).Split(NewLineCharacter));
+                    totalLines.InsertOrAddRange(ListHelper.GetLinesFromString(stringmanager.CleanUpString(item.RedoText), newLineCharacter), item.StartLine);
             }
             return null;
-            //return item.Selection;
         }
 
         /// <summary>
@@ -191,14 +172,5 @@ namespace TextControlBox.Text
         /// Gets if the redo stack contains actions
         /// </summary>
         public bool CanRedo { get => RedoStack.Count > 0; }
-    }
-    internal struct UndoRedoItem
-    {
-        public int StartLine { get; set; }
-        public string UndoText { get; set; }
-        public string RedoText { get; set; }
-        public int UndoCount { get; set; }
-        public int RedoCount { get; set; }
-        public TextSelection Selection { get; set; }
     }
 }

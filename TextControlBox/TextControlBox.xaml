@@ -20,7 +20,6 @@
     LostFocus="UserControl_LostFocus"
     LosingFocus="UserControl_LosingFocus"
     >
-
     <Grid x:Name="MainGrid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="auto"/>
@@ -39,25 +38,32 @@
                     VerticalAlignment="Stretch"/>
         
         <Grid Grid.Column="1" x:Name="Scroll">
-            <xaml:CanvasControl x:Name="Canvas_Cursor"
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="auto"/>
+                <ColumnDefinition Width="auto"/>
+            </Grid.ColumnDefinitions>
+            <xaml:CanvasControl Grid.Column="0" x:Name="Canvas_Cursor"
                         Draw="Canvas_Cursor_Draw"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"/>
 
-            <xaml:CanvasControl x:Name="Canvas_Text"
+            <xaml:CanvasControl Grid.Column="0" x:Name="Canvas_Text"
                         Draw="Canvas_Text_Draw"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"/>
 
-            <xaml:CanvasControl x:Name="Canvas_Selection"
+            <xaml:CanvasControl Grid.Column="0" x:Name="Canvas_Selection"
                         Draw="Canvas_Selection_Draw"
                         PointerPressed="Canvas_Selection_PointerPressed"
                         PointerMoved="Canvas_Selection_PointerMoved"
                         PointerReleased="Canvas_Selection_PointerReleased"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch"/>
-            <ScrollBar Loaded="VerticalScrollbar_Loaded" PointerEntered="Scrollbar_PointerEntered" PointerExited="Scrollbar_PointerExited" SmallChange="10" Maximum="0" LargeChange="100" Minimum="0" Scroll="VerticalScrollbar_Scroll" x:Name="VerticalScrollbar" Value="0" IndicatorMode="MouseIndicator" Background="Transparent" HorizontalAlignment="Right" Orientation="Vertical" VerticalAlignment="Stretch"/>
+
+            <ScrollBar Grid.Column="2" Loaded="VerticalScrollbar_Loaded" PointerEntered="Scrollbar_PointerEntered" PointerExited="Scrollbar_PointerExited" SmallChange="10" Maximum="0" LargeChange="100" Minimum="0" Scroll="VerticalScrollbar_Scroll" x:Name="VerticalScrollbar" Value="0" IndicatorMode="MouseIndicator" Background="Transparent" HorizontalAlignment="Right" Orientation="Vertical" VerticalAlignment="Stretch"/>
             <ScrollBar PointerEntered="Scrollbar_PointerEntered" PointerExited="Scrollbar_PointerExited" SmallChange="10" LargeChange="100" Minimum="0" Maximum="0" Scroll="HorizontalScrollbar_Scroll" x:Name="HorizontalScrollbar" Value="0" IndicatorMode="MouseIndicator" Background="Transparent" HorizontalAlignment="Stretch" Orientation="Horizontal" VerticalAlignment="Bottom"/>
         </Grid>
+
     </Grid>
 </UserControl>

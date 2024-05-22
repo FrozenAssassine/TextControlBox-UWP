@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using TextControlBox;
 using TextControlBox.Helper;
 using TextControlBox.Text;
 using Windows.Storage;
+using Windows.Storage.AccessCache;
 using Windows.Storage.Pickers;
 using Windows.UI;
 using Windows.UI.Xaml;
@@ -35,9 +37,9 @@ namespace TextControlBox_TestApp
                 SelectionColor = Color.FromArgb(100, 144, 0, 255)
             };*/
         }
-        private void Load()
+        private async void Load()
         {
-            textbox.CodeLanguage = TextControlBox.TextControlBox.GetCodeLanguageFromId("Json");
+            textbox.CodeLanguage = TextControlBox.TextControlBox.GetCodeLanguageFromId("C#");
             textbox.SyntaxHighlighting = true;
             textbox.LoadLines(GenerateContent());
         }
@@ -64,13 +66,10 @@ namespace TextControlBox_TestApp
             {
                 textbox.RequestedTheme = textbox.RequestedTheme == ElementTheme.Dark ? 
                     ElementTheme.Light : textbox.RequestedTheme == ElementTheme.Default ? ElementTheme.Light : ElementTheme.Dark;
-                
-                //TextControlBox.DuplicateLine(TextControlBox.CurrentLineIndex);
             }
             if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.L)
             {
                 textbox.ShowLineNumbers = !textbox.ShowLineNumbers;
-                //TextControlBox.DuplicateLine(TextControlBox.CurrentLineIndex);
             }
             if (ControlKey && args.VirtualKey == Windows.System.VirtualKey.O)
             {
@@ -98,21 +97,6 @@ namespace TextControlBox_TestApp
                     await FileIO.WriteLinesAsync(file, textbox.Lines);
                 }
             }
-        }
-
-        private void searchInput_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            textbox.BeginSearch(searchInput.Text, false, false);
-        }
-
-        private void SearchUp_Click(object sender, RoutedEventArgs e)
-        {
-            textbox.FindPrevious();
-        }
-
-        private void SearchDown_Click(object sender, RoutedEventArgs e)
-        {
-            textbox.FindNext();
         }
     }
 }

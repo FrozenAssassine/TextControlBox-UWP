@@ -1,543 +1,527 @@
 using Collections.Pooled;
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using TextControlBox.Extensions;
 using TextControlBox.Helper;
+using TextControlBox.Renderer;
 
 namespace TextControlBox.Text
 {
     internal class Selection
     {
-        public static bool Equals(TextSelection Sel1, TextSelection Sel2)
+        public static bool Equals(TextSelection sel1, TextSelection sel2)
         {
-            if (Sel1 == null || Sel2 == null)
+            if (sel1 == null || sel2 == null)
                 return false;
 
-            return Cursor.Equals(Sel1.StartPosition, Sel2.StartPosition) &&
-                Cursor.Equals(Sel1.EndPosition, Sel2.EndPosition);
+            return Cursor.Equals(sel1.StartPosition, sel2.StartPosition) &&
+                Cursor.Equals(sel1.EndPosition, sel2.EndPosition);
         }
 
         //Order the selection that StartPosition is always smaller than EndPosition
-        public static TextSelection OrderTextSelection(TextSelection Selection)
+        public static TextSelection OrderTextSelection(TextSelection selection)
         {
-            if (Selection == null)
-                return Selection;
+            if (selection == null)
+                return selection;
 
-            int StartLine = Math.Min(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
-            int EndLine = Math.Max(Selection.StartPosition.LineNumber, Selection.EndPosition.LineNumber);
-            int StartPosition;
-            int EndPosition;
-            if (StartLine == EndLine)
+            int startLine = Math.Min(selection.StartPosition.LineNumber, selection.EndPosition.LineNumber);
+            int endLine = Math.Max(selection.StartPosition.LineNumber, selection.EndPosition.LineNumber);
+            int startPosition;
+            int endPosition;
+            if (startLine == endLine)
             {
-                StartPosition = Math.Min(Selection.StartPosition.CharacterPosition, Selection.EndPosition.CharacterPosition);
-                EndPosition = Math.Max(Selection.StartPosition.CharacterPosition, Selection.EndPosition.CharacterPosition);
+                startPosition = Math.Min(selection.StartPosition.CharacterPosition, selection.EndPosition.CharacterPosition);
+                endPosition = Math.Max(selection.StartPosition.CharacterPosition, selection.EndPosition.CharacterPosition);
             }
             else
             {
-                if (Selection.StartPosition.LineNumber < Selection.EndPosition.LineNumber)
+                if (selection.StartPosition.LineNumber < selection.EndPosition.LineNumber)
                 {
-                    EndPosition = Selection.EndPosition.CharacterPosition;
-                    StartPosition = Selection.StartPosition.CharacterPosition;
+                    endPosition = selection.EndPosition.CharacterPosition;
+                    startPosition = selection.StartPosition.CharacterPosition;
                 }
                 else
                 {
-                    EndPosition = Selection.StartPosition.CharacterPosition;
-                    StartPosition = Selection.EndPosition.CharacterPosition;
+                    endPosition = selection.StartPosition.CharacterPosition;
+                    startPosition = selection.EndPosition.CharacterPosition;
                 }
             }
 
-            return new TextSelection(Selection.Index, Selection.Length, new CursorPosition(StartPosition, StartLine), new CursorPosition(EndPosition, EndLine));
+            return new TextSelection(selection.Index, selection.Length, new CursorPosition(startPosition, startLine), new CursorPosition(endPosition, endLine));
         }
 
-        public static bool WholeTextSelected(TextSelection Selection, PooledList<string> TotalLines)
+        public static bool WholeTextSelected(TextSelection selection, PooledList<string> totalLines)
         {
-            if (Selection == null)
+            if (selection == null)
                 return false;
-            var sel = OrderTextSelection(Selection);
+
+            var sel = OrderTextSelection(selection);
             return Utils.CursorPositionsAreEqual(sel.StartPosition, new CursorPosition(0, 0)) &&
-                Utils.CursorPositionsAreEqual(sel.EndPosition, new CursorPosition(TotalLines.GetLineLength(-1), TotalLines.Count - 1));
+                Utils.CursorPositionsAreEqual(sel.EndPosition, new CursorPosition(totalLines.GetLineLength(-1), totalLines.Count - 1));
         }
-        //returns whether the selection starts at character zero and ends 
-        public static bool WholeLinesAreSelected(TextSelection Selection, PooledList<string> TotalLines)
+
+        //returns whether the selection starts at character zero and ends
+        public static bool WholeLinesAreSelected(TextSelection selection, PooledList<string> totalLines)
         {
-            if (Selection == null)
+            if (selection == null)
                 return false;
-            var sel = OrderTextSelection(Selection);
+
+            var sel = OrderTextSelection(selection);
             return Utils.CursorPositionsAreEqual(sel.StartPosition, new CursorPosition(0, sel.StartPosition.LineNumber)) &&
-                Utils.CursorPositionsAreEqual(sel.EndPosition, new CursorPosition(TotalLines.GetLineText(sel.EndPosition.LineNumber).Length, sel.EndPosition.LineNumber));
+                Utils.CursorPositionsAreEqual(sel.EndPosition, new CursorPosition(totalLines.GetLineText(sel.EndPosition.LineNumber).Length, sel.EndPosition.LineNumber));
         }
 
-        public static CursorPosition GetMax(CursorPosition Pos1, CursorPosition Pos2)
+        public static CursorPosition GetMax(CursorPosition pos1, CursorPosition pos2)
         {
-            if (Pos1.LineNumber == Pos2.LineNumber)
-                return Pos1.CharacterPosition > Pos2.CharacterPosition ? Pos1 : Pos2;
-            return Pos1.LineNumber > Pos2.LineNumber ? Pos1 : Pos2;
+            if (pos1.LineNumber == pos2.LineNumber)
+                return pos1.CharacterPosition > pos2.CharacterPosition ? pos1 : pos2;
+            return pos1.LineNumber > pos2.LineNumber ? pos1 : pos2;
         }
-        public static CursorPosition GetMin(CursorPosition Pos1, CursorPosition Pos2)
+        public static CursorPosition GetMin(CursorPosition pos1, CursorPosition pos2)
         {
-            if (Pos1.LineNumber == Pos2.LineNumber)
-                return Pos1.CharacterPosition > Pos2.CharacterPosition ? Pos2 : Pos1;
-            return Pos1.LineNumber > Pos2.LineNumber ? Pos2 : Pos1;
+            if (pos1.LineNumber == pos2.LineNumber)
+                return pos1.CharacterPosition > pos2.CharacterPosition ? pos2 : pos1;
+            return pos1.LineNumber > pos2.LineNumber ? pos2 : pos1;
         }
-        public static CursorPosition GetMin(TextSelection Selection)
+        public static CursorPosition GetMin(TextSelection selection)
         {
-            return GetMin(Selection.StartPosition, Selection.EndPosition);
+            return GetMin(selection.StartPosition, selection.EndPosition);
         }
-        public static CursorPosition GetMax(TextSelection Selection)
+        public static CursorPosition GetMax(TextSelection selection)
         {
-            return GetMax(Selection.StartPosition, Selection.EndPosition);
+            return GetMax(selection.StartPosition, selection.EndPosition);
         }
 
-        public static CursorPosition InsertText(TextSelection Selection, CursorPosition CursorPosition, PooledList<string> TotalLines, string Text, string NewLineCharacter)
+        public static CursorPosition InsertText(TextSelection selection, CursorPosition cursorPosition, PooledList<string> totalLines, string text, string newLineCharacter)
         {
-            if (Selection != null)
-                return Replace(Selection, TotalLines, Text, NewLineCharacter);
+            if (selection != null)
+                return Replace(selection, totalLines, text, newLineCharacter);
 
-            string curLine = TotalLines.GetLineText(CursorPosition.LineNumber);
+            string curLine = totalLines.GetLineText(cursorPosition.LineNumber);
 
-            string[] lines = Text.Split(NewLineCharacter);
+            string[] lines = text.Split(newLineCharacter);
 
             //Singleline
-            if (lines.Length == 1 && Text != string.Empty)
+            if (lines.Length == 1 && text != string.Empty)
             {
-                Text = Text.Replace("\r", string.Empty).Replace("\n", string.Empty);
-                TotalLines.SetLineText(-1, TotalLines.GetLineText(-1).AddText(Text, CursorPosition.CharacterPosition));
-                CursorPosition.AddToCharacterPos(Text.Length);
-                return CursorPosition;
+                text = text.Replace("\r", string.Empty).Replace("\n", string.Empty);
+                totalLines.SetLineText(-1, totalLines.GetLineText(-1).AddText(text, cursorPosition.CharacterPosition));
+                cursorPosition.AddToCharacterPos(text.Length);
+                return cursorPosition;
             }
 
             //Multiline:
-            int CurPos = CursorPosition.CharacterPosition;
-            if (CurPos > curLine.Length)
-                CurPos = curLine.Length;
+            int curPos = cursorPosition.CharacterPosition;
+            if (curPos > curLine.Length)
+                curPos = curLine.Length;
 
             //GEt the text in front of the cursor
-            string TextInFrontOfCursor = curLine.Substring(0, CurPos < 0 ? 0 : CurPos);
+            string textInFrontOfCursor = curLine.Substring(0, curPos < 0 ? 0 : curPos);
             //Get the text behind the cursor
-            string TextBehindCursor = curLine.SafeRemove(0, CurPos < 0 ? 0 : CurPos);
+            string textBehindCursor = curLine.SafeRemove(0, curPos < 0 ? 0 : curPos);
 
-            TotalLines.DeleteAt(CursorPosition.LineNumber);
-            TotalLines.InsertOrAddRange(ListHelper.CreateLines(lines, 0, TextInFrontOfCursor, TextBehindCursor), CursorPosition.LineNumber);
+            totalLines.DeleteAt(cursorPosition.LineNumber);
+            totalLines.InsertOrAddRange(ListHelper.CreateLines(lines, 0, textInFrontOfCursor, textBehindCursor), cursorPosition.LineNumber);
 
-            return new CursorPosition(CursorPosition.CharacterPosition + lines.Length > 0 ? lines[lines.Length - 1].Length : 0, CursorPosition.LineNumber + lines.Length - 1);
+            return new CursorPosition(cursorPosition.CharacterPosition + lines.Length > 0 ? lines[lines.Length - 1].Length : 0, cursorPosition.LineNumber + lines.Length - 1);
         }
 
-        public static CursorPosition Replace(TextSelection Selection, PooledList<string> TotalLines, string Text, string NewLineCharacter)
+        public static CursorPosition Replace(TextSelection selection, PooledList<string> totalLines, string text, string newLineCharacter)
         {
             //Just delete the text if the string is emty
-            if (Text == "")
-            {
-                return Remove(Selection, TotalLines);
-            }
+            if (text == "")
+                return Remove(selection, totalLines);
 
-            Selection = OrderTextSelection(Selection);
-            int StartLine = Selection.StartPosition.LineNumber;
-            int EndLine = Selection.EndPosition.LineNumber;
-            int StartPosition = Selection.StartPosition.CharacterPosition;
-            int EndPosition = Selection.EndPosition.CharacterPosition;
+            selection = OrderTextSelection(selection);
+            int startLine = selection.StartPosition.LineNumber;
+            int endLine = selection.EndPosition.LineNumber;
+            int startPosition = selection.StartPosition.CharacterPosition;
+            int endPosition = selection.EndPosition.CharacterPosition;
 
-            string[] lines = Text.Split(NewLineCharacter);
-            string Start_Line = TotalLines.GetLineText(StartLine);
+            string[] lines = text.Split(newLineCharacter);
+            string start_Line = totalLines.GetLineText(startLine);
 
             //Selection is singleline and text to paste is also singleline
-            if (StartLine == EndLine && lines.Length == 1)
+            if (startLine == endLine && lines.Length == 1)
             {
-                if (StartPosition == 0 && EndPosition == TotalLines.GetLineLength(EndLine))
-                    Start_Line = "";
-                else
-                    Start_Line = Start_Line.SafeRemove(StartPosition, EndPosition - StartPosition);
+                start_Line =
+                    (startPosition == 0 && endPosition == totalLines.GetLineLength(endLine)) ?
+                    "" :
+                    start_Line.SafeRemove(startPosition, endPosition - startPosition
+                    );
 
-                TotalLines.SetLineText(StartLine, Start_Line.AddText(Text, StartPosition));
+                totalLines.SetLineText(startLine, start_Line.AddText(text, startPosition));
 
-                return new CursorPosition(StartPosition + Text.Length, Selection.StartPosition.LineNumber);
+                return new CursorPosition(startPosition + text.Length, selection.StartPosition.LineNumber);
             }
-            else if (StartLine == EndLine && lines.Length > 1 && (StartPosition != 0 && EndPosition != Start_Line.Length))
+            else if (startLine == endLine && lines.Length > 1 && (startPosition != 0 && endPosition != start_Line.Length))
             {
-                string TextTo = Start_Line == "" ? "" : StartPosition >= Start_Line.Length ? Start_Line : Start_Line.Safe_Substring(0, StartPosition);
-                string TextFrom = Start_Line == "" ? "" : EndPosition >= Start_Line.Length ? Start_Line : Start_Line.Safe_Substring(EndPosition);
+                string textTo = start_Line == "" ? "" : startPosition >= start_Line.Length ? start_Line : start_Line.Safe_Substring(0, startPosition);
+                string textFrom = start_Line == "" ? "" : endPosition >= start_Line.Length ? start_Line : start_Line.Safe_Substring(endPosition);
 
-                TotalLines.SetLineText(StartLine, (TextTo + lines[0]));
+                totalLines.SetLineText(startLine, (textTo + lines[0]));
+                totalLines.InsertOrAddRange(ListHelper.CreateLines(lines, 1, "", textFrom), startLine + 1);
 
-                TotalLines.InsertOrAddRange(ListHelper.CreateLines(lines, 1, "", TextFrom), StartLine + 1);
-                //ListHelper.Insert(TotalLines, new Line(lines[lines.Length - 1] + TextFrom), StartLine + 1);
-
-                return new CursorPosition(EndPosition + Text.Length, StartLine + lines.Length - 1);
+                return new CursorPosition(endPosition + text.Length, startLine + lines.Length - 1);
             }
-            else if (WholeTextSelected(Selection, TotalLines))
+            else if (WholeTextSelected(selection, totalLines))
             {
-                Debug.WriteLine("Replace whole text");
-                if (lines.Length < TotalLines.Count)
+                if (lines.Length < totalLines.Count)
                 {
-                    ListHelper.Clear(TotalLines);
-                    TotalLines.InsertOrAddRange(lines, 0);
+                    ListHelper.Clear(totalLines);
+                    totalLines.InsertOrAddRange(lines, 0);
                 }
                 else
-                    ReplaceLines(TotalLines, 0, TotalLines.Count, lines);
+                    ReplaceLines(totalLines, 0, totalLines.Count, lines);
 
-                return new CursorPosition(TotalLines.GetLineLength(-1), TotalLines.Count - 1);
+                return new CursorPosition(totalLines.GetLineLength(-1), totalLines.Count - 1);
             }
             else
             {
-                string End_Line = TotalLines.GetLineText(EndLine);
+                string end_Line = totalLines.GetLineText(endLine);
 
                 //All lines are selected from start to finish
-                if (StartPosition == 0 && EndPosition == End_Line.Length)
+                if (startPosition == 0 && endPosition == end_Line.Length)
                 {
-                    TotalLines.Safe_RemoveRange(StartLine, EndLine - StartLine + 1);
-                    TotalLines.InsertOrAddRange(lines, StartLine);
+                    totalLines.Safe_RemoveRange(startLine, endLine - startLine + 1);
+                    totalLines.InsertOrAddRange(lines, startLine);
                 }
                 //Only the startline is completely selected
-                else if (StartPosition == 0 && EndPosition != End_Line.Length)
+                else if (startPosition == 0 && endPosition != end_Line.Length)
                 {
-                    TotalLines.SetLineText(EndLine, End_Line.Substring(EndPosition).AddToStart(lines[lines.Length - 1]));
+                    totalLines.SetLineText(endLine, end_Line.Substring(endPosition).AddToStart(lines[lines.Length - 1]));
 
-                    TotalLines.Safe_RemoveRange(StartLine, EndLine - StartLine);
-                    TotalLines.InsertOrAddRange(lines.Take(lines.Length - 1), StartLine);
+                    totalLines.Safe_RemoveRange(startLine, endLine - startLine);
+                    totalLines.InsertOrAddRange(lines.Take(lines.Length - 1), startLine);
                 }
                 //Only the endline is completely selected
-                else if (StartPosition != 0 && EndPosition == End_Line.Length)
+                else if (startPosition != 0 && endPosition == end_Line.Length)
                 {
-                    TotalLines.SetLineText(StartLine, Start_Line.SafeRemove(StartPosition).AddToEnd(lines[0]));
+                    totalLines.SetLineText(startLine, start_Line.SafeRemove(startPosition).AddToEnd(lines[0]));
 
-                    TotalLines.Safe_RemoveRange(StartLine + 1, EndLine - StartLine);
-                    TotalLines.InsertOrAddRange(lines.Skip(1), StartLine + 1);
+                    totalLines.Safe_RemoveRange(startLine + 1, endLine - startLine);
+                    totalLines.InsertOrAddRange(lines.Skip(1), startLine + 1);
                 }
                 else
                 {
                     //Delete the selected parts
-                    Start_Line = Start_Line.SafeRemove(StartPosition);
-                    End_Line = End_Line.Safe_Substring(EndPosition);
+                    start_Line = start_Line.SafeRemove(startPosition);
+                    end_Line = end_Line.Safe_Substring(endPosition);
 
                     //Only one line to insert
                     if (lines.Length == 1)
                     {
-                        TotalLines.SetLineText(StartLine, Start_Line.AddToEnd(lines[0] + End_Line));
-                        TotalLines.Safe_RemoveRange(StartLine + 1, EndLine - StartLine < 0 ? 0 : EndLine - StartLine);
+                        totalLines.SetLineText(startLine, start_Line.AddToEnd(lines[0] + end_Line));
+                        totalLines.Safe_RemoveRange(startLine + 1, endLine - startLine < 0 ? 0 : endLine - startLine);
                     }
                     else
                     {
-                        TotalLines.SetLineText(StartLine, Start_Line.AddToEnd(lines[0]));
-                        TotalLines.SetLineText(EndLine, End_Line.AddToStart(lines[lines.Length - 1]));
+                        totalLines.SetLineText(startLine, start_Line.AddToEnd(lines[0]));
+                        totalLines.SetLineText(endLine, end_Line.AddToStart(lines[lines.Length - 1]));
 
-                        TotalLines.Safe_RemoveRange(StartLine + 1, EndLine - StartLine - 1 < 0 ? 0 : EndLine - StartLine - 1);
+                        totalLines.Safe_RemoveRange(startLine + 1, endLine - startLine - 1 < 0 ? 0 : endLine - startLine - 1);
                         if (lines.Length > 2)
-                        {
-                            TotalLines.InsertOrAddRange(lines.GetLines(1, lines.Length - 2), StartLine + 1);
-                        }
+                            totalLines.InsertOrAddRange(lines.GetLines(1, lines.Length - 2), startLine + 1);
                     }
                 }
-                return new CursorPosition(Start_Line.Length + End_Line.Length - 1, StartLine + lines.Length - 1);
+                return new CursorPosition(start_Line.Length + end_Line.Length - 1, startLine + lines.Length - 1);
             }
         }
 
-        public static CursorPosition Remove(TextSelection Selection, PooledList<string> TotalLines)
+        public static CursorPosition Remove(TextSelection selection, PooledList<string> totalLines)
         {
-            Selection = OrderTextSelection(Selection);
-            int StartLine = Selection.StartPosition.LineNumber;
-            int EndLine = Selection.EndPosition.LineNumber;
-            int StartPosition = Selection.StartPosition.CharacterPosition;
-            int EndPosition = Selection.EndPosition.CharacterPosition;
+            selection = OrderTextSelection(selection);
+            int startLine = selection.StartPosition.LineNumber;
+            int endLine = selection.EndPosition.LineNumber;
+            int startPosition = selection.StartPosition.CharacterPosition;
+            int endPosition = selection.EndPosition.CharacterPosition;
 
-            string Start_Line = TotalLines.GetLineText(StartLine);
-            string End_Line = TotalLines.GetLineText(EndLine);
+            string start_Line = totalLines.GetLineText(startLine);
+            string end_Line = totalLines.GetLineText(endLine);
 
-            if (StartLine == EndLine)
+            if (startLine == endLine)
             {
-                if (StartPosition == 0 && EndPosition == End_Line.Length)
-                    TotalLines.SetLineText(StartLine, "");
-                else
-                    TotalLines.SetLineText(StartLine, Start_Line.SafeRemove(StartPosition, EndPosition - StartPosition));
+                totalLines.SetLineText(startLine,
+                    (startPosition == 0 && endPosition == end_Line.Length ?
+                    "" :
+                    start_Line.SafeRemove(startPosition, endPosition - startPosition))
+                );
             }
-            else if (WholeTextSelected(Selection, TotalLines))
+            else if (WholeTextSelected(selection, totalLines))
             {
-                ListHelper.Clear(TotalLines, true);
-                return new CursorPosition(0, TotalLines.Count - 1);
+                ListHelper.Clear(totalLines, true);
+                return new CursorPosition(0, totalLines.Count - 1);
             }
             else
             {
                 //Whole lines are selected from start to finish
-                if (StartPosition == 0 && EndPosition == End_Line.Length)
+                if (startPosition == 0 && endPosition == end_Line.Length)
                 {
-                    TotalLines.Safe_RemoveRange(StartLine, EndLine - StartLine + 1);
+                    totalLines.Safe_RemoveRange(startLine, endLine - startLine + 1);
                 }
                 //Only the startline is completely selected
-                else if (StartPosition == 0 && EndPosition != End_Line.Length)
+                else if (startPosition == 0 && endPosition != end_Line.Length)
                 {
-                    TotalLines.SetLineText(EndLine, End_Line.Safe_Substring(EndPosition));
-                    TotalLines.Safe_RemoveRange(StartLine, EndLine - StartLine);
+                    totalLines.SetLineText(endLine, end_Line.Safe_Substring(endPosition));
+                    totalLines.Safe_RemoveRange(startLine, endLine - startLine);
                 }
                 //Only the endline is completely selected
-                else if (StartPosition != 0 && EndPosition == End_Line.Length)
+                else if (startPosition != 0 && endPosition == end_Line.Length)
                 {
-                    TotalLines.SetLineText(StartLine, Start_Line.SafeRemove(StartPosition));
-                    TotalLines.Safe_RemoveRange(StartLine + 1, EndLine - StartLine);
+                    totalLines.SetLineText(startLine, start_Line.SafeRemove(startPosition));
+                    totalLines.Safe_RemoveRange(startLine + 1, endLine - startLine);
                 }
                 //Both startline and endline are not completely selected
                 else
                 {
-                    TotalLines.SetLineText(StartLine, Start_Line.SafeRemove(StartPosition) + End_Line.Safe_Substring(EndPosition));
-                    TotalLines.Safe_RemoveRange(StartLine + 1, EndLine - StartLine);
+                    totalLines.SetLineText(startLine, start_Line.SafeRemove(startPosition) + end_Line.Safe_Substring(endPosition));
+                    totalLines.Safe_RemoveRange(startLine + 1, endLine - startLine);
                 }
             }
 
-            if (TotalLines.Count == 0)
-                TotalLines.AddLine();
+            if (totalLines.Count == 0)
+                totalLines.AddLine();
 
-            return new CursorPosition(StartPosition, StartLine);
+            return new CursorPosition(startPosition, startLine);
         }
 
-        public static TextSelectionPosition GetIndexOfSelection(PooledList<string> TotalLines, TextSelection Selection)
+        public static TextSelectionPosition GetIndexOfSelection(PooledList<string> totalLines, TextSelection selection)
         {
-            var Sel = OrderTextSelection(Selection);
-            int StartIndex = Cursor.CursorPositionToIndex(TotalLines, Sel.StartPosition);
-            int EndIndex = Cursor.CursorPositionToIndex(TotalLines, Sel.EndPosition);
+            var sel = OrderTextSelection(selection);
+            int startIndex = Cursor.CursorPositionToIndex(totalLines, sel.StartPosition);
+            int endIndex = Cursor.CursorPositionToIndex(totalLines, sel.EndPosition);
 
-            int SelectionLength;
-            if (EndIndex > StartIndex)
-                SelectionLength = EndIndex - StartIndex;
+            if (endIndex > startIndex)
+                return new TextSelectionPosition(Math.Min(startIndex, endIndex), endIndex - startIndex);
             else
-                SelectionLength = StartIndex - EndIndex;
-
-            return new TextSelectionPosition(Math.Min(StartIndex, EndIndex), SelectionLength);
+                return new TextSelectionPosition(Math.Min(startIndex, endIndex), startIndex - endIndex);
         }
 
-        public static TextSelection GetSelectionFromPosition(PooledList<string> TotalLines, int StartPosition, int Length, int NumberOfCharacters)
+        public static TextSelection GetSelectionFromPosition(PooledList<string> totalLines, int startPosition, int length, int numberOfCharacters)
         {
             TextSelection returnValue = new TextSelection();
 
-            if (StartPosition + Length > NumberOfCharacters)
+            if (startPosition + length > numberOfCharacters)
             {
-                if (StartPosition > NumberOfCharacters)
+                if (startPosition > numberOfCharacters)
                 {
-                    StartPosition = NumberOfCharacters;
-                    Length = 0;
+                    startPosition = numberOfCharacters;
+                    length = 0;
                 }
                 else
-                {
-                    Length = NumberOfCharacters - StartPosition;
-                }
+                    length = numberOfCharacters - startPosition;
             }
 
-            void GetIndexInLine(int CurrentIndex, int CurrentTotalLength)
+            void GetIndexInLine(int currentIndex, int currentTotalLength)
             {
-                int Position = Math.Abs(CurrentTotalLength - StartPosition);
+                int position = Math.Abs(currentTotalLength - startPosition);
 
                 returnValue.StartPosition =
-                    new CursorPosition(Position, CurrentIndex);
+                    new CursorPosition(position, currentIndex);
 
-                if (Length == 0)
+                if (length == 0)
                     returnValue.EndPosition = new CursorPosition(returnValue.StartPosition);
                 else
                 {
-                    int LengthCount = 0;
-                    for (int i = CurrentIndex; i < TotalLines.Count; i++)
+                    int lengthCount = 0;
+                    for (int i = currentIndex; i < totalLines.Count; i++)
                     {
-                        int lineLength = TotalLines[i].Length + 1;
-                        if (LengthCount + lineLength > Length)
+                        int lineLength = totalLines[i].Length + 1;
+                        if (lengthCount + lineLength > length)
                         {
-                            returnValue.EndPosition = new CursorPosition(Math.Abs(LengthCount - Length) + Position, i);
+                            returnValue.EndPosition = new CursorPosition(Math.Abs(lengthCount - length) + position, i);
                             break;
                         }
-                        LengthCount += lineLength;
+                        lengthCount += lineLength;
                     }
                 }
             }
 
             //Get the Length
-            int TotalLength = 0;
-            for (int i = 0; i < TotalLines.Count; i++)
+            int totalLength = 0;
+            for (int i = 0; i < totalLines.Count; i++)
             {
-                int lineLength = TotalLines[i].Length + 1;
-                if (TotalLength + lineLength > StartPosition)
+                int lineLength = totalLines[i].Length + 1;
+                if (totalLength + lineLength > startPosition)
                 {
-                    GetIndexInLine(i, TotalLength);
+                    GetIndexInLine(i, totalLength);
                     break;
                 }
 
-                TotalLength += lineLength;
+                totalLength += lineLength;
             }
             return returnValue;
         }
 
-        public static string GetSelectedText(PooledList<string> TotalLines, TextSelection TextSelection, int CurrentLineIndex, string NewLineCharacter)
+        public static string GetSelectedText(PooledList<string> totalLines, TextSelection textSelection, int currentLineIndex, string newLineCharacter)
         {
             //return the current line, if no text is selected:
-            if (TextSelection == null)
+            if (textSelection == null)
+                return totalLines.GetLineText(currentLineIndex) + newLineCharacter;
+
+            int startLine = Math.Min(textSelection.StartPosition.LineNumber, textSelection.EndPosition.LineNumber);
+            int endLine = Math.Max(textSelection.StartPosition.LineNumber, textSelection.EndPosition.LineNumber);
+            int endIndex = Math.Max(textSelection.StartPosition.CharacterPosition, textSelection.EndPosition.CharacterPosition);
+            int startIndex = Math.Min(textSelection.StartPosition.CharacterPosition, textSelection.EndPosition.CharacterPosition);
+
+            StringBuilder stringBuilder = new StringBuilder();
+
+            if (startLine == endLine) //Singleline
             {
-                return TotalLines.GetLineText(CurrentLineIndex) + NewLineCharacter;
+                string line = totalLines.GetLineText(startLine < totalLines.Count ? startLine : totalLines.Count - 1);
+
+                if (startIndex == 0 && endIndex != line.Length)
+                    stringBuilder.Append(line.SafeRemove(endIndex));
+                else if (endIndex == line.Length && startIndex != 0)
+                    stringBuilder.Append(line.Safe_Substring(startIndex));
+                else if (startIndex == 0 && endIndex == line.Length)
+                    stringBuilder.Append(line);
+                else stringBuilder.Append(line.SafeRemove(endIndex).Substring(startIndex));
             }
-
-            int StartLine = Math.Min(TextSelection.StartPosition.LineNumber, TextSelection.EndPosition.LineNumber);
-            int EndLine = Math.Max(TextSelection.StartPosition.LineNumber, TextSelection.EndPosition.LineNumber);
-            int EndIndex = Math.Max(TextSelection.StartPosition.CharacterPosition, TextSelection.EndPosition.CharacterPosition);
-            int StartIndex = Math.Min(TextSelection.StartPosition.CharacterPosition, TextSelection.EndPosition.CharacterPosition);
-
-            StringBuilder StringBuilder = new StringBuilder();
-
-            if (StartLine == EndLine) //Singleline
+            else if (WholeTextSelected(textSelection, totalLines))
             {
-                string line = TotalLines.GetLineText(StartLine < TotalLines.Count ? StartLine : TotalLines.Count - 1);
-
-                if (StartIndex == 0 && EndIndex != line.Length)
-                    StringBuilder.Append(line.SafeRemove(EndIndex));
-                else if (EndIndex == line.Length && StartIndex != 0)
-                    StringBuilder.Append(line.Safe_Substring(StartIndex));
-                else if (StartIndex == 0 && EndIndex == line.Length)
-                    StringBuilder.Append(line);
-                else StringBuilder.Append(line.SafeRemove(EndIndex).Substring(StartIndex));
-            }
-            else if (WholeTextSelected(TextSelection, TotalLines))
-            {
-                StringBuilder.Append(ListHelper.GetLinesAsString(TotalLines, NewLineCharacter));
+                stringBuilder.Append(ListHelper.GetLinesAsString(totalLines, newLineCharacter));
             }
             else //Multiline
             {
                 //StartLine
-                StringBuilder.Append(TotalLines.GetLineText(StartLine).Substring(StartIndex) + NewLineCharacter);
+                stringBuilder.Append(totalLines.GetLineText(startLine).Substring(startIndex) + newLineCharacter);
 
                 //Other lines
-                if (EndLine - StartLine > 1)
-                    StringBuilder.Append(TotalLines.GetLines_Large(StartLine + 1, EndLine - StartLine - 1).GetString(NewLineCharacter) + NewLineCharacter);
+                if (endLine - startLine > 1)
+                    stringBuilder.Append(totalLines.GetLines(startLine + 1, endLine - startLine - 1).GetString(newLineCharacter) + newLineCharacter);
 
                 //Endline
-                string CurrentLine = TotalLines.GetLineText(EndLine);
+                string currentLine = totalLines.GetLineText(endLine);
 
-                StringBuilder.Append(EndIndex >= CurrentLine.Length ? CurrentLine : CurrentLine.SafeRemove(EndIndex));
+                stringBuilder.Append(endIndex >= currentLine.Length ? currentLine : currentLine.SafeRemove(endIndex));
             }
-            return StringBuilder.ToString();
+            return stringBuilder.ToString();
         }
 
         /// <summary>
         /// Replaces the lines in TotalLines, starting by Start replacing Count number of items, with the string in SplittedText
         /// All lines that can be replaced get replaced all lines that are needed additionally get added
         /// </summary>
-        /// <param name="TotalLines"></param>
-        /// <param name="Start"></param>
-        /// <param name="Count"></param>
-        /// <param name="SplittedText"></param>
-        public static void ReplaceLines(PooledList<string> TotalLines, int Start, int Count, string[] SplittedText)
+        /// <param name="totalLines"></param>
+        /// <param name="start"></param>
+        /// <param name="count"></param>
+        /// <param name="splittedText"></param>
+        public static void ReplaceLines(PooledList<string> totalLines, int start, int count, string[] splittedText)
         {
-            if (SplittedText.Length == 0)
+            if (splittedText.Length == 0)
             {
-                TotalLines.Safe_RemoveRange(Start, Count);
+                totalLines.Safe_RemoveRange(start, count);
                 return;
             }
 
             //Same line-length -> check for any differences in the individual lines
-            if (Count == SplittedText.Length)
+            if (count == splittedText.Length)
             {
-                for (int i = 0; i < Count; i++)
+                for (int i = 0; i < count; i++)
                 {
-                    if (!TotalLines.GetLineText(i).Equals(SplittedText[i], StringComparison.Ordinal))
+                    if (!totalLines.GetLineText(i).Equals(splittedText[i], StringComparison.Ordinal))
                     {
-                        TotalLines.SetLineText(Start + i, SplittedText[i]);
+                        totalLines.SetLineText(start + i, splittedText[i]);
                     }
                 }
             }
-            //Delete items from Start to Count; Insert SplittedText at Start
-            else if (Count > SplittedText.Length)
+            //Delete items from start to count; Insert splittedText at start
+            else if (count > splittedText.Length)
             {
-                for (int i = 0; i < Count; i++)
+                for (int i = 0; i < count; i++)
                 {
-                    if (i < SplittedText.Length)
+                    if (i < splittedText.Length)
                     {
-                        TotalLines.SetLineText(Start + i, SplittedText[i]);
+                        totalLines.SetLineText(start + i, splittedText[i]);
                     }
                     else
                     {
-                        TotalLines.Safe_RemoveRange(Start + i, Count - i);
+                        totalLines.Safe_RemoveRange(start + i, count - i);
                         break;
                     }
                 }
             }
-            //Replace all items from Start - Count with existing (add more if out of range)
+            //Replace all items from start - count with existing (add more if out of range)
             else //SplittedText.Length > Count:
             {
-                for (int i = 0; i < SplittedText.Length; i++)
+                for (int i = 0; i < splittedText.Length; i++)
                 {
                     //replace all possible lines
-                    if (i < Count)
+                    if (i < count)
                     {
-                        TotalLines.SetLineText(Start + i, SplittedText[i]);
+                        totalLines.SetLineText(start + i, splittedText[i]);
                     }
                     else //Add new lines
                     {
-                        TotalLines.InsertOrAddRange(SplittedText.Skip(Start + i), Start + i);
+                        totalLines.InsertOrAddRange(splittedText.Skip(start + i), start + i);
                         break;
                     }
                 }
             }
         }
 
-        public static bool MoveLinesUp(PooledList<string> TotalLines, TextSelection selection, CursorPosition cursorposition)
+        public static bool MoveLinesUp(PooledList<string> totalLines, TextSelection selection, CursorPosition cursorposition)
         {
             //Move single line
-            if (selection == null)
-            {
-                if (cursorposition.LineNumber > 0)
-                {
-                    TotalLines.SwapLines(cursorposition.LineNumber, cursorposition.LineNumber - 1);
-                    cursorposition.LineNumber -= 1;
-                    return true;
-                }
-            }
-            //Can not move whole text
-            //else if (WholeTextSelected(selection, TotalLines))
-            //{
-            //    return null;
-            //}
-            ////Move selected lines
-            //else
-            //{
-            //    selection = OrderTextSelection(selection);
-            //    if (selection.StartPosition.LineNumber > 0)
-            //    {
-            //        string aboveLineText = TotalLines.GetLineText(selection.StartPosition.LineNumber - 1);
-            //        TotalLines.RemoveAt(selection.StartPosition.LineNumber - 1);
-            //        TotalLines.InsertOrAdd(selection.EndPosition.LineNumber, aboveLineText);
+            if (selection != null)
+                return false;
 
-            //        selection.StartPosition.ChangeLineNumber(selection.StartPosition.LineNumber - 1);
-            //        selection.EndPosition.ChangeLineNumber(selection.EndPosition.LineNumber - 1);
-            //        return selection;
-            //    }
-            //}
+            if (cursorposition.LineNumber > 0)
+            {
+                totalLines.SwapLines(cursorposition.LineNumber, cursorposition.LineNumber - 1);
+                cursorposition.LineNumber -= 1;
+                return true;
+            }
             return false;
         }
-        public static bool MoveLinesDown(PooledList<string> TotalLines, TextSelection selection, CursorPosition cursorposition)
+        public static bool MoveLinesDown(PooledList<string> totalLines, TextSelection selection, CursorPosition cursorposition)
         {
             //Move single line
-            if (selection == null || selection.StartPosition.LineNumber == selection.EndPosition.LineNumber)
-            {
-                if (cursorposition.LineNumber < TotalLines.Count)
-                {
-                    TotalLines.SwapLines(cursorposition.LineNumber, cursorposition.LineNumber + 1);
-                    cursorposition.LineNumber += 1;
-                    return true;
-                }
-            }
-            //Can not move whole text
-            //else if (WholeTextSelected(selection, TotalLines))
-            //{
-            //    return null;
-            //}
-            //Move selected lines
-            //else
-            //{
-            //    selection = OrderTextSelection(selection);
-            //    if (selection.EndPosition.LineNumber + 1 < TotalLines.Count)
-            //    {
-            //        string aboveLineText = TotalLines.GetLineText(selection.EndPosition.LineNumber + 1);
-            //        TotalLines.RemoveAt(selection.EndPosition.LineNumber + 1);
-            //        TotalLines.InsertOrAdd(selection.StartPosition.LineNumber, aboveLineText);
+            if (selection != null || selection.StartPosition.LineNumber != selection.EndPosition.LineNumber)
+                return false;
 
-            //        selection.StartPosition.ChangeLineNumber(selection.StartPosition.LineNumber + 1);
-            //        selection.EndPosition.ChangeLineNumber(selection.EndPosition.LineNumber + 1);
-            //        return selection;
-            //    }
-            //}
+            if (cursorposition.LineNumber < totalLines.Count)
+            {
+                totalLines.SwapLines(cursorposition.LineNumber, cursorposition.LineNumber + 1);
+                cursorposition.LineNumber += 1;
+                return true;
+            }
             return false;
+        }
+        public static void ClearSelectionIfNeeded(TextControlBox textbox, SelectionRenderer selectionrenderer)
+        {
+            //If the selection is visible, but is not getting set, clear the selection
+            if (selectionrenderer.HasSelection && !selectionrenderer.IsSelecting)
+            {
+                textbox.ClearSelection();
+            }
+        }
+
+
+        public static bool SelectionIsNull(SelectionRenderer selectionrenderer, TextSelection selection)
+        {
+            if (selection == null)
+                return true;
+            return selectionrenderer.SelectionStartPosition == null || selectionrenderer.SelectionEndPosition == null;
+        }
+        public static void SelectSingleWord(CanvasHelper canvashelper, SelectionRenderer selectionrenderer, CursorPosition cursorPosition, string currentLine)
+        {
+            int characterpos = cursorPosition.CharacterPosition;
+            //Update variables
+            selectionrenderer.SelectionStartPosition =
+                new CursorPosition(characterpos - Cursor.CalculateStepsToMoveLeft2(currentLine, characterpos), cursorPosition.LineNumber);
+
+            selectionrenderer.SelectionEndPosition =
+                new CursorPosition(characterpos + Cursor.CalculateStepsToMoveRight2(currentLine, characterpos), cursorPosition.LineNumber);
+
+            cursorPosition.CharacterPosition = selectionrenderer.SelectionEndPosition.CharacterPosition;
+            selectionrenderer.HasSelection = true;
+
+            //Render it
+            canvashelper.UpdateSelection();
+            canvashelper.UpdateCursor();
         }
     }
 }

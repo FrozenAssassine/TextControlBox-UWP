@@ -4,44 +4,32 @@ namespace TextControlBox.Text
 {
     internal class MoveLine
     {
-        public static TextSelection Move(PooledList<string> TotalLines, TextSelection selection, CursorPosition cursorposition, UndoRedo undoredo, string NewLineCharacter, MoveDirection direction)
+        public static void Move(PooledList<string> totalLines, TextSelection selection, CursorPosition cursorposition, UndoRedo undoredo, string newLineCharacter, LineMoveDirection direction)
         {
-            TextSelection result = null;
-            if (direction == MoveDirection.Down)
+            if (selection != null)
+                return;
+
+            //move down:
+            if (direction == LineMoveDirection.Down)
             {
-                if (selection == null)
+                if (cursorposition.LineNumber >= totalLines.Count - 1)
+                    return;
+
+                undoredo.RecordUndoAction(() =>
                 {
-                    if (cursorposition.LineNumber >= TotalLines.Count - 1)
-                        return null;
-
-                    undoredo.RecordUndoAction(() =>
-                    {
-                        Selection.MoveLinesDown(TotalLines, selection, cursorposition);
-
-                    }, TotalLines, cursorposition.LineNumber, 2, 2, NewLineCharacter, cursorposition);
-                    return result;
-                }
+                    Selection.MoveLinesDown(totalLines, selection, cursorposition);
+                }, totalLines, cursorposition.LineNumber, 2, 2, newLineCharacter, cursorposition);
+                return;
             }
-            else
+
+            //move up:
+            if (cursorposition.LineNumber <= 0)
+                return;
+
+            undoredo.RecordUndoAction(() =>
             {
-                if (selection == null)
-                {
-                    if (cursorposition.LineNumber <= 0)
-                        return null;
-
-                    undoredo.RecordUndoAction(() =>
-                    {
-                        Selection.MoveLinesUp(TotalLines, selection, cursorposition);
-
-                    }, TotalLines, cursorposition.LineNumber - 1, 2, 2, NewLineCharacter, cursorposition);
-                    return result;
-                }
-            }
-            return null;
+                Selection.MoveLinesUp(totalLines, selection, cursorposition);
+            }, totalLines, cursorposition.LineNumber - 1, 2, 2, newLineCharacter, cursorposition);
         }
-    }
-    internal enum MoveDirection
-    {
-        Up, Down
     }
 }

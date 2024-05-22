@@ -17,16 +17,19 @@
 
 </div>
 
-<h3 align="center">A UWP based textbox with syntaxhighlighting and support for very large amount of text which is still in development.</h3>
+## 🤔 What is TextControlBox?
+A UWP based textbox with syntaxhighlighting and support for very large amount of text which is still in development.</h3>
 
 ## Reason why I built it
 UWP has a default Textbox and a RichTextBox. Both of them are very slow in rendering multiple thousand lines. The selection works also very slow. So I decided to create my own version of a Textbox.
 
-## Info:
-The textbox is mostly done, but there are still some bugs, I'm working on.
-I also would like to have a Winui3 variant, but the CoreTextServicesManager is not available yet
+## 📥 Download
 
-## Features:
+<a href="https://www.nuget.org/packages/TextControlBox.JuliusKirsch">
+<img width="40" height="auto" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/nuget/nuget-original.svg"/>
+</a>
+
+## 🔍 Features:
 - Viewing files with a million lines or more without performance issues
 - Syntaxhighlighting
 - Outstanding performance because it only renders the lines that are needed to display
@@ -36,17 +39,18 @@ I also would like to have a Winui3 variant, but the CoreTextServicesManager is n
 - Highly customizable
 
 
-## Problems:
+## ❗ Problems:
 - Current text limit is 100 million characters
 - Currently there is no textwrapping
-- Not available for Winui3, because CoreTextServicesManager is not available
+- First version for WinUI with many problems and bugs, but working [Github](https://github.com/FrozenAssassine/TextControlBox-WinUI/)
 
-## Available languages:
+## 🚩 Available languages:
 - Batch
 - Config file
 - C++
 - C#
 - CSV
+- CSS
 - GCode
 - Hex
 - Html
@@ -61,7 +65,7 @@ I also would like to have a Winui3 variant, but the CoreTextServicesManager is n
 - Toml
 - Xml
 
-## Usage:
+## 🚀 Usage:
 
 <details><summary><h2>Properties</h2></summary> 
  
@@ -197,9 +201,9 @@ textbox.Design = new TextControlBoxDesign(
 ```
 
 
-## Contributors:
+## 👨‍👩‍👧‍👦 Contributors:
 If you want to contribute for this project, feel free to open an <a href="https://github.com/FrozenAssassine/TextControlBox-UWP/issues/new">issue</a> or a <a href="https://github.com/FrozenAssassine/TextControlBox-UWP/pulls">pull request</a>.
 
-#
+## 📸 Images
 
 <img src="images/image1.png">

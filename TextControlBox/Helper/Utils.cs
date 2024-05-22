@@ -5,7 +5,6 @@ using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using TextControlBox.Extensions;
-using TextControlBox.Text;
 using Windows.Foundation;
 using Windows.System;
 using Windows.UI.Core;
@@ -47,13 +46,13 @@ namespace TextControlBox.Helper
         }
 
         //Get the longest line in the textbox
-        public static int GetLongestLineIndex(PooledList<string> TotalLines)
+        public static int GetLongestLineIndex(PooledList<string> totalLines)
         {
             int LongestIndex = 0;
             int OldLenght = 0;
-            for (int i = 0; i < TotalLines.Count; i++)
+            for (int i = 0; i < totalLines.Count; i++)
             {
-                var lenght = TotalLines[i].Length;
+                var lenght = totalLines[i].Length;
                 if (lenght > OldLenght)
                 {
                     LongestIndex = i;
@@ -77,9 +76,9 @@ namespace TextControlBox.Helper
             return OldLenght;
         }
 
-        public static bool CursorPositionsAreEqual(CursorPosition First, CursorPosition Second)
+        public static bool CursorPositionsAreEqual(CursorPosition first, CursorPosition second)
         {
-            return First.LineNumber == Second.LineNumber && First.CharacterPosition == Second.CharacterPosition;
+            return first.LineNumber == second.LineNumber && first.CharacterPosition == second.CharacterPosition;
         }
 
         public static string[] SplitAt(string Text, int Index)
@@ -89,45 +88,45 @@ namespace TextControlBox.Helper
             return new string[] { First, Second };
         }
 
-        public static int CountCharacters(PooledList<string> TotalLines)
+        public static int CountCharacters(PooledList<string> totalLines)
         {
             int Count = 0;
-            for (int i = 0; i < TotalLines.Count; i++)
+            for (int i = 0; i < totalLines.Count; i++)
             {
-                Count += TotalLines[i].Length + 1;
+                Count += totalLines[i].Length + 1;
             }
             return Count - 1;
         }
-        public static void ChangeCursor(CoreCursorType CursorType)
+        public static void ChangeCursor(CoreCursorType cursorType)
         {
-            Window.Current.CoreWindow.PointerCursor = new CoreCursor(CursorType, 0);
+            Window.Current.CoreWindow.PointerCursor = new CoreCursor(cursorType, 0);
         }
         public static bool IsKeyPressed(VirtualKey key)
         {
             return Window.Current.CoreWindow.GetKeyState(key).HasFlag(CoreVirtualKeyStates.Down);
         }
-        public static async Task<bool> IsOverTextLimit(int TextLength)
+        public static async Task<bool> IsOverTextLimit(int textLength)
         {
-            if (TextLength > 100000000)
+            if (textLength > 100000000)
             {
-                await new MessageDialog("Current textlimit is 100 million characters, but your file has " + TextLength + " characters").ShowAsync();
+                await new MessageDialog("Current textlimit is 100 million characters, but your file has " + textLength + " characters").ShowAsync();
                 return true;
             }
             return false;
         }
-        public static void Benchmark(Action action, string Text)
+        public static void Benchmark(Action action, string text)
         {
             Stopwatch sw = new Stopwatch();
             sw.Start();
             action.Invoke();
             sw.Stop();
 
-            Debug.WriteLine(Text + " took " + sw.ElapsedMilliseconds + "::" + sw.ElapsedTicks);
+            Debug.WriteLine(text + " took " + sw.ElapsedMilliseconds + "::" + sw.ElapsedTicks);
         }
 
-        public static ApplicationTheme ConvertTheme(ElementTheme Theme)
+        public static ApplicationTheme ConvertTheme(ElementTheme theme)
         {
-            switch (Theme)
+            switch (theme)
             {
                 case ElementTheme.Light: return ApplicationTheme.Light;
                 case ElementTheme.Dark: return ApplicationTheme.Dark;
@@ -140,20 +139,32 @@ namespace TextControlBox.Helper
             }
         }
 
-        public static Point GetPointFromCoreWindowRelativeTo(PointerEventArgs args, UIElement realtive)
+        public static Point GetPointFromCoreWindowRelativeTo(PointerEventArgs args, UIElement relative)
         {
             //Convert the point relative to the Canvas_Selection to get around Control position changes in the Window
-            return args.CurrentPoint.Position.Subtract(GetTextboxstartingPoint(realtive));
+            return args.CurrentPoint.Position.Subtract(GetTextboxstartingPoint(relative));
         }
 
-        public static Point GetTextboxstartingPoint(UIElement realtiveTo)
+        public static Point GetTextboxstartingPoint(UIElement relativeTo)
         {
-            return realtiveTo.TransformToVisual(Window.Current.Content).TransformPoint(new Point(0, 0));
+            return relativeTo.TransformToVisual(Window.Current.Content).TransformPoint(new Point(0, 0));
         }
 
-        public static int CountLines(string text, string NewLineCharacter)
+        public static int CountLines(string text, string newLineCharacter)
         {
-            return (text.Length - text.Replace(NewLineCharacter, "").Length) / NewLineCharacter.Length + 1;
+            return (text.Length - text.Replace(newLineCharacter, "").Length) / newLineCharacter.Length + 1;
         }
+
+        public static Rect CreateRect(Rect rect, float marginLeft = 0, float marginTop = 0)
+        {
+            return new Rect(
+                new Point(
+                    Math.Floor(rect.Left + marginLeft),//X
+                    Math.Floor(rect.Top + marginTop)), //Y
+                new Point(
+                    Math.Ceiling(rect.Right + marginLeft), //Width
+                    Math.Ceiling(rect.Bottom + marginTop))); //Height
+        }
+
     }
 }

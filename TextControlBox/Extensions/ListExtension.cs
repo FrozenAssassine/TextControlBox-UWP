@@ -1,4 +1,5 @@
 ﻿using Collections.Pooled;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TextControlBox.Helper;
@@ -34,10 +35,8 @@ namespace TextControlBox.Extensions
         {
             if (line == -1)
                 line = list.Count - 1;
-            if (line >= list.Count)
-                line = list.Count - 1;
-            if (line < 0)
-                line = 0;
+
+            line = Math.Clamp(line, 0, list.Count - 1);
 
             list[line] = text;
         }
@@ -53,7 +52,7 @@ namespace TextControlBox.Extensions
         {
             return GetCurrentLineText(list).Length;
         }
-        public static void UpdateCurrentLine(this PooledList<string> list, int currentLine)
+        public static void UpdateCurrentLine(this PooledList<string> _, int currentLine)
         {
             CurrentLineIndex = currentLine;
         }
@@ -61,23 +60,12 @@ namespace TextControlBox.Extensions
         {
             list[line] = list[line] + add;
         }
-        public static void String_AddToStart(this PooledList<string> list, int line, string add)
-        {
-            list[line] = add + list[line];
-        }
         public static void InsertOrAdd(this PooledList<string> list, int index, string lineText)
         {
             if (index >= list.Count || index == -1)
                 list.Add(lineText);
             else
                 list.Insert(index, lineText);
-        }
-        public static void InsertOrAddRange(this PooledList<string> list, PooledList<string> Lines, int position)
-        {
-            if (position >= list.Count)
-                list.AddRange(Lines);
-            else
-                list.InsertRange(position < 0 ? 0 : position, Lines);
         }
         public static void InsertOrAddRange(this PooledList<string> list, IEnumerable<string> lines, int index)
         {
@@ -98,21 +86,25 @@ namespace TextControlBox.Extensions
             list.RemoveAt(index);
             list.TrimExcess();
         }
-
-        //Use this to get a large amount of lines (200 and more)
-        public static IEnumerable<string> GetLines_Large(this PooledList<string> TotalLines, int start, int count)
+        private static IEnumerable<string> GetLines_Small(this PooledList<string> totalLines, int start, int count)
         {
-            return TotalLines.Skip(start).Take(count);
-        }
-        //Use this to get a small amount of lines (sub 200)
-        public static IEnumerable<string> GetLines_Small(this PooledList<string> TotalLines, int start, int count)
-        {
-            var res = ListHelper.CheckValues(TotalLines, start, count);
+            var res = ListHelper.CheckValues(totalLines, start, count);
 
             for (int i = 0; i < res.Count; i++)
             {
-                yield return TotalLines[i + res.Index];
+                yield return totalLines[i + res.Index];
             }
+        }
+
+        public static IEnumerable<string> GetLines(this PooledList<string> totalLines, int start, int count)
+        {
+            //use different algorithm for small amount of lines:
+            if (start + count < 400)
+            {
+                return GetLines_Small(totalLines, start, count);
+            }
+
+            return totalLines.Skip(start).Take(count);
         }
 
         public static string GetString(this IEnumerable<string> lines, string NewLineCharacter)
@@ -120,15 +112,15 @@ namespace TextControlBox.Extensions
             return string.Join(NewLineCharacter, lines);
         }
 
-        public static void Safe_RemoveRange(this PooledList<string> TotalLines, int Index, int Count)
+        public static void Safe_RemoveRange(this PooledList<string> totalLines, int index, int count)
         {
-            var res = ListHelper.CheckValues(TotalLines, Index, Count);
-            TotalLines.RemoveRange(res.Index, res.Count);
-            TotalLines.TrimExcess();
+            var res = ListHelper.CheckValues(totalLines, index, count);
+            totalLines.RemoveRange(res.Index, res.Count);
+            totalLines.TrimExcess();
 
             //clear up the memory of the list when more than 1mio items are removed
             if (res.Count > 1_000_000)
-                ListHelper.GCList(TotalLines);
+                ListHelper.GCList(totalLines);
         }
         public static string[] GetLines(this string[] lines, int start, int count)
         {

@@ -6,45 +6,6 @@ namespace TextControlBox.Extensions
 {
     internal static class StringExtension
     {
-        public static int IndexOfWholeWord(string Text, string Word, int StartIndex)
-        {
-            for (int j = StartIndex; j < Text.Length &&
-                (j = Text.IndexOf(Word, j, StringComparison.Ordinal)) >= 0; j++)
-            {
-                if ((j == 0 || !char.IsLetterOrDigit(Text, j - 1)) &&
-                    (j + Word.Length == Text.Length || !char.IsLetterOrDigit(Text, j + Word.Length)))
-                {
-                    return j;
-                }
-            }
-
-            return -1;
-        }
-        public static int LastIndexOfWholeWord(string Text, string Word)
-        {
-            int StartIndex = Text.Length - 1;
-            while (StartIndex >= 0 && (StartIndex = Text.LastIndexOf(Word, StartIndex, StringComparison.Ordinal)) != -1)
-            {
-                if (StartIndex > 0)
-                {
-                    if (!char.IsLetterOrDigit(Text[StartIndex - 1]))
-                    {
-                        return StartIndex;
-                    }
-                }
-
-                if (StartIndex + Text.Length < Text.Length)
-                {
-                    if (!char.IsLetterOrDigit(Text[StartIndex + Word.Length]))
-                    {
-                        return StartIndex;
-                    }
-                }
-
-                StartIndex--;
-            }
-            return -1;
-        }
         public static string RemoveFirstOccurence(this string value, string removeString)
         {
             int index = value.IndexOf(removeString, StringComparison.Ordinal);
@@ -79,15 +40,15 @@ namespace TextControlBox.Extensions
             else
                 return text.Remove(start, count);
         }
-        public static bool Contains(this string text, SearchParameter Parameter)
+        public static bool Contains(this string text, SearchParameter parameter)
         {
-            if (Parameter.WholeWord)
-                return Regex.IsMatch(text, Parameter.SearchExpression, RegexOptions.Compiled);
+            if (parameter.WholeWord)
+                return Regex.IsMatch(text, parameter.SearchExpression, RegexOptions.Compiled);
 
-            if (Parameter.MatchCase)
-                return text.Contains(Parameter.Word, StringComparison.Ordinal);
+            if (parameter.MatchCase)
+                return text.Contains(parameter.Word, StringComparison.Ordinal);
             else
-                return text.Contains(Parameter.Word, StringComparison.OrdinalIgnoreCase);
+                return text.Contains(parameter.Word, StringComparison.OrdinalIgnoreCase);
         }
         public static string Safe_Substring(this string text, int index, int count = -1)
         {

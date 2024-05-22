@@ -7,9 +7,9 @@ namespace TextControlBox.Text
         private TabSpaceHelper tabSpaceHelper;
         public LineEnding lineEnding;
 
-        public StringManager(TabSpaceHelper tsh)
+        public StringManager(TabSpaceHelper tabSpaceHelper)
         {
-            tabSpaceHelper = tsh;
+            this.tabSpaceHelper = tabSpaceHelper;
         }
         public string CleanUpString(string input)
         {

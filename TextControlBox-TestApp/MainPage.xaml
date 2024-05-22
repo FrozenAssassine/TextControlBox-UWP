@@ -13,12 +13,5 @@
         <AcrylicBrush TintColor="Black" TintOpacity="0.7" BackgroundSource="HostBackdrop">
         </AcrylicBrush>
     </Page.Background>
-    <Grid>
-        <StackPanel Orientation="Horizontal"  VerticalAlignment="Top" HorizontalAlignment="Center" >
-            <TextBox x:Name="searchInput" TextChanged="searchInput_TextChanged"/>
-            <Button Click="SearchUp_Click" Content="UP"/>
-            <Button Click="SearchDown_Click" Content="DOWN"/>
-        </StackPanel>
-        <textcontrolbox:TextControlBox Margin="0,40,0,0" x:Name="textbox"/>
-    </Grid>
+        <textcontrolbox:TextControlBox x:Name="textbox"/>
 </Page>

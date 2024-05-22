@@ -1,59 +1,52 @@
 ﻿using Microsoft.Graphics.Canvas.Brushes;
 using Microsoft.Graphics.Canvas.Text;
 using Microsoft.Graphics.Canvas.UI.Xaml;
+using System;
 using System.Numerics;
-using TextControlBox.Text;
 using Windows.Foundation;
 
 namespace TextControlBox.Renderer
 {
     internal class CursorRenderer
     {
-        public static int GetCursorLineFromPoint(Point Point, float SingleLineHeight, int NumberOfRenderedLines, int NumberOfStartLine)
+        public static int GetCursorLineFromPoint(Point point, float singleLineHeight, int numberOfRenderedLines, int numberOfStartLine)
         {
             //Calculate the relative linenumber, where the pointer was pressed at
-            int Linenumber = (int)(Point.Y / SingleLineHeight);
-            if (Linenumber < 0)
-                Linenumber = 0;
-
-            Linenumber += NumberOfStartLine;
-
-            if (Linenumber >= NumberOfStartLine + NumberOfRenderedLines)
-                Linenumber = NumberOfStartLine + NumberOfRenderedLines - 1;
-
-            return Linenumber;
+            int linenumber = (int)(point.Y / singleLineHeight);
+            linenumber += numberOfStartLine;
+            return Math.Clamp(linenumber, 0, numberOfStartLine + numberOfRenderedLines - 1);
         }
-        public static int GetCharacterPositionFromPoint(string CurrentLine, CanvasTextLayout TextLayout, Point CursorPosition, float MarginLeft)
+        public static int GetCharacterPositionFromPoint(string currentLine, CanvasTextLayout textLayout, Point cursorPosition, float marginLeft)
         {
-            if (CurrentLine == null || TextLayout == null)
+            if (currentLine == null || textLayout == null)
                 return 0;
 
-            TextLayout.HitTest(
-                (float)CursorPosition.X - MarginLeft, 0,
+            textLayout.HitTest(
+                (float)cursorPosition.X - marginLeft, 0,
                 out var textLayoutRegion);
             return textLayoutRegion.CharacterIndex;
         }
 
         //Return the position in pixels of the cursor in the current line
-        public static float GetCursorPositionInLine(CanvasTextLayout CurrentLineTextLayout, CursorPosition CursorPosition, float XOffset)
+        public static float GetCursorPositionInLine(CanvasTextLayout currentLineTextLayout, CursorPosition cursorPosition, float xOffset)
         {
-            if (CurrentLineTextLayout == null)
+            if (currentLineTextLayout == null)
                 return 0;
 
-            return CurrentLineTextLayout.GetCaretPosition(CursorPosition.CharacterPosition < 0 ? 0 : CursorPosition.CharacterPosition, false).X + XOffset;
+            return currentLineTextLayout.GetCaretPosition(cursorPosition.CharacterPosition < 0 ? 0 : cursorPosition.CharacterPosition, false).X + xOffset;
         }
 
         //Return the cursor Width
-        public static void RenderCursor(CanvasTextLayout TextLayout, int CharacterPosition, float XOffset, float Y, float FontSize, CursorSize CustomSize, CanvasDrawEventArgs args, CanvasSolidColorBrush CursorColorBrush)
+        public static void RenderCursor(CanvasTextLayout textLayout, int characterPosition, float xOffset, float y, float fontSize, CursorSize customSize, CanvasDrawEventArgs args, CanvasSolidColorBrush cursorColorBrush)
         {
-            if (TextLayout == null)
+            if (textLayout == null)
                 return;
 
-            Vector2 vector = TextLayout.GetCaretPosition(CharacterPosition < 0 ? 0 : CharacterPosition, false);
-            if (CustomSize == null)
-                args.DrawingSession.FillRectangle(vector.X + XOffset, Y, 1, FontSize, CursorColorBrush);
+            Vector2 vector = textLayout.GetCaretPosition(characterPosition < 0 ? 0 : characterPosition, false);
+            if (customSize == null)
+                args.DrawingSession.FillRectangle(vector.X + xOffset, y, 1, fontSize, cursorColorBrush);
             else
-                args.DrawingSession.FillRectangle(vector.X + XOffset + CustomSize.OffsetX, Y + CustomSize.OffsetY, (float)CustomSize.Width, (float)CustomSize.Height, CursorColorBrush);
+                args.DrawingSession.FillRectangle(vector.X + xOffset + customSize.OffsetX, y + customSize.OffsetY, (float)customSize.Width, (float)customSize.Height, cursorColorBrush);
         }
     }
 }
