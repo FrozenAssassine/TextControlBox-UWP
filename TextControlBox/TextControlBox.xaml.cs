@@ -2669,6 +2669,7 @@ namespace TextControlBox
             { "PHP", new PHP() },
             { "Python", new Python() },
             { "QSharp", new QSharp() },
+            { "SQL", new SQL() },
             { "TOML", new TOML() },
             { "XML", new XML() },
         };
