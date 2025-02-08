@@ -1,32 +1,39 @@
-
 <div align="center">
-<img src="images/Icon1.png" height="150px" width="auto">
-<h1>TextControlBox-UWP</h1>
+  <img src="images/Icon1.png" height="150px" width="auto">
+  <h1>TextControlBox-UWP</h1>
 </div>
 
 <div align="center">
-     <a href="https://www.microsoft.com/store/productId/9NWL9M9JPQ36">
-         <img src="https://img.shields.io/badge/Download demo App-Microsoft%20Store-brightgreen?style=flat">
-    </a>
-<img src="https://img.shields.io/github/issues/FrozenAssassine/TextControlBox-UWP.svg?style=flat">
-<img src="https://img.shields.io/github/issues-closed/FrozenAssassine/TextControlBox-UWP.svg">
-<img src="https://img.shields.io/github/stars/FrozenAssassine/TextControlBox-UWP.svg">
-<img src="https://img.shields.io/github/repo-size/FrozenAssassine/TextControlBox-UWP">
+  <a href="https://www.microsoft.com/store/productId/9NWL9M9JPQ36">
+    <img src="https://img.shields.io/badge/Download demo App-Microsoft%20Store-brightgreen?style=flat">
+  </a>
+  <img src="https://img.shields.io/github/issues/FrozenAssassine/TextControlBox-UWP.svg?style=flat">
+  <img src="https://img.shields.io/github/issues-closed/FrozenAssassine/TextControlBox-UWP.svg">
+  <img src="https://img.shields.io/github/stars/FrozenAssassine/TextControlBox-UWP.svg">
+  <img src="https://img.shields.io/github/repo-size/FrozenAssassine/TextControlBox-UWP">
+  
+  <br>
 
-[![NuGet version (TextControlBox)](https://img.shields.io/nuget/v/TextControlBox.JuliusKirsch)](https://www.nuget.org/packages/TextControlBox.JuliusKirsch)
-
+  [![NuGet version (TextControlBox)](https://img.shields.io/nuget/v/TextControlBox.JuliusKirsch)](https://www.nuget.org/packages/TextControlBox.JuliusKirsch)
 </div>
+
+---
+
+> ⚠️ **This version is deprecated!** Check out the new version for WinUI-3:  
+> 👉 [TextControlBox-WinUI](https://github.com/FrozenAssassine/TextControlBox-WinUI)
+
+---
 
 ## 🤔 What is TextControlBox?
-A UWP based textbox with syntaxhighlighting and support for very large amount of text which is still in development.</h3>
+A UWP-based textbox with syntax highlighting and support for handling very large amounts of text. This project is still in development.
 
-## Reason why I built it
-UWP has a default Textbox and a RichTextBox. Both of them are very slow in rendering multiple thousand lines. The selection works also very slow. So I decided to create my own version of a Textbox.
+## 🛠 Why I Built It
+UWP provides a default `TextBox` and `RichTextBox`, but both perform poorly when rendering thousands of lines. Additionally, selection handling is slow. To solve these issues, I created my own textbox control.
 
 ## 📥 Download
 
 <a href="https://www.nuget.org/packages/TextControlBox.JuliusKirsch">
-<img width="40" height="auto" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/nuget/nuget-original.svg"/>
+  <img width="40" height="auto" src="https://raw.githubusercontent.com/devicons/devicon/master/icons/nuget/nuget-original.svg"/>
 </a>
 
 ## 🔍 Features:
